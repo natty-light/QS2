@@ -8,7 +8,10 @@ func TestNextToken(t *testing.T) {
 	mut add = func (x, y) {
 		 x + y;
 	};
-	mut result = add(five, ten);`
+	mut result = add(five, ten);
+	!-/*5;
+	5 < 10 > 5;
+	`
 
 	tests := []struct {
 		expectedType    TokenType
@@ -56,6 +59,20 @@ func TestNextToken(t *testing.T) {
 		{Identifier, "ten", 6},
 		{RightParen, ")", 6},
 		{Semicolon, ";", 6},
+
+		{Bang, "!", 7},
+		{Minus, "-", 7},
+		{Slash, "/", 7},
+		{Star, "*", 7},
+		{Int, "5", 7},
+		{Semicolon, ";", 7},
+
+		{Int, "5", 8},
+		{LessThan, "<", 8},
+		{Int, "10", 8},
+		{GreaterThan, ">", 8},
+		{Int, "5", 8},
+		{Semicolon, ";", 8},
 
 		{EOF, "", 0},
 	}

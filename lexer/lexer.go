@@ -17,11 +17,11 @@ const (
 	colon = ':'
 	dot   = '.'
 
-	addSym  = '+'
-	multSym = '*'
-	divSym  = '/'
-	subSym  = '-'
-	modSym  = '%'
+	plus   = '+'
+	star   = '*'
+	slash  = '/'
+	minus  = '-'
+	modulo = '%'
 
 	greaterThan = '>'
 	lessThan    = '<'
@@ -115,18 +115,23 @@ func (l *Lexer) NextToken() Token {
 	case dot:
 		tok = token(Dot, l.char, l.line)
 
-	// Operators
-	case addSym:
+	// Symbols
+	case plus:
 		tok = token(Plus, l.char, l.line)
-	case subSym:
+	case minus:
 		tok = token(Minus, l.char, l.line)
-	case multSym:
-		tok = token(Product, l.char, l.line)
-	case divSym:
-		tok = token(Quotient, l.char, l.line)
-	case modSym:
+	case star:
+		tok = token(Star, l.char, l.line)
+	case slash:
+		tok = token(Slash, l.char, l.line)
+	case modulo:
 		tok = token(Modulo, l.char, l.line)
-
+	case greaterThan:
+		tok = token(GreaterThan, l.char, l.line)
+	case lessThan:
+		tok = token(LessThan, l.char, l.line)
+	case bang:
+		tok = token(Bang, l.char, l.line)
 		// TODO: Logical operators
 	case 0:
 		tok.Literal = ""
