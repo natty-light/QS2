@@ -83,14 +83,18 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.source) {
+		return 0
+	} else {
+		return l.source[l.readPosition]
+	}
+}
+
 func (l *Lexer) NextToken() Token {
 	var tok Token
 	l.skipWhitespace()
 	switch l.char {
-	// Assignment
-	case eqSym:
-		tok = token(Assign, l.char, l.line)
-
 	// grouping
 	case leftParen:
 		tok = token(LeftParen, l.char, l.line)
@@ -116,6 +120,15 @@ func (l *Lexer) NextToken() Token {
 		tok = token(Dot, l.char, l.line)
 
 	// Symbols
+	case eqSym:
+		if l.peekChar() == eqSym {
+			char := l.char
+			l.readChar() // advance past first equals
+			literal := string(char) + string(l.char)
+			tok = Token{Type: EqualTo, Literal: literal, Line: l.line}
+		} else {
+			tok = token(Assign, l.char, l.line)
+		}
 	case plus:
 		tok = token(Plus, l.char, l.line)
 	case minus:
@@ -127,12 +140,52 @@ func (l *Lexer) NextToken() Token {
 	case modulo:
 		tok = token(Modulo, l.char, l.line)
 	case greaterThan:
-		tok = token(GreaterThan, l.char, l.line)
+		if l.peekChar() == eqSym {
+			char := l.char
+			l.readChar() // advance past first equals
+			literal := string(char) + string(l.char)
+			tok = Token{Type: GreaterThanEqualTo, Literal: literal, Line: l.line}
+		} else {
+			tok = token(GreaterThan, l.char, l.line)
+		}
 	case lessThan:
-		tok = token(LessThan, l.char, l.line)
+		if l.peekChar() == eqSym {
+			char := l.char
+			l.readChar() // advance past first equals
+			literal := string(char) + string(l.char)
+			tok = Token{Type: LessThanEqualTo, Literal: literal, Line: l.line}
+		} else {
+			tok = token(LessThan, l.char, l.line)
+		}
 	case bang:
-		tok = token(Bang, l.char, l.line)
-		// TODO: Logical operators
+		if l.peekChar() == eqSym {
+			char := l.char
+			l.readChar() // advance past first equals
+			literal := string(char) + string(l.char)
+			tok = Token{Type: NotEqualTo, Literal: literal, Line: l.line}
+		} else {
+			tok = token(Bang, l.char, l.line)
+		}
+	case ampersand:
+		if l.peekChar() == ampersand {
+			char := l.char
+			l.readChar()
+			literal := string(char) + string(l.char)
+			tok = Token{Type: And, Literal: literal, Line: l.line}
+		} else {
+			// Single & is an illegal char
+			tok = token(Illegal, l.char, l.line)
+		}
+	case pipe:
+		if l.peekChar() == pipe {
+			char := l.char
+			l.readChar()
+			literal := string(char) + string(l.char)
+			tok = Token{Type: Or, Literal: literal, Line: l.line}
+		} else {
+			// Single & is an illegal char
+			tok = token(Illegal, l.char, l.line)
+		}
 	case 0:
 		tok.Literal = ""
 		tok.Type = "EOF"

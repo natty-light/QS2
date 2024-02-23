@@ -32,21 +32,23 @@ const (
 	Dot                TokenType = "Dot"
 
 	// Symbols
-	Plus   TokenType = "Plus"
-	Minus  TokenType = "Minus"
-	Slash  TokenType = "Slash"
-	Star   TokenType = "Star"
-	Modulo TokenType = "Modulus"
-	Assign TokenType = "Assign"
-	// Equality    TokenType = "Equality"
+	Plus        TokenType = "Plus"
+	Minus       TokenType = "Minus"
+	Slash       TokenType = "Slash"
+	Star        TokenType = "Star"
+	Modulo      TokenType = "Modulus"
+	Assign      TokenType = "Assign"
 	GreaterThan TokenType = "GreaterThan"
 	LessThan    TokenType = "LessThan"
 	Bang        TokenType = "Bang"
-	// GreaterThanEqualTo TokenType = "GreaterThanEqualTo"
-	// LessThanEqualTo    TokenType = "LessThanEqualTo"
-	// NotEqual           TokenType = "NotEqual"
-	And TokenType = "And"
-	Or  TokenType = "Or"
+
+	// Multi char symbols
+	EqualTo            TokenType = "Equality"
+	GreaterThanEqualTo TokenType = "GreaterThanEqualTo"
+	LessThanEqualTo    TokenType = "LessThanEqualTo"
+	NotEqualTo         TokenType = "NotEqual"
+	And                TokenType = "And"
+	Or                 TokenType = "Or"
 
 	EOF     TokenType = "EOF" // End of File
 	Illegal TokenType = "Illegal"

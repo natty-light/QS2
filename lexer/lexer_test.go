@@ -16,6 +16,12 @@ func TestNextToken(t *testing.T) {
 	} else {
 		return false;
 	}
+	10 == 10;
+	10 != 9;
+	5 >= 10;
+	7 <= 6;
+	true && false;
+	true || false;
 	`
 
 	tests := []struct {
@@ -100,6 +106,36 @@ func TestNextToken(t *testing.T) {
 		{Semicolon, ";", 12},
 
 		{RightCurlyBracket, "}", 13},
+
+		{Number, "10", 14},
+		{EqualTo, "==", 14},
+		{Number, "10", 14},
+		{Semicolon, ";", 14},
+
+		{Number, "10", 15},
+		{NotEqualTo, "!=", 15},
+		{Number, "9", 15},
+		{Semicolon, ";", 15},
+
+		{Number, "5", 16},
+		{GreaterThanEqualTo, ">=", 16},
+		{Number, "10", 16},
+		{Semicolon, ";", 16},
+
+		{Number, "7", 17},
+		{LessThanEqualTo, "<=", 17},
+		{Number, "6", 17},
+		{Semicolon, ";", 17},
+
+		{True, "true", 18},
+		{And, "&&", 18},
+		{False, "false", 18},
+		{Semicolon, ";", 18},
+
+		{True, "true", 19},
+		{Or, "||", 19},
+		{False, "false", 19},
+		{Semicolon, ";", 19},
 
 		{EOF, "", 0},
 	}
