@@ -1,6 +1,9 @@
 package lexer
 
-import "QuonkScript/utils"
+import (
+	"QuonkScript/token"
+	"QuonkScript/utils"
+)
 
 const (
 	eqSym = '='
@@ -91,33 +94,33 @@ func (l *Lexer) peekChar() byte {
 	}
 }
 
-func (l *Lexer) NextToken() Token {
-	var tok Token
+func (l *Lexer) NextToken() token.Token {
+	var tok token.Token
 	l.skipWhitespace()
 	switch l.char {
 	// grouping
 	case leftParen:
-		tok = token(LeftParen, l.char, l.line)
+		tok = token.MakeToken(token.LeftParen, l.char, l.line)
 	case rightParen:
-		tok = token(RightParen, l.char, l.line)
+		tok = token.MakeToken(token.RightParen, l.char, l.line)
 	case leftCurlyBracket:
-		tok = token(LeftCurlyBracket, l.char, l.line)
+		tok = token.MakeToken(token.LeftCurlyBracket, l.char, l.line)
 	case rightCurlyBracket:
-		tok = token(RightCurlyBracket, l.char, l.line)
+		tok = token.MakeToken(token.RightCurlyBracket, l.char, l.line)
 	case leftSquareBracket:
-		tok = token(RightSquareBracket, l.char, l.line)
+		tok = token.MakeToken(token.RightSquareBracket, l.char, l.line)
 	case rightSquareBracket:
-		tok = token(RightSquareBracket, l.char, l.line)
+		tok = token.MakeToken(token.RightSquareBracket, l.char, l.line)
 
 	// Punctuation
 	case semi:
-		tok = token(Semicolon, l.char, l.line)
+		tok = token.MakeToken(token.Semicolon, l.char, l.line)
 	case comma:
-		tok = token(Comma, l.char, l.line)
+		tok = token.MakeToken(token.Comma, l.char, l.line)
 	case colon:
-		tok = token(Colon, l.char, l.line)
+		tok = token.MakeToken(token.Colon, l.char, l.line)
 	case dot:
-		tok = token(Dot, l.char, l.line)
+		tok = token.MakeToken(token.Dot, l.char, l.line)
 
 	// Symbols
 	case eqSym:
@@ -125,66 +128,66 @@ func (l *Lexer) NextToken() Token {
 			char := l.char
 			l.readChar() // advance past first equals
 			literal := string(char) + string(l.char)
-			tok = Token{Type: EqualTo, Literal: literal, Line: l.line}
+			tok = token.Token{Type: token.EqualTo, Literal: literal, Line: l.line}
 		} else {
-			tok = token(Assign, l.char, l.line)
+			tok = token.MakeToken(token.Assign, l.char, l.line)
 		}
 	case plus:
-		tok = token(Plus, l.char, l.line)
+		tok = token.MakeToken(token.Plus, l.char, l.line)
 	case minus:
-		tok = token(Minus, l.char, l.line)
+		tok = token.MakeToken(token.Minus, l.char, l.line)
 	case star:
-		tok = token(Star, l.char, l.line)
+		tok = token.MakeToken(token.Star, l.char, l.line)
 	case slash:
-		tok = token(Slash, l.char, l.line)
+		tok = token.MakeToken(token.Slash, l.char, l.line)
 	case modulo:
-		tok = token(Modulo, l.char, l.line)
+		tok = token.MakeToken(token.Modulo, l.char, l.line)
 	case greaterThan:
 		if l.peekChar() == eqSym {
 			char := l.char
 			l.readChar() // advance past first equals
 			literal := string(char) + string(l.char)
-			tok = Token{Type: GreaterThanEqualTo, Literal: literal, Line: l.line}
+			tok = token.Token{Type: token.GreaterThanEqualTo, Literal: literal, Line: l.line}
 		} else {
-			tok = token(GreaterThan, l.char, l.line)
+			tok = token.MakeToken(token.GreaterThan, l.char, l.line)
 		}
 	case lessThan:
 		if l.peekChar() == eqSym {
 			char := l.char
 			l.readChar() // advance past first equals
 			literal := string(char) + string(l.char)
-			tok = Token{Type: LessThanEqualTo, Literal: literal, Line: l.line}
+			tok = token.Token{Type: token.LessThanEqualTo, Literal: literal, Line: l.line}
 		} else {
-			tok = token(LessThan, l.char, l.line)
+			tok = token.MakeToken(token.LessThan, l.char, l.line)
 		}
 	case bang:
 		if l.peekChar() == eqSym {
 			char := l.char
 			l.readChar() // advance past first equals
 			literal := string(char) + string(l.char)
-			tok = Token{Type: NotEqualTo, Literal: literal, Line: l.line}
+			tok = token.Token{Type: token.NotEqualTo, Literal: literal, Line: l.line}
 		} else {
-			tok = token(Bang, l.char, l.line)
+			tok = token.MakeToken(token.Bang, l.char, l.line)
 		}
 	case ampersand:
 		if l.peekChar() == ampersand {
 			char := l.char
 			l.readChar()
 			literal := string(char) + string(l.char)
-			tok = Token{Type: And, Literal: literal, Line: l.line}
+			tok = token.Token{Type: token.And, Literal: literal, Line: l.line}
 		} else {
 			// Single & is an illegal char
-			tok = token(Illegal, l.char, l.line)
+			tok = token.MakeToken(token.Illegal, l.char, l.line)
 		}
 	case pipe:
 		if l.peekChar() == pipe {
 			char := l.char
 			l.readChar()
 			literal := string(char) + string(l.char)
-			tok = Token{Type: Or, Literal: literal, Line: l.line}
+			tok = token.Token{Type: token.Or, Literal: literal, Line: l.line}
 		} else {
 			// Single & is an illegal char
-			tok = token(Illegal, l.char, l.line)
+			tok = token.MakeToken(token.Illegal, l.char, l.line)
 		}
 	case 0:
 		tok.Literal = ""
@@ -197,12 +200,12 @@ func (l *Lexer) NextToken() Token {
 			tok.Line = l.line
 			return tok // This is to avoid the l.readChar() call before this functions return
 		} else if utils.IsNumeric(string(l.char)) {
-			tok.Type = Number
+			tok.Type = token.Number
 			tok.Literal = l.readNumber()
 			tok.Line = l.line
 			return tok // This is to avoid the l.readChar() call before this functions return
 		} else {
-			tok = token(Illegal, l.char, l.line)
+			tok = token.MakeToken(token.Illegal, l.char, l.line)
 		}
 	}
 
@@ -210,22 +213,22 @@ func (l *Lexer) NextToken() Token {
 	return tok
 }
 
-var keywords = map[string]TokenType{
-	"mut":    Mut,
-	"const":  Const,
-	"null":   Null,
-	"true":   True,
-	"false":  False,
-	"if":     If,
-	"else":   Else,
-	"elseif": Elseif,
-	"func":   Func,
-	"return": Return,
+var keywords = map[string]token.TokenType{
+	"mut":    token.Mut,
+	"const":  token.Const,
+	"null":   token.Null,
+	"true":   token.True,
+	"false":  token.False,
+	"if":     token.If,
+	"else":   token.Else,
+	"elseif": token.Elseif,
+	"func":   token.Func,
+	"return": token.Return,
 }
 
-func LookupIdent(ident string) TokenType {
+func LookupIdent(ident string) token.TokenType {
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}
-	return Identifier
+	return token.Identifier
 }

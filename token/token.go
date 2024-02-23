@@ -1,4 +1,4 @@
-package lexer
+package token
 
 type TokenType string
 
@@ -60,6 +60,6 @@ type Token struct {
 	Line    int
 }
 
-func token(Type TokenType, char byte, Line int) Token {
+func MakeToken(Type TokenType, char byte, Line int) Token {
 	return Token{Type: Type, Literal: string(char), Line: Line}
 }
