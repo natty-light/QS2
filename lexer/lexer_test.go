@@ -11,6 +11,11 @@ func TestNextToken(t *testing.T) {
 	mut result = add(five, ten);
 	!-/*5;
 	5 < 10 > 5;
+	if (5 < 10) {
+		return true;
+	} else {
+		return false;
+	}
 	`
 
 	tests := []struct {
@@ -21,13 +26,13 @@ func TestNextToken(t *testing.T) {
 		{Mut, "mut", 1},
 		{Identifier, "five", 1},
 		{Assign, "=", 1},
-		{Int, "5", 1},
+		{Number, "5", 1},
 		{Semicolon, ";", 1},
 
 		{Mut, "mut", 2},
 		{Identifier, "ten", 2},
 		{Assign, "=", 2},
-		{Int, "10", 2},
+		{Number, "10", 2},
 		{Semicolon, ";", 2},
 
 		{Mut, "mut", 3},
@@ -64,15 +69,37 @@ func TestNextToken(t *testing.T) {
 		{Minus, "-", 7},
 		{Slash, "/", 7},
 		{Star, "*", 7},
-		{Int, "5", 7},
+		{Number, "5", 7},
 		{Semicolon, ";", 7},
 
-		{Int, "5", 8},
+		{Number, "5", 8},
 		{LessThan, "<", 8},
-		{Int, "10", 8},
+		{Number, "10", 8},
 		{GreaterThan, ">", 8},
-		{Int, "5", 8},
+		{Number, "5", 8},
 		{Semicolon, ";", 8},
+
+		{If, "if", 9},
+		{LeftParen, "(", 9},
+		{Number, "5", 9},
+		{LessThan, "<", 9},
+		{Number, "10", 9},
+		{RightParen, ")", 9},
+		{LeftCurlyBracket, "{", 9},
+
+		{Return, "return", 10},
+		{True, "true", 10},
+		{Semicolon, ";", 10},
+
+		{RightCurlyBracket, "}", 11},
+		{Else, "else", 11},
+		{LeftCurlyBracket, "{", 11},
+
+		{Return, "return", 12},
+		{False, "false", 12},
+		{Semicolon, ";", 12},
+
+		{RightCurlyBracket, "}", 13},
 
 		{EOF, "", 0},
 	}

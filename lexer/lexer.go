@@ -144,7 +144,7 @@ func (l *Lexer) NextToken() Token {
 			tok.Line = l.line
 			return tok // This is to avoid the l.readChar() call before this functions return
 		} else if utils.IsNumeric(string(l.char)) {
-			tok.Type = Int
+			tok.Type = Number
 			tok.Literal = l.readNumber()
 			tok.Line = l.line
 			return tok // This is to avoid the l.readChar() call before this functions return
