@@ -41,7 +41,7 @@ type Lexer struct {
 	line         int
 }
 
-func CreateLexer(source string) *Lexer {
+func New(source string) *Lexer {
 	lexer := &Lexer{source: source, line: 1} // Start our lexer at line 1
 	lexer.readChar()                         // set up lexer
 	return lexer
