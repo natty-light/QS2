@@ -200,7 +200,7 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Line = l.line
 			return tok // This is to avoid the l.readChar() call before this functions return
 		} else if utils.IsNumeric(string(l.char)) {
-			tok.Type = token.Number
+			tok.Type = token.Integer
 			tok.Literal = l.readNumber()
 			tok.Line = l.line
 			return tok // This is to avoid the l.readChar() call before this functions return

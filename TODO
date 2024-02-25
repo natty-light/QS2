@@ -1,1 +1,2 @@
-Try replacing lexer tokentype with int instead of string, use iota
+Add line as field on AST structs for error messages
+Add support for float literals

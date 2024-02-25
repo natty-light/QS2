@@ -6,7 +6,7 @@ const (
 	// Literals
 	Null       TokenType = "Null"
 	Identifier TokenType = "Identifier"
-	Number     TokenType = "Number"
+	Integer    TokenType = "Number"
 
 	// Keywords
 	Mut    TokenType = "Mut"
