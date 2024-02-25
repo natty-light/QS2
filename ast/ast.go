@@ -1,12 +1,16 @@
 package ast
 
-import "QuonkScript/token"
+import (
+	"QuonkScript/token"
+	"bytes"
+)
 
 // Interfaces
 
 type (
 	Node interface {
 		TokenLiteral() string
+		String() string
 	}
 
 	Stmt interface {
@@ -41,6 +45,11 @@ type (
 		Token       token.Token
 		ReturnValue Expr
 	}
+
+	ExpressionStmt struct {
+		Token token.Token
+		Expr  Expr
+	}
 )
 
 // Node interfaces
@@ -52,21 +61,77 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
+func (p *Program) String() string {
+	var out bytes.Buffer
+
+	for _, stmt := range p.Stmts {
+		out.WriteString(stmt.String())
+	}
+
+	return out.String()
+}
+
 func (v *VarDeclarationStmt) TokenLiteral() string {
 	return v.Token.Literal
+}
+
+func (v *VarDeclarationStmt) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(v.TokenLiteral() + " ")
+	out.WriteString(v.Name.String())
+	out.WriteString(" = ")
+
+	if v.Value != nil {
+		out.WriteString(v.Value.String())
+	}
+
+	out.WriteString(";")
+
+	return out.String()
 }
 
 func (i *Identifier) TokenLiteral() string {
 	return i.Token.Literal
 }
 
+func (i *Identifier) String() string {
+	return i.Value
+}
+
 func (r *ReturnStmt) TokenLiteral() string {
 	return r.Token.Literal
+}
+
+func (r *ReturnStmt) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(r.TokenLiteral() + " ")
+
+	if r.ReturnValue != nil {
+		out.WriteString(r.ReturnValue.String())
+	}
+
+	out.WriteString(";")
+
+	return out.String()
+}
+
+func (e *ExpressionStmt) TokenLiteral() string {
+	return e.Token.Literal
+}
+
+func (e *ExpressionStmt) String() string {
+	if e.Expr != nil {
+		return e.Expr.String()
+	}
+	return ""
 }
 
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
+func (e *ExpressionStmt) statementNode()     {}
 
 // Expressions
 func (i *Identifier) expressionNode() {}
