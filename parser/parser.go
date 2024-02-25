@@ -5,6 +5,7 @@ import (
 	"QuonkScript/lexer"
 	"QuonkScript/token"
 	"fmt"
+	"strconv"
 )
 
 type (
@@ -46,6 +47,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 
 	p.registerPrefix(token.Identifier, p.parseIdentifier)
+	p.registerPrefix(token.Integer, p.parseIntegerLiteral)
 
 	return p
 }
@@ -185,4 +187,20 @@ func (p *Parser) parseExpression(precedence Precedence) ast.Expr {
 // this is an prefixParseFn, so it will not call p.nextToken()
 func (p *Parser) parseIdentifier() ast.Expr {
 	return &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Expr {
+	literal := &ast.IntegerLiteral{Token: p.currToken}
+
+	value, err := strconv.ParseInt(p.currToken.Literal, 0, 64)
+
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as integer", p.currToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	literal.Value = value
+
+	return literal
 }

@@ -24,21 +24,20 @@ type (
 	}
 )
 
+// Node
 type (
 	Program struct {
 		Stmts []Stmt
 	}
+)
 
+// Statements
+type (
 	VarDeclarationStmt struct {
 		Token    token.Token // token.Mut or token.Const
 		Name     *Identifier
 		Value    Expr
 		Constant bool
-	}
-
-	Identifier struct {
-		Token token.Token // token.Ident
-		Value string
 	}
 
 	ReturnStmt struct {
@@ -52,6 +51,19 @@ type (
 	}
 )
 
+// Expressions and literals
+type (
+	Identifier struct {
+		Token token.Token // token.Ident
+		Value string
+	}
+
+	IntegerLiteral struct {
+		Token token.Token
+		Value int64
+	}
+)
+
 // Node interfaces
 func (p *Program) TokenLiteral() string {
 	if len(p.Stmts) > 0 {
@@ -59,6 +71,26 @@ func (p *Program) TokenLiteral() string {
 	} else {
 		return ""
 	}
+}
+
+func (v *VarDeclarationStmt) TokenLiteral() string {
+	return v.Token.Literal
+}
+
+func (e *ExpressionStmt) TokenLiteral() string {
+	return e.Token.Literal
+}
+
+func (r *ReturnStmt) TokenLiteral() string {
+	return r.Token.Literal
+}
+
+func (i *Identifier) TokenLiteral() string {
+	return i.Token.Literal
+}
+
+func (i *IntegerLiteral) TokenLiteral() string {
+	return i.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -69,10 +101,6 @@ func (p *Program) String() string {
 	}
 
 	return out.String()
-}
-
-func (v *VarDeclarationStmt) TokenLiteral() string {
-	return v.Token.Literal
 }
 
 func (v *VarDeclarationStmt) String() string {
@@ -91,18 +119,6 @@ func (v *VarDeclarationStmt) String() string {
 	return out.String()
 }
 
-func (i *Identifier) TokenLiteral() string {
-	return i.Token.Literal
-}
-
-func (i *Identifier) String() string {
-	return i.Value
-}
-
-func (r *ReturnStmt) TokenLiteral() string {
-	return r.Token.Literal
-}
-
 func (r *ReturnStmt) String() string {
 	var out bytes.Buffer
 
@@ -117,15 +133,20 @@ func (r *ReturnStmt) String() string {
 	return out.String()
 }
 
-func (e *ExpressionStmt) TokenLiteral() string {
-	return e.Token.Literal
-}
-
 func (e *ExpressionStmt) String() string {
 	if e.Expr != nil {
 		return e.Expr.String()
 	}
 	return ""
+}
+
+// Expressions
+func (i *Identifier) String() string {
+	return i.Value
+}
+
+func (i *IntegerLiteral) String() string {
+	return i.Token.Literal
 }
 
 // Statements
@@ -134,4 +155,5 @@ func (r *ReturnStmt) statementNode()         {}
 func (e *ExpressionStmt) statementNode()     {}
 
 // Expressions
-func (i *Identifier) expressionNode() {}
+func (i *Identifier) expressionNode()     {}
+func (i *IntegerLiteral) expressionNode() {}
