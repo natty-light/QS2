@@ -70,6 +70,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.True, p.parseBooleanLiteral)
 	p.registerPrefix(token.False, p.parseBooleanLiteral)
 	p.registerPrefix(token.LeftParen, p.parseGroupedExpr)
+	p.registerPrefix(token.If, p.parseIfExpr)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.Plus, p.parseInfixExpr)
@@ -166,6 +167,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 	return program
 }
 
+// Statements
 func (p *Parser) parseStatement() ast.Stmt {
 	switch p.currToken.Type {
 	case token.Mut:
@@ -227,6 +229,23 @@ func (p *Parser) parseExpressionStmt() *ast.ExpressionStmt {
 	return stmt
 }
 
+func (p *Parser) parseBlockStmt() *ast.BlockStmt {
+	block := &ast.BlockStmt{Token: p.currToken}
+	block.Stmts = make([]ast.Stmt, 0)
+
+	p.nextToken() // advance past {
+
+	for !p.currTokenIs(token.RightCurlyBracket) && !p.currTokenIs(token.EOF) {
+		stmt := p.parseStatement()
+		if stmt != nil {
+			block.Stmts = append(block.Stmts, stmt)
+		}
+		p.nextToken() // what is this advance for
+	}
+	return block
+}
+
+// Expressions
 func (p *Parser) parseExpression(precedence Precedence) ast.Expr {
 	prefix := p.prefixParseFns[p.currToken.Type]
 	if prefix == nil {
@@ -253,7 +272,7 @@ func (p *Parser) parseExpression(precedence Precedence) ast.Expr {
 	return left
 }
 
-// PREFIX functions
+// prefix and infix functions
 
 // this is an prefixParseFn, so it will not call p.nextToken() at the end
 func (p *Parser) parseIdentifier() ast.Expr {
@@ -309,6 +328,36 @@ func (p *Parser) parseGroupedExpr() ast.Expr {
 
 	if !p.expectPeek(token.RightParen) {
 		return nil
+	}
+
+	return expr
+}
+
+func (p *Parser) parseIfExpr() ast.Expr {
+	expr := &ast.IfExpr{Token: p.currToken}
+
+	if !p.expectPeek(token.LeftParen) {
+		return nil
+	}
+	p.nextToken() // advance past (
+	expr.Condition = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RightParen) {
+		return nil
+	}
+	if !p.expectPeek(token.LeftCurlyBracket) {
+		return nil
+	}
+
+	expr.Consequence = p.parseBlockStmt()
+
+	if p.peekTokenIs(token.Else) {
+		p.nextToken() // advance past else
+		if !p.expectPeek(token.LeftCurlyBracket) {
+			return nil
+		}
+
+		expr.Alternative = p.parseBlockStmt()
 	}
 
 	return expr
