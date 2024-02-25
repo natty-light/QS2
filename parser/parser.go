@@ -351,6 +351,7 @@ func (p *Parser) parseIfExpr() ast.Expr {
 
 	expr.Consequence = p.parseBlockStmt()
 
+	// For else if, probably want to set the alternative to another ast.IfExpr, maybe by calling this method recursively
 	if p.peekTokenIs(token.Else) {
 		p.nextToken() // advance past else
 		if !p.expectPeek(token.LeftCurlyBracket) {
