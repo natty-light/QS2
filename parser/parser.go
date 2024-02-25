@@ -48,6 +48,8 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.registerPrefix(token.Identifier, p.parseIdentifier)
 	p.registerPrefix(token.Integer, p.parseIntegerLiteral)
+	p.registerPrefix(token.Bang, p.parsePrefixExpr)
+	p.registerPrefix(token.Minus, p.parsePrefixExpr)
 
 	return p
 }
@@ -62,6 +64,11 @@ func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
 
 func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
+}
+
+func (p *Parser) noPrefixParseFnError(t token.TokenType) {
+	msg := fmt.Sprintf("no prefix parse function for %s found", t)
+	p.errors = append(p.errors, msg)
 }
 
 // advances current and peek by one
@@ -174,8 +181,8 @@ func (p *Parser) parseExpressionStmt() *ast.ExpressionStmt {
 
 func (p *Parser) parseExpression(precedence Precedence) ast.Expr {
 	prefix := p.prefixParseFns[p.currToken.Type]
-
 	if prefix == nil {
+		p.noPrefixParseFnError(p.currToken.Type)
 		return nil
 	}
 
@@ -184,11 +191,14 @@ func (p *Parser) parseExpression(precedence Precedence) ast.Expr {
 	return left
 }
 
-// this is an prefixParseFn, so it will not call p.nextToken()
+// PREFIX functions
+
+// this is an prefixParseFn, so it will not call p.nextToken() at the end
 func (p *Parser) parseIdentifier() ast.Expr {
 	return &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
 }
 
+// this is an prefixParseFn, so it will not call p.nextToken() at the end
 func (p *Parser) parseIntegerLiteral() ast.Expr {
 	literal := &ast.IntegerLiteral{Token: p.currToken}
 
@@ -203,4 +213,14 @@ func (p *Parser) parseIntegerLiteral() ast.Expr {
 	literal.Value = value
 
 	return literal
+}
+
+// this is an prefixParseFn, so it will not call p.nextToken() at the end
+func (p *Parser) parsePrefixExpr() ast.Expr {
+	expr := &ast.PrefixExpr{Token: p.currToken, Operator: p.currToken.Literal}
+
+	p.nextToken() // advance past operator
+	expr.Right = p.parseExpression(PREFIX)
+
+	return expr
 }

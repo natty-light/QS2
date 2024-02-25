@@ -62,6 +62,12 @@ type (
 		Token token.Token
 		Value int64
 	}
+
+	PrefixExpr struct {
+		Token    token.Token
+		Operator string
+		Right    Expr
+	}
 )
 
 // Node interfaces
@@ -77,12 +83,12 @@ func (v *VarDeclarationStmt) TokenLiteral() string {
 	return v.Token.Literal
 }
 
-func (e *ExpressionStmt) TokenLiteral() string {
-	return e.Token.Literal
-}
-
 func (r *ReturnStmt) TokenLiteral() string {
 	return r.Token.Literal
+}
+
+func (e *ExpressionStmt) TokenLiteral() string {
+	return e.Token.Literal
 }
 
 func (i *Identifier) TokenLiteral() string {
@@ -91,6 +97,10 @@ func (i *Identifier) TokenLiteral() string {
 
 func (i *IntegerLiteral) TokenLiteral() string {
 	return i.Token.Literal
+}
+
+func (p *PrefixExpr) TokenLiteral() string {
+	return p.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -149,6 +159,17 @@ func (i *IntegerLiteral) String() string {
 	return i.Token.Literal
 }
 
+func (p *PrefixExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(p.Operator)
+	out.WriteString(p.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -157,3 +178,4 @@ func (e *ExpressionStmt) statementNode()     {}
 // Expressions
 func (i *Identifier) expressionNode()     {}
 func (i *IntegerLiteral) expressionNode() {}
+func (p *PrefixExpr) expressionNode()     {}

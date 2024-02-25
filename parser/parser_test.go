@@ -3,6 +3,7 @@ package parser
 import (
 	"QuonkScript/ast"
 	"QuonkScript/lexer"
+	"fmt"
 	"testing"
 )
 
@@ -176,4 +177,63 @@ func TestIntegerLiteralExpr(t *testing.T) {
 	if literal.TokenLiteral() != "5" {
 		t.Errorf("ident.TokenLiteral not %s. got=%s", "5", literal.TokenLiteral())
 	}
+}
+
+func TestParsingPrefixExpr(t *testing.T) {
+	prefixTests := []struct {
+		input        string
+		operator     string
+		integerValue int64
+	}{
+		{"!5", "!", 5},
+		{"-15", "-", 15},
+	}
+
+	for _, tt := range prefixTests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Stmts) != 1 {
+			t.Fatalf("program.Stmts does not contain %d statements. got=%d\n", 1, len(program.Stmts))
+		}
+
+		stmt, ok := program.Stmts[0].(*ast.ExpressionStmt)
+		if !ok {
+			t.Fatalf("program.Stmts[0] is not *ast.ExpressionStmt. got=%T", program.Stmts[0])
+		}
+
+		expr, ok := stmt.Expr.(*ast.PrefixExpr)
+		if !ok {
+			t.Fatalf("stmt is not *ast.PrefixExpr. got=%T", stmt.Expr)
+		}
+
+		if expr.Operator != tt.operator {
+			t.Fatalf("expr.Operator is not '%s'. got=%s", tt.operator, expr.Operator)
+		}
+		if !testIntegerLiteral(t, expr.Right, tt.integerValue) {
+			return
+		}
+	}
+}
+
+func testIntegerLiteral(t *testing.T, i ast.Expr, value int64) bool {
+	integ, ok := i.(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("i not *ast.IntegerLiteral. got=%T", integ)
+		return false
+	}
+
+	if integ.Value != value {
+		t.Errorf("integ.Value not %d. got=%d", value, integ.Value)
+		return false
+	}
+
+	if integ.TokenLiteral() != fmt.Sprintf("%d", value) {
+		t.Errorf("integ.TokenLiteral not %d. got=%s", value, integ.TokenLiteral())
+		return false
+	}
+
+	return true
 }
