@@ -49,6 +49,11 @@ type (
 		Token token.Token
 		Expr  Expr
 	}
+
+	BlockStmt struct {
+		Token token.Token
+		Stmts []Stmt
+	}
 )
 
 // Expressions and literals
@@ -79,6 +84,13 @@ type (
 	BooleanLiteral struct {
 		Token token.Token
 		Value bool
+	}
+
+	IfExpr struct {
+		Token       token.Token
+		Condition   Expr
+		Consequence *BlockStmt
+		Alternative *BlockStmt
 	}
 )
 
@@ -120,6 +132,14 @@ func (i *InfixExpr) TokenLiteral() string {
 }
 
 func (b *BooleanLiteral) TokenLiteral() string {
+	return b.Token.Literal
+}
+
+func (i IfExpr) TokenLiteral() string {
+	return i.Token.Literal
+}
+
+func (b *BlockStmt) TokenLiteral() string {
 	return b.Token.Literal
 }
 
@@ -170,6 +190,32 @@ func (e *ExpressionStmt) String() string {
 	return ""
 }
 
+func (i *IfExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("if")
+	out.WriteString(i.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(i.Consequence.String())
+
+	if i.Alternative != nil {
+		out.WriteString("else ")
+		out.WriteString(i.Alternative.String())
+	}
+
+	return out.String()
+}
+
+func (b *BlockStmt) String() string {
+	var out bytes.Buffer
+
+	for _, stmt := range b.Stmts {
+		out.WriteString(stmt.String())
+	}
+
+	return out.String()
+}
+
 // Expressions
 func (i *Identifier) String() string {
 	return i.Value
@@ -210,6 +256,7 @@ func (b *BooleanLiteral) String() string {
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
 func (e *ExpressionStmt) statementNode()     {}
+func (b *BlockStmt) statementNode()          {}
 
 // Expressions
 func (i *Identifier) expressionNode()     {}
@@ -217,3 +264,4 @@ func (i *IntegerLiteral) expressionNode() {}
 func (p *PrefixExpr) expressionNode()     {}
 func (i *InfixExpr) expressionNode()      {}
 func (b *BooleanLiteral) expressionNode() {}
+func (i *IfExpr) expressionNode()         {}
