@@ -75,6 +75,11 @@ type (
 		Operator string
 		Right    Expr
 	}
+
+	BooleanLiteral struct {
+		Token token.Token
+		Value bool
+	}
 )
 
 // Node interfaces
@@ -112,6 +117,10 @@ func (p *PrefixExpr) TokenLiteral() string {
 
 func (i *InfixExpr) TokenLiteral() string {
 	return i.Token.Literal
+}
+
+func (b *BooleanLiteral) TokenLiteral() string {
+	return b.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -193,6 +202,10 @@ func (i *InfixExpr) String() string {
 	return out.String()
 }
 
+func (b *BooleanLiteral) String() string {
+	return b.Token.Literal
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -203,3 +216,4 @@ func (i *Identifier) expressionNode()     {}
 func (i *IntegerLiteral) expressionNode() {}
 func (p *PrefixExpr) expressionNode()     {}
 func (i *InfixExpr) expressionNode()      {}
+func (b *BooleanLiteral) expressionNode() {}

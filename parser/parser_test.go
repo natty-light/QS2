@@ -288,6 +288,37 @@ func TestOperatorPrecendeParsing(t *testing.T) {
 	}
 }
 
+func TestBooleanExpr(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedBoolean bool
+	}{
+		{"true;", true},
+		{"false;", false},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Stmts) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d", 1, len(program.Stmts))
+		}
+
+		stmt, ok := program.Stmts[0].(*ast.ExpressionStmt)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not *ast.ExpressionStatement. got=%T",
+				program.Stmts[0])
+		}
+
+		if !testLiteralExpr(t, stmt.Expr, tt.expectedBoolean) {
+			return
+		}
+	}
+}
+
 // Utilities
 
 func checkParserErrors(t *testing.T, p *Parser) {
@@ -375,6 +406,8 @@ func testLiteralExpr(t *testing.T, expr ast.Expr, expected interface{}) bool {
 		return testIntegerLiteral(t, expr, v)
 	case string:
 		return testIdentifier(t, expr, v)
+	case bool:
+		return testBooleanLiteral(t, expr, v)
 	}
 	t.Errorf("type of expr not handled. got=%T", expr)
 	return false
@@ -397,6 +430,21 @@ func testInfixExpr(t *testing.T, expr ast.Expr, left interface{}, operator strin
 	}
 
 	if !testLiteralExpr(t, opExpr.Right, right) {
+		return false
+	}
+
+	return true
+}
+
+func testBooleanLiteral(t *testing.T, expr ast.Expr, value bool) bool {
+	boolean, ok := expr.(*ast.BooleanLiteral)
+	if !ok {
+		t.Errorf("expr not *ast.BooleanLiteral. got=%T", expr)
+		return false
+	}
+
+	if boolean.Value != value {
+		t.Errorf("boolean.Value not %t. got=%t", value, boolean.Value)
 		return false
 	}
 
