@@ -17,13 +17,30 @@ type Precedence int
 
 const (
 	LOWEST Precedence = iota + 1
+	ANDOR             // I think this is right
 	EQUALS
+	LESSGREATEREQUAL
 	LESSGREATER
 	SUM
 	PRODUCT
 	PREFIX
 	CALL
 )
+
+var precedences = map[token.TokenType]Precedence{
+	token.And:                ANDOR,
+	token.Or:                 ANDOR,
+	token.EqualTo:            EQUALS,
+	token.NotEqualTo:         EQUALS,
+	token.LessThan:           LESSGREATER,
+	token.GreaterThan:        LESSGREATER,
+	token.GreaterThanEqualTo: LESSGREATEREQUAL,
+	token.LessThanEqualTo:    LESSGREATEREQUAL,
+	token.Plus:               SUM,
+	token.Minus:              SUM,
+	token.Slash:              PRODUCT,
+	token.Star:               PRODUCT,
+}
 
 type Parser struct {
 	lexer *lexer.Lexer
@@ -50,6 +67,20 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.Integer, p.parseIntegerLiteral)
 	p.registerPrefix(token.Bang, p.parsePrefixExpr)
 	p.registerPrefix(token.Minus, p.parsePrefixExpr)
+
+	p.infixParseFns = make(map[token.TokenType]infixParseFn)
+	p.registerInfix(token.Plus, p.parseInfixExpr)
+	p.registerInfix(token.Minus, p.parseInfixExpr)
+	p.registerInfix(token.Slash, p.parseInfixExpr)
+	p.registerInfix(token.Star, p.parseInfixExpr)
+	p.registerInfix(token.EqualTo, p.parseInfixExpr)
+	p.registerInfix(token.NotEqualTo, p.parseInfixExpr)
+	p.registerInfix(token.GreaterThanEqualTo, p.parseInfixExpr)
+	p.registerInfix(token.LessThanEqualTo, p.parseInfixExpr)
+	p.registerInfix(token.GreaterThan, p.parseInfixExpr)
+	p.registerInfix(token.LessThan, p.parseInfixExpr)
+	p.registerInfix(token.And, p.parseInfixExpr)
+	p.registerInfix(token.Or, p.parseInfixExpr)
 
 	return p
 }
@@ -101,6 +132,20 @@ func (p *Parser) peekError(t token.TokenType) {
 	msg := fmt.Sprintf("expected next token to be %s, got %s instead on line %d",
 		t, p.peekToken.Type, p.peekToken.Line)
 	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) peekPrecedence() Precedence {
+	if p, ok := precedences[p.peekToken.Type]; ok {
+		return p
+	}
+	return LOWEST
+}
+
+func (p *Parser) currPrecedence() Precedence {
+	if p, ok := precedences[p.currToken.Type]; ok {
+		return p
+	}
+	return LOWEST
 }
 
 // Parsing methods
@@ -188,6 +233,20 @@ func (p *Parser) parseExpression(precedence Precedence) ast.Expr {
 
 	left := prefix()
 
+	// if the statement has not ended and the passed in precedence is lower than the precedence of the next token
+	for !p.peekTokenIs(token.Semicolon) && precedence < p.peekPrecedence() {
+		// look for an infix parse fn
+		infix := p.infixParseFns[p.peekToken.Type]
+		if infix == nil {
+			return left
+		}
+
+		p.nextToken()
+
+		// this bubbles up
+		left = infix(left)
+	}
+
 	return left
 }
 
@@ -221,6 +280,17 @@ func (p *Parser) parsePrefixExpr() ast.Expr {
 
 	p.nextToken() // advance past operator
 	expr.Right = p.parseExpression(PREFIX)
+
+	return expr
+}
+
+// this is an infixParseFn, so it will not call p.nextToken() at the end
+func (p *Parser) parseInfixExpr(left ast.Expr) ast.Expr {
+	expr := &ast.InfixExpr{Token: p.currToken, Operator: p.currToken.Literal, Left: left}
+
+	precedence := p.currPrecedence()
+	p.nextToken()
+	expr.Right = p.parseExpression(precedence)
 
 	return expr
 }

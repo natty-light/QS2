@@ -68,6 +68,13 @@ type (
 		Operator string
 		Right    Expr
 	}
+
+	InfixExpr struct {
+		Token    token.Token
+		Left     Expr
+		Operator string
+		Right    Expr
+	}
 )
 
 // Node interfaces
@@ -101,6 +108,10 @@ func (i *IntegerLiteral) TokenLiteral() string {
 
 func (p *PrefixExpr) TokenLiteral() string {
 	return p.Token.Literal
+}
+
+func (i *InfixExpr) TokenLiteral() string {
+	return i.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -170,6 +181,18 @@ func (p *PrefixExpr) String() string {
 	return out.String()
 }
 
+func (i *InfixExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(i.Left.String())
+	out.WriteString(" " + i.Operator + " ")
+	out.WriteString(i.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -179,3 +202,4 @@ func (e *ExpressionStmt) statementNode()     {}
 func (i *Identifier) expressionNode()     {}
 func (i *IntegerLiteral) expressionNode() {}
 func (p *PrefixExpr) expressionNode()     {}
+func (i *InfixExpr) expressionNode()      {}
