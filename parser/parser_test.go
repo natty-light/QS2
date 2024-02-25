@@ -45,42 +45,6 @@ func TestVarDeclarationStmts(t *testing.T) {
 	}
 }
 
-func testVarDeclarationStmt(t *testing.T, s ast.Stmt, name string) bool {
-	if s.TokenLiteral() != "mut" && s.TokenLiteral() != "const" {
-		t.Errorf("s.TokenLiteral not `mut` or `const`. got=%q", s.TokenLiteral())
-		return false
-	}
-
-	varDeclStmt, ok := s.(*ast.VarDeclarationStmt)
-	if !ok {
-		t.Errorf("s not *ast.VarDeclarationStmt. got=%T", s)
-		return false
-	}
-
-	if varDeclStmt.Name.Value != name {
-		t.Errorf("varDeclStmt.Name.Value not '%s'. got=%s", name, varDeclStmt.Name.Value)
-		return false
-	}
-
-	if varDeclStmt.Name.TokenLiteral() != name {
-		t.Errorf("varDeclStmt.Name.TokenLiteral() not '%s'. got=%s", name, varDeclStmt.Name.TokenLiteral())
-		return false
-	}
-
-	return true
-}
-
-func checkParserErrors(t *testing.T, p *Parser) {
-	errors := p.Errors()
-	if len(errors) == 0 {
-		return
-	}
-	for _, msg := range errors {
-		t.Errorf("parser error: %q", msg)
-	}
-	t.FailNow()
-}
-
 func TestReturnStatements(t *testing.T) {
 	source := `
 	return 5;
@@ -131,19 +95,10 @@ func TestIdentifierExpr(t *testing.T) {
 		t.Fatalf("program.Stmts[0] not ast.ExpressionStmt. got=%T", stmt)
 	}
 
-	ident, ok := stmt.Expr.(*ast.Identifier)
-
-	if !ok {
-		t.Errorf("expr not *ast.Identifier. got=%T", stmt.Expr)
+	if !testIdentifier(t, stmt.Expr, "myVar") {
+		return
 	}
 
-	if ident.Value != "myVar" {
-		t.Errorf("ident.Value not %s. got=%s", "myVar", ident.Value)
-	}
-
-	if ident.TokenLiteral() != "myVar" {
-		t.Errorf("ident.TokenLiteral not %s. got=%s", "myVar", ident.TokenLiteral())
-	}
 }
 
 func TestIntegerLiteralExpr(t *testing.T) {
@@ -164,7 +119,9 @@ func TestIntegerLiteralExpr(t *testing.T) {
 		t.Fatalf("program.Stmts[0] not ast.ExpressionStmt. got=%T", stmt)
 	}
 
-	testIntegerLiteral(t, stmt.Expr, 5)
+	if !testIntegerLiteral(t, stmt.Expr, 5) {
+		return
+	}
 }
 
 func TestParsingPrefixExpr(t *testing.T) {
@@ -200,30 +157,10 @@ func TestParsingPrefixExpr(t *testing.T) {
 		if expr.Operator != tt.operator {
 			t.Fatalf("expr.Operator is not '%s'. got=%s", tt.operator, expr.Operator)
 		}
-		if !testIntegerLiteral(t, expr.Right, tt.integerValue) {
+		if !testLiteralExpr(t, expr.Right, tt.integerValue) {
 			return
 		}
 	}
-}
-
-func testIntegerLiteral(t *testing.T, i ast.Expr, value int64) bool {
-	integ, ok := i.(*ast.IntegerLiteral)
-	if !ok {
-		t.Errorf("i not *ast.IntegerLiteral. got=%T", integ)
-		return false
-	}
-
-	if integ.Value != value {
-		t.Errorf("integ.Value not %d. got=%d", value, integ.Value)
-		return false
-	}
-
-	if integ.TokenLiteral() != fmt.Sprintf("%d", value) {
-		t.Errorf("integ.TokenLiteral not %d. got=%s", value, integ.TokenLiteral())
-		return false
-	}
-
-	return true
 }
 
 func TestParsingInfixExpressions(t *testing.T) {
@@ -259,18 +196,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 				program.Stmts[0])
 		}
 
-		exp, ok := stmt.Expr.(*ast.InfixExpr)
-		if !ok {
-			t.Fatalf("exp is not ast.InfixExpression. got=%T", stmt.Expr)
-		}
-		if !testIntegerLiteral(t, exp.Left, tt.leftValue) {
-			return
-		}
-		if exp.Operator != tt.operator {
-			t.Fatalf("exp.Operator is not '%s'. got=%s",
-				tt.operator, exp.Operator)
-		}
-		if !testIntegerLiteral(t, exp.Right, tt.rightValue) {
+		if !testInfixExpr(t, stmt.Expr, tt.leftValue, tt.operator, tt.rightValue) {
 			return
 		}
 	}
@@ -360,4 +286,119 @@ func TestOperatorPrecendeParsing(t *testing.T) {
 			t.Errorf("expected=%q, got=%q", tt.expected, actual)
 		}
 	}
+}
+
+// Utilities
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+	for _, msg := range errors {
+		t.Errorf("parser error: %q", msg)
+	}
+	t.FailNow()
+}
+
+func testVarDeclarationStmt(t *testing.T, s ast.Stmt, name string) bool {
+	if s.TokenLiteral() != "mut" && s.TokenLiteral() != "const" {
+		t.Errorf("s.TokenLiteral not `mut` or `const`. got=%q", s.TokenLiteral())
+		return false
+	}
+
+	varDeclStmt, ok := s.(*ast.VarDeclarationStmt)
+	if !ok {
+		t.Errorf("s not *ast.VarDeclarationStmt. got=%T", s)
+		return false
+	}
+
+	if varDeclStmt.Name.Value != name {
+		t.Errorf("varDeclStmt.Name.Value not '%s'. got=%s", name, varDeclStmt.Name.Value)
+		return false
+	}
+
+	if varDeclStmt.Name.TokenLiteral() != name {
+		t.Errorf("varDeclStmt.Name.TokenLiteral() not '%s'. got=%s", name, varDeclStmt.Name.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func testIntegerLiteral(t *testing.T, i ast.Expr, value int64) bool {
+	integ, ok := i.(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("i not *ast.IntegerLiteral. got=%T", integ)
+		return false
+	}
+
+	if integ.Value != value {
+		t.Errorf("integ.Value not %d. got=%d", value, integ.Value)
+		return false
+	}
+
+	if integ.TokenLiteral() != fmt.Sprintf("%d", value) {
+		t.Errorf("integ.TokenLiteral not %d. got=%s", value, integ.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func testIdentifier(t *testing.T, expr ast.Expr, value string) bool {
+	ident, ok := expr.(*ast.Identifier)
+
+	if !ok {
+		t.Errorf("expr not *ast.Identifier. got=%T", expr)
+		return false
+	}
+
+	if ident.Value != value {
+		t.Errorf("ident.Value not %s. got=%s", value, ident.Value)
+		return false
+	}
+
+	if ident.TokenLiteral() != value {
+		t.Errorf("ident.TokenLiteral not %s. got=%s", value, ident.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func testLiteralExpr(t *testing.T, expr ast.Expr, expected interface{}) bool {
+	switch v := expected.(type) {
+	case int:
+		return testIntegerLiteral(t, expr, int64(v))
+	case int64:
+		return testIntegerLiteral(t, expr, v)
+	case string:
+		return testIdentifier(t, expr, v)
+	}
+	t.Errorf("type of expr not handled. got=%T", expr)
+	return false
+}
+
+func testInfixExpr(t *testing.T, expr ast.Expr, left interface{}, operator string, right interface{}) bool {
+	opExpr, ok := expr.(*ast.InfixExpr)
+	if !ok {
+		t.Errorf("expr is not *ast.InfixExpr. got=%T(%s)", expr, expr)
+		return false
+	}
+
+	if !testLiteralExpr(t, opExpr.Left, left) {
+		return false
+	}
+
+	if opExpr.Operator != operator {
+		t.Errorf("expr.Operator is not '%s'. got=%s", operator, opExpr.Operator)
+		return false
+	}
+
+	if !testLiteralExpr(t, opExpr.Right, right) {
+		return false
+	}
+
+	return true
 }
