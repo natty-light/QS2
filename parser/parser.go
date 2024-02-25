@@ -7,6 +7,23 @@ import (
 	"fmt"
 )
 
+type (
+	prefixParseFn func() ast.Expr
+	infixParseFn  func(ast.Expr) ast.Expr
+)
+
+type Precedence int
+
+const (
+	LOWEST Precedence = iota + 1
+	EQUALS
+	LESSGREATER
+	SUM
+	PRODUCT
+	PREFIX
+	CALL
+)
+
 type Parser struct {
 	lexer *lexer.Lexer
 
@@ -14,6 +31,9 @@ type Parser struct {
 	peekToken token.Token
 
 	errors []string
+
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -23,11 +43,23 @@ func New(l *lexer.Lexer) *Parser {
 	p.nextToken() // set peek
 	p.nextToken() // set curr and peek
 
+	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+
+	p.registerPrefix(token.Identifier, p.parseIdentifier)
+
 	return p
 }
 
 func (p *Parser) Errors() []string {
 	return p.errors
+}
+
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
 }
 
 // advances current and peek by one
@@ -86,7 +118,7 @@ func (p *Parser) parseStatement() ast.Stmt {
 	case token.Return:
 		return p.parseReturnStmt()
 	default:
-		return nil
+		return p.parseExpressionStmt()
 	}
 }
 
@@ -125,4 +157,32 @@ func (p *Parser) parseReturnStmt() *ast.ReturnStmt {
 	}
 
 	return stmt
+}
+
+func (p *Parser) parseExpressionStmt() *ast.ExpressionStmt {
+	stmt := &ast.ExpressionStmt{Token: p.currToken}
+
+	stmt.Expr = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.Semicolon) {
+		p.nextToken()
+	}
+	return stmt
+}
+
+func (p *Parser) parseExpression(precedence Precedence) ast.Expr {
+	prefix := p.prefixParseFns[p.currToken.Type]
+
+	if prefix == nil {
+		return nil
+	}
+
+	left := prefix()
+
+	return left
+}
+
+// this is an prefixParseFn, so it will not call p.nextToken()
+func (p *Parser) parseIdentifier() ast.Expr {
+	return &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
 }
