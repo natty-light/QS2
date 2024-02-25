@@ -83,6 +83,8 @@ func (p *Parser) parseStatement() ast.Stmt {
 		fallthrough
 	case token.Const:
 		return p.parseVarDeclarationStmt()
+	case token.Return:
+		return p.parseReturnStmt()
 	default:
 		return nil
 	}
@@ -105,6 +107,18 @@ func (p *Parser) parseVarDeclarationStmt() *ast.VarDeclarationStmt {
 	if !p.expectPeek(token.Assign) {
 		return nil
 	}
+
+	for !p.currTokenIs(token.Semicolon) {
+		p.nextToken()
+	}
+
+	return stmt
+}
+
+func (p *Parser) parseReturnStmt() *ast.ReturnStmt {
+	stmt := &ast.ReturnStmt{Token: p.currToken}
+
+	p.nextToken()
 
 	for !p.currTokenIs(token.Semicolon) {
 		p.nextToken()

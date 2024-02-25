@@ -36,6 +36,11 @@ type (
 		Token token.Token // token.Ident
 		Value string
 	}
+
+	ReturnStmt struct {
+		Token       token.Token
+		ReturnValue Expr
+	}
 )
 
 // Node interfaces
@@ -55,8 +60,13 @@ func (i *Identifier) TokenLiteral() string {
 	return i.Token.Literal
 }
 
+func (r *ReturnStmt) TokenLiteral() string {
+	return r.Token.Literal
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
+func (r *ReturnStmt) statementNode()         {}
 
 // Expressions
 func (i *Identifier) expressionNode() {}
