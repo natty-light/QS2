@@ -164,19 +164,7 @@ func TestIntegerLiteralExpr(t *testing.T) {
 		t.Fatalf("program.Stmts[0] not ast.ExpressionStmt. got=%T", stmt)
 	}
 
-	literal, ok := stmt.Expr.(*ast.IntegerLiteral)
-
-	if !ok {
-		t.Errorf("expr not *ast.IntegerLiteral. got=%T", stmt.Expr)
-	}
-
-	if literal.Value != 5 {
-		t.Errorf("ident.Value not %d. got=%d", 5, literal.Value)
-	}
-
-	if literal.TokenLiteral() != "5" {
-		t.Errorf("ident.TokenLiteral not %s. got=%s", "5", literal.TokenLiteral())
-	}
+	testIntegerLiteral(t, stmt.Expr, 5)
 }
 
 func TestParsingPrefixExpr(t *testing.T) {
