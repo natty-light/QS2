@@ -133,7 +133,7 @@ func TestParsingPrefixExpr(t *testing.T) {
 		{"!5", "!", 5},
 		{"-15", "-", 15},
 		{"!true", "!", true},
-		{"!false", "!", true},
+		{"!false", "!", false},
 	}
 
 	for _, tt := range prefixTests {
@@ -304,6 +304,26 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{
 			"4 > 5 || 2 < 3 && 2 + 4 * 3 / 7",
 			"(((4 > 5) || (2 < 3)) && (2 + ((4 * 3) / 7)))",
+		},
+		{
+			"1 + (2 + 3) + 4",
+			"((1 + (2 + 3)) + 4)",
+		},
+		{
+			"(5 + 5) * 2",
+			"((5 + 5) * 2)",
+		},
+		{
+			"2 / (5 + 5)",
+			"(2 / (5 + 5))",
+		},
+		{
+			"-(5 + 5)",
+			"(-(5 + 5))",
+		},
+		{
+			"!(true == true)",
+			"(!(true == true))",
 		},
 	}
 
