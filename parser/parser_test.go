@@ -467,6 +467,76 @@ func TestIfElseExpr(t *testing.T) {
 	}
 }
 
+func TestFunctionLiteralParsing(t *testing.T) {
+	source := "func(x, y) { x + y; }"
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Stmts) != 1 {
+		t.Fatalf("program.Stmts does not contain %d statements. got=%d\n", 1, len(program.Stmts))
+	}
+
+	stmt, ok := program.Stmts[0].(*ast.ExpressionStmt)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not *ast.ExpressionStmt. got=%T", program.Stmts[0])
+	}
+
+	function, ok := stmt.Expr.(*ast.FunctionLiteral)
+	if !ok {
+		t.Fatalf("stmt.Expr is not *ast.FunctionLiteral. got=%T", stmt.Expr)
+	}
+
+	if len(function.Parameters) != 2 {
+		t.Fatalf("function literal parameters wrong. want 2, got=%d\n", len(function.Parameters))
+	}
+
+	testLiteralExpr(t, function.Parameters[0], "x")
+	testLiteralExpr(t, function.Parameters[1], "y")
+
+	if len(function.Body.Stmts) != 1 {
+		t.Fatalf("function.Body.Stmts does not contain %d statements. got=%d\n", 1, len(function.Body.Stmts))
+	}
+
+	bodyStmt, ok := function.Body.Stmts[0].(*ast.ExpressionStmt)
+	if !ok {
+		t.Fatalf("function body stmt is not *ast.ExpressionStmt. got=%T", function.Body.Stmts[0])
+	}
+
+	testInfixExpr(t, bodyStmt.Expr, "x", "+", "y")
+}
+
+func TestFunctionParameterParsing(t *testing.T) {
+	tests := []struct {
+		input          string
+		expectedParams []string
+	}{
+		{input: "func() {}", expectedParams: []string{}},
+		{input: "func(x) {}", expectedParams: []string{"x"}},
+		{input: "func(x, y, z) {}", expectedParams: []string{"x", "y", "z"}},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		stmt := program.Stmts[0].(*ast.ExpressionStmt)
+		function := stmt.Expr.(*ast.FunctionLiteral)
+
+		if len(function.Parameters) != len(tt.expectedParams) {
+			t.Errorf("parameter length wrong. want %d. got=%d", len(tt.expectedParams), len(function.Parameters))
+		}
+
+		for i, ident := range tt.expectedParams {
+			testLiteralExpr(t, function.Parameters[i], ident)
+		}
+	}
+}
+
 // Utilities
 
 func checkParserErrors(t *testing.T, p *Parser) {

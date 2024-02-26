@@ -71,6 +71,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.False, p.parseBooleanLiteral)
 	p.registerPrefix(token.LeftParen, p.parseGroupedExpr)
 	p.registerPrefix(token.If, p.parseIfExpr)
+	p.registerPrefix(token.Func, p.parseFunctionLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.Plus, p.parseInfixExpr)
@@ -321,6 +322,7 @@ func (p *Parser) parseBooleanLiteral() ast.Expr {
 	return &ast.BooleanLiteral{Token: p.currToken, Value: p.currTokenIs(token.True)}
 }
 
+// this is a prefixParseFn
 func (p *Parser) parseGroupedExpr() ast.Expr {
 	p.nextToken() // advance past (
 
@@ -362,4 +364,50 @@ func (p *Parser) parseIfExpr() ast.Expr {
 	}
 
 	return expr
+}
+
+func (p *Parser) parseFunctionLiteral() ast.Expr {
+	function := &ast.FunctionLiteral{Token: p.currToken}
+
+	if !p.expectPeek(token.LeftParen) {
+		return nil
+	}
+
+	function.Parameters = p.parseFunctionParameters()
+
+	if !p.expectPeek(token.LeftCurlyBracket) {
+		return nil
+	}
+
+	function.Body = p.parseBlockStmt()
+
+	return function
+}
+
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	idents := make([]*ast.Identifier, 0)
+
+	if p.peekTokenIs(token.RightParen) {
+		p.nextToken()
+		return idents
+	}
+
+	p.nextToken()
+
+	ident := &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
+	idents = append(idents, ident)
+
+	// This loop will start with currToken equal to an ident
+	for p.peekTokenIs(token.Comma) {
+		p.nextToken() // advance comma to currToken
+		p.nextToken() // advance past comma to next ident
+		ident := &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
+		idents = append(idents, ident)
+	}
+
+	if !p.expectPeek(token.RightParen) {
+		return nil
+	}
+
+	return idents
 }

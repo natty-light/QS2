@@ -3,6 +3,7 @@ package ast
 import (
 	"QuonkScript/token"
 	"bytes"
+	"strings"
 )
 
 // Interfaces
@@ -92,6 +93,12 @@ type (
 		Consequence *BlockStmt
 		Alternative *BlockStmt
 	}
+
+	FunctionLiteral struct {
+		Token      token.Token
+		Parameters []*Identifier
+		Body       *BlockStmt
+	}
 )
 
 // Node interfaces
@@ -141,6 +148,10 @@ func (i IfExpr) TokenLiteral() string {
 
 func (b *BlockStmt) TokenLiteral() string {
 	return b.Token.Literal
+}
+
+func (f *FunctionLiteral) TokenLiteral() string {
+	return f.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -252,6 +263,24 @@ func (b *BooleanLiteral) String() string {
 	return b.Token.Literal
 }
 
+func (f *FunctionLiteral) String() string {
+	var out bytes.Buffer
+
+	params := make([]string, 0)
+
+	for _, p := range f.Parameters {
+		params = append(params, p.String())
+	}
+
+	out.WriteString(f.TokenLiteral())
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString(f.Body.String())
+
+	return out.String()
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -259,9 +288,10 @@ func (e *ExpressionStmt) statementNode()     {}
 func (b *BlockStmt) statementNode()          {}
 
 // Expressions
-func (i *Identifier) expressionNode()     {}
-func (i *IntegerLiteral) expressionNode() {}
-func (p *PrefixExpr) expressionNode()     {}
-func (i *InfixExpr) expressionNode()      {}
-func (b *BooleanLiteral) expressionNode() {}
-func (i *IfExpr) expressionNode()         {}
+func (i *Identifier) expressionNode()      {}
+func (i *IntegerLiteral) expressionNode()  {}
+func (p *PrefixExpr) expressionNode()      {}
+func (i *InfixExpr) expressionNode()       {}
+func (b *BooleanLiteral) expressionNode()  {}
+func (i *IfExpr) expressionNode()          {}
+func (f *FunctionLiteral) expressionNode() {}
