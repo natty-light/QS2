@@ -99,6 +99,12 @@ type (
 		Parameters []*Identifier
 		Body       *BlockStmt
 	}
+
+	CallExpr struct {
+		Token     token.Token
+		Function  Expr
+		Arguments []Expr
+	}
 )
 
 // Node interfaces
@@ -152,6 +158,10 @@ func (b *BlockStmt) TokenLiteral() string {
 
 func (f *FunctionLiteral) TokenLiteral() string {
 	return f.Token.Literal
+}
+
+func (c *CallExpr) TokenLiteral() string {
+	return c.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -281,6 +291,21 @@ func (f *FunctionLiteral) String() string {
 	return out.String()
 }
 
+func (c *CallExpr) String() string {
+	var out bytes.Buffer
+	args := make([]string, 0)
+	for _, arg := range c.Arguments {
+		args = append(args, arg.String())
+	}
+
+	out.WriteString(c.Function.String())
+	out.WriteString("(")
+	out.WriteString(strings.Join(args, ", "))
+	out.WriteString(")")
+
+	return out.String()
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -295,3 +320,4 @@ func (i *InfixExpr) expressionNode()       {}
 func (b *BooleanLiteral) expressionNode()  {}
 func (i *IfExpr) expressionNode()          {}
 func (f *FunctionLiteral) expressionNode() {}
+func (c *CallExpr) expressionNode()        {}
