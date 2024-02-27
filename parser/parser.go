@@ -250,13 +250,13 @@ func (p *Parser) parseBlockStmt() *ast.BlockStmt {
 
 // Expressions
 func (p *Parser) parseExpression(precedence Precedence) ast.Expr {
-	prefix := p.prefixParseFns[p.currToken.Type]
+	prefix := p.prefixParseFns[p.currToken.Type] // look for prefix function for p.currToken
 	if prefix == nil {
 		p.noPrefixParseFnError(p.currToken.Type)
 		return nil
 	}
 
-	left := prefix()
+	left := prefix() // call prefix function
 
 	// if the statement has not ended and the passed in precedence is lower than the precedence of the next token
 	// if the precedence of the next token is higher, then we need to parse it as an infix expression because it is higher priority
@@ -270,7 +270,7 @@ func (p *Parser) parseExpression(precedence Precedence) ast.Expr {
 
 		p.nextToken()
 
-		// this bubbles up
+		// we bind left to the infix expression
 		left = infix(left)
 	}
 
