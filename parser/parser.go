@@ -202,7 +202,10 @@ func (p *Parser) parseVarDeclarationStmt() *ast.VarDeclarationStmt {
 		return nil
 	}
 
-	for !p.currTokenIs(token.Semicolon) {
+	p.nextToken() // advance past =
+	stmt.Value = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.Semicolon) {
 		p.nextToken()
 	}
 
@@ -214,7 +217,9 @@ func (p *Parser) parseReturnStmt() *ast.ReturnStmt {
 
 	p.nextToken()
 
-	for !p.currTokenIs(token.Semicolon) {
+	stmt.ReturnValue = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.Semicolon) {
 		p.nextToken()
 	}
 

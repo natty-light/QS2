@@ -8,38 +8,35 @@ import (
 )
 
 func TestVarDeclarationStmts(t *testing.T) {
-	source := `
-	mut x = 5;
-	const y = 10;
-	mut val = 838383;	
-	`
-
-	lexer := lexer.New(source)
-
-	parser := New(lexer)
-
-	program := parser.ParseProgram()
-	checkParserErrors(t, parser)
-
-	if program == nil {
-		t.Fatal("ParseProgram returned nil")
-	}
-
-	if len(program.Stmts) != 3 {
-		t.Fatalf("program.Stmts does not contain 3 statements. got=%d", len(program.Stmts))
-	}
 
 	tests := []struct {
-		expectedIdentifier string
+		source        string
+		expectedIdent string
+		expectedValue interface{}
+		isConst       bool
 	}{
-		{"x"},
-		{"y"},
-		{"val"},
+		{"mut x = 5;", "x", 5, false},
+		{"const y = true;", "y", true, true},
+		{"mut foo = y;", "foo", "y", false},
 	}
 
-	for i, tt := range tests {
-		stmt := program.Stmts[i]
-		if !testVarDeclarationStmt(t, stmt, tt.expectedIdentifier) {
+	for _, tt := range tests {
+		l := lexer.New(tt.source)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Stmts) != 1 {
+			t.Fatalf("program.Stmts doe snot contain 1 statement. got=%d", len(program.Stmts))
+		}
+
+		stmt := program.Stmts[0]
+		if !testVarDeclarationStmt(t, stmt, tt.expectedIdent, tt.isConst) {
+			return
+		}
+
+		val := stmt.(*ast.VarDeclarationStmt).Value
+		if !testLiteralExpr(t, val, tt.expectedValue) {
 			return
 		}
 	}
@@ -643,7 +640,7 @@ func checkParserErrors(t *testing.T, p *Parser) {
 	t.FailNow()
 }
 
-func testVarDeclarationStmt(t *testing.T, s ast.Stmt, name string) bool {
+func testVarDeclarationStmt(t *testing.T, s ast.Stmt, name string, isConst bool) bool {
 	if s.TokenLiteral() != "mut" && s.TokenLiteral() != "const" {
 		t.Errorf("s.TokenLiteral not `mut` or `const`. got=%q", s.TokenLiteral())
 		return false
@@ -663,6 +660,10 @@ func testVarDeclarationStmt(t *testing.T, s ast.Stmt, name string) bool {
 	if varDeclStmt.Name.TokenLiteral() != name {
 		t.Errorf("varDeclStmt.Name.TokenLiteral() not '%s'. got=%s", name, varDeclStmt.Name.TokenLiteral())
 		return false
+	}
+
+	if varDeclStmt.Constant != isConst {
+		t.Errorf("varDeclStmt.Name.Constant not %t. got=%t", isConst, varDeclStmt.Constant)
 	}
 
 	return true
