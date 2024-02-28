@@ -4,6 +4,7 @@ import (
 	"QuonkScript/lexer"
 	"QuonkScript/object"
 	"QuonkScript/parser"
+	"fmt"
 	"testing"
 )
 
@@ -123,10 +124,79 @@ func TestReturnStatements(t *testing.T) {
 		{"return 10; 9;", 10},
 		{"return 2 * 5; 9;", 10},
 		{"9; return 2 * 5; 9;", 10},
+		{"if (10 > 1) { if (10 > 1) { return 10 } return 1 }", 10},
 	}
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
 		testIntegerObject(t, evaluated, tt.expected)
+	}
+}
+
+func TestErrorHandling(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+		expectedLine    int
+	}{
+		// {
+		// 	"5 + true;",
+		// 	"type mismatch: Integer + Boolean",
+		// 	1,
+		// },
+		// {
+		// 	"5 + true; 5;",
+		// 	"type mismatch: Integer + Boolean",
+		// 	1,
+		// },
+		// {
+		// 	"-true",
+		// 	"unknown operation - for type Boolean",
+		// 	1,
+		// },
+		// {
+		// 	"true + false;",
+		// 	"unknown operator: Boolean + Boolean",
+		// 	1,
+		// },
+		// {
+		// 	"5; true + false; 5",
+		// 	"unknown operator: Boolean + Boolean",
+		// 	1,
+		// },
+		// {
+		// 	"if (10 > 1) { true + false; }",
+		// 	"unknown operator: Boolean + Boolean",
+		// 	1,
+		// },
+		{
+			` if (10 > 1) {
+		  		if (10 > 1) {
+					return true + false;
+				}
+				return 1;
+			}`,
+			"unknown operator: Boolean + Boolean",
+			3,
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		errObj, ok := evaluated.(*object.Error)
+		if !ok {
+			fmt.Println(tt)
+			t.Errorf("no error object returned. got=%T (%+v)", evaluated, evaluated)
+			continue
+		}
+
+		if errObj.Message != tt.expectedMessage {
+			t.Errorf("wrong error message. expected=%q, got=%q", tt.expectedMessage, errObj.Message)
+		}
+
+		if errObj.Line() != tt.expectedLine {
+			t.Errorf("wrong line. expected=%d, got=%d", tt.expectedLine, errObj.Line())
+		}
 	}
 }
 

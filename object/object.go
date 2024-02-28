@@ -9,26 +9,38 @@ const (
 	BooleanObj     ObjectType = "Boolean"
 	NullObj        ObjectType = "Null"
 	ReturnValueObj ObjectType = "ReturnValue"
+	ErrorObj       ObjectType = "ErrorObj"
 )
 
 type Object interface {
 	Type() ObjectType
 	Inspect() string
+	Line() int
 }
 
 type (
 	Integer struct {
-		Value int64
+		Value     int64
+		TokenLine int
 	}
 
 	Boolean struct {
-		Value bool
+		Value     bool
+		TokenLine int
 	}
 
-	Null struct{}
+	Null struct {
+		TokenLine int
+	}
 
 	ReturnValue struct {
-		Value Object
+		Value     Object
+		TokenLine int
+	}
+
+	Error struct {
+		Message    string
+		OriginLine int
 	}
 )
 
@@ -48,6 +60,30 @@ func (r *ReturnValue) Type() ObjectType {
 	return ReturnValueObj
 }
 
+func (e *Error) Type() ObjectType {
+	return ErrorObj
+}
+
+func (i *Integer) Line() int {
+	return i.TokenLine
+}
+
+func (b *Boolean) Line() int {
+	return b.TokenLine
+}
+
+func (n *Null) Line() int {
+	return n.TokenLine
+}
+
+func (r *ReturnValue) Line() int {
+	return r.TokenLine
+}
+
+func (e *Error) Line() int {
+	return e.OriginLine
+}
+
 func (i *Integer) Inspect() string {
 	return fmt.Sprintf("%d", i.Value)
 }
@@ -62,4 +98,8 @@ func (r *ReturnValue) Inspect() string {
 
 func (n *Null) Inspect() string {
 	return "null"
+}
+
+func (e *Error) Inspect() string {
+	return fmt.Sprintf("Honk! Error: %s on line %d", e.Message, e.Line())
 }
