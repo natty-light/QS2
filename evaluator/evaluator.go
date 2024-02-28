@@ -28,6 +28,10 @@ func Eval(node ast.Node) object.Object {
 		right := Eval(node.Right)
 		left := Eval(node.Left)
 		return evalInfixExpr(node.Operator, left, right)
+	case *ast.BlockStmt:
+		return evalStatements(node.Stmts)
+	case *ast.IfExpr:
+		return evalIfExpr(node)
 	}
 
 	return nil
@@ -134,9 +138,34 @@ func evalBooleanComparisonExpr(operator string, left, right object.Object) objec
 	}
 }
 
+func evalIfExpr(expr *ast.IfExpr) object.Object {
+	condition := Eval(expr.Condition)
+
+	if isTruthy(condition) {
+		return Eval(expr.Consequence)
+	} else if expr.Alternative != nil {
+		return Eval(expr.Alternative)
+	} else {
+		return NULL
+	}
+}
+
 func nativeBoolToBooleanObject(input bool) *object.Boolean {
 	if input {
 		return TRUE
 	}
 	return FALSE
+}
+
+func isTruthy(obj object.Object) bool {
+	switch obj {
+	case NULL:
+		return false
+	case FALSE:
+		return false
+	case TRUE:
+		return true
+	default:
+		return true
+	}
 }
