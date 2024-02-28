@@ -85,6 +85,10 @@ func evalInfixExpr(operator string, left, right object.Object) object.Object {
 		return nativeBoolToBooleanObject(left == right)
 	case operator == "!=":
 		return nativeBoolToBooleanObject(right != left)
+	case operator == "&&" && left.Type() == object.BooleanObj && right.Type() == object.BooleanObj:
+		fallthrough
+	case operator == "||" && left.Type() == object.BooleanObj && right.Type() == object.BooleanObj:
+		return evalBooleanComparisonExpr(operator, left, right)
 	default:
 		return NULL
 	}
@@ -111,6 +115,20 @@ func evalIntegerInfixExpr(operator string, left, right object.Object) object.Obj
 		return nativeBoolToBooleanObject(leftVal == rightVal)
 	case "!=":
 		return nativeBoolToBooleanObject(leftVal != rightVal)
+	default:
+		return NULL
+	}
+}
+
+func evalBooleanComparisonExpr(operator string, left, right object.Object) object.Object {
+	leftVal := left.(*object.Boolean).Value
+	rightVal := right.(*object.Boolean).Value
+
+	switch operator {
+	case "&&":
+		return nativeBoolToBooleanObject(leftVal && rightVal)
+	case "||":
+		return nativeBoolToBooleanObject(leftVal || rightVal)
 	default:
 		return NULL
 	}
