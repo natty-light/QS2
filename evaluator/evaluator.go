@@ -33,15 +33,19 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 			return val
 		}
 		s.Set(node.Name.Value, val, node.Constant)
-	case *ast.Identifier:
-		return evalIdentifier(node, s)
+
 	// Literals
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value, TokenLine: node.Token.Line}
 	case *ast.BooleanLiteral:
 		return nativeBoolToBooleanObject(node.Value, node.Token.Line)
-
+	case *ast.FunctionLiteral:
+		params := node.Parameters
+		body := node.Body
+		return &object.Function{Parameters: params, Scope: s, Body: body}
 	// Expressions
+	case *ast.Identifier:
+		return evalIdentifier(node, s)
 	case *ast.PrefixExpr:
 		right := Eval(node.Right, s)
 		if isError(right) {
@@ -62,6 +66,17 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 		return evalInfixExpr(node.Operator, left, right)
 	case *ast.IfExpr:
 		return evalIfExpr(node, s)
+	case *ast.CallExpr:
+		function := Eval(node.Function, s)
+		if isError(function) {
+			return function
+		}
+		args := evalExpressions(node.Arguments, s)
+		if len(args) == 1 && isError(args[0]) {
+			return args[0]
+		}
+
+		return applyFunction(function, args)
 	}
 
 	return nil
@@ -213,13 +228,41 @@ func evalIfExpr(expr *ast.IfExpr, s *object.Scope) object.Object {
 }
 
 func evalIdentifier(node *ast.Identifier, s *object.Scope) object.Object {
-	val, ok := s.Get(node.Value)
+	val, ok, _ := s.Get(node.Value)
 
 	if !ok {
 		return newError(node.Token.Line, "identifier not found: %s", node.Value)
 	}
 
 	return val.Value
+}
+
+func evalExpressions(exprs []ast.Expr, s *object.Scope) []object.Object {
+	var result []object.Object
+
+	for _, e := range exprs {
+		evaluated := Eval(e, s)
+		if isError(evaluated) {
+			return []object.Object{evaluated}
+		}
+		result = append(result, evaluated)
+	}
+
+	return result
+}
+
+// Function calls
+func applyFunction(fn object.Object, args []object.Object) object.Object {
+	function, ok := fn.(*object.Function)
+
+	if !ok {
+		return newError(fn.Line(), "cannot call non-function value %s", fn.Type())
+	}
+
+	exentedScope := extendFunctionScope(function, args)
+	evaluated := Eval(function.Body, exentedScope)
+	return unwrapReturnValue(evaluated)
+
 }
 
 // Utilty functions
@@ -254,4 +297,22 @@ func isError(obj object.Object) bool {
 		return obj.Type() == object.ErrorObj
 	}
 	return false
+}
+
+func extendFunctionScope(fn *object.Function, args []object.Object) *object.Scope {
+	scope := object.NewEnclosedScope(fn.Scope)
+
+	for paramIdx, param := range fn.Parameters {
+		scope.Set(param.Value, args[paramIdx], true) // arguments from a function should be constant
+	}
+
+	return scope
+}
+
+func unwrapReturnValue(obj object.Object) object.Object {
+	if returnVal, ok := obj.(*object.ReturnValue); ok {
+		return returnVal.Value
+	}
+
+	return obj
 }

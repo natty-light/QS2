@@ -1,6 +1,12 @@
 package object
 
-import "fmt"
+import (
+	"QuonkScript/ast"
+	"bytes"
+	"fmt"
+
+	"strings"
+)
 
 type ObjectType string
 
@@ -11,6 +17,7 @@ const (
 	ReturnValueObj ObjectType = "ReturnValue"
 	ErrorObj       ObjectType = "Error"
 	VariableObj    ObjectType = "Variable"
+	FunctionObj    ObjectType = "Function"
 )
 
 type Object interface {
@@ -49,6 +56,13 @@ type (
 		Constant  bool
 		TokenLine int
 	}
+
+	Function struct {
+		Parameters []*ast.Identifier
+		Body       *ast.BlockStmt
+		Scope      *Scope
+		TokenLine  int
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -75,6 +89,10 @@ func (v *Variable) Type() ObjectType {
 	return VariableObj
 }
 
+func (f *Function) Type() ObjectType {
+	return FunctionObj
+}
+
 func (i *Integer) Line() int {
 	return i.TokenLine
 }
@@ -93,6 +111,10 @@ func (r *ReturnValue) Line() int {
 
 func (e *Error) Line() int {
 	return e.OriginLine
+}
+
+func (f *Function) Line() int {
+	return f.TokenLine
 }
 
 func (i *Integer) Inspect() string {
@@ -117,4 +139,21 @@ func (e *Error) Inspect() string {
 
 func (v *Variable) Inspect() string {
 	return v.Value.Inspect()
+}
+
+func (f *Function) Inspect() string {
+	var out bytes.Buffer
+
+	params := []string{}
+	for _, p := range f.Parameters {
+		params = append(params, p.String())
+	}
+
+	out.WriteString("func(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") {\n")
+	out.WriteString(f.Body.String())
+	out.WriteString("\n}")
+
+	return out.String()
 }
