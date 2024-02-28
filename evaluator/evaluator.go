@@ -267,8 +267,8 @@ func applyFunction(fn object.Object, args []object.Object) object.Object {
 		return newError(fn.Line(), "cannot call non-function value %s", fn.Type())
 	}
 
-	exentedScope := extendFunctionScope(function, args)
-	evaluated := Eval(function.Body, exentedScope)
+	extendedScope := extendFunctionScope(function, args)
+	evaluated := Eval(function.Body, extendedScope)
 	return unwrapReturnValue(evaluated)
 
 }
