@@ -627,6 +627,43 @@ func TestCallExprArgsParsing(t *testing.T) {
 	}
 }
 
+func TestVarAssignmentExpr(t *testing.T) {
+	tests := []struct {
+		source        string
+		expectedIdent string
+		expectedValue interface{}
+	}{
+		{"x = 5;", "x", 5},
+		{"x = true;", "x", true},
+		{"x = y;", "x", "y"},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.source)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Stmts) != 1 {
+			t.Fatalf("program.Stmts doe snot contain 1 statement. got=%d", len(program.Stmts))
+		}
+
+		expr, ok := program.Stmts[0].(*ast.VarAssignmentStmt)
+
+		if !ok {
+			t.Fatalf("program.Stmts[0] is not *ast.ExpressionStmt. got=%T", program.Stmts[0])
+		}
+
+		if !testVarAssignmentStmt(t, expr, tt.expectedIdent) {
+			return
+		}
+
+		if !testLiteralExpr(t, expr.Value, tt.expectedValue) {
+			return
+		}
+	}
+}
+
 // Utilities
 
 func checkParserErrors(t *testing.T, p *Parser) {
@@ -664,6 +701,22 @@ func testVarDeclarationStmt(t *testing.T, s ast.Stmt, name string, isConst bool)
 
 	if varDeclStmt.Constant != isConst {
 		t.Errorf("varDeclStmt.Name.Constant not %t. got=%t", isConst, varDeclStmt.Constant)
+	}
+
+	return true
+}
+
+func testVarAssignmentStmt(t *testing.T, s ast.Stmt, ident string) bool {
+
+	varAssignExpr, ok := s.(*ast.VarAssignmentStmt)
+
+	if !ok {
+		t.Errorf("e not *ast.VarAssignmentExpr. got=%T", s)
+		return false
+	}
+
+	if !testIdentifier(t, varAssignExpr.Identifier, ident) {
+		return false
 	}
 
 	return true

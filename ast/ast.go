@@ -55,6 +55,12 @@ type (
 		Token token.Token
 		Stmts []Stmt
 	}
+
+	VarAssignmentStmt struct {
+		Token      token.Token
+		Identifier *Identifier
+		Value      Expr
+	}
 )
 
 // Expressions and literals
@@ -162,6 +168,10 @@ func (f *FunctionLiteral) TokenLiteral() string {
 
 func (c *CallExpr) TokenLiteral() string {
 	return c.Token.Literal
+}
+
+func (v *VarAssignmentStmt) TokenLiteral() string {
+	return v.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -306,11 +316,22 @@ func (c *CallExpr) String() string {
 	return out.String()
 }
 
+func (v *VarAssignmentStmt) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(v.Identifier.String())
+	out.WriteString(" = ")
+	out.WriteString(v.Value.String())
+
+	return out.String()
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
 func (e *ExpressionStmt) statementNode()     {}
 func (b *BlockStmt) statementNode()          {}
+func (v *VarAssignmentStmt) statementNode()  {}
 
 // Expressions
 func (i *Identifier) expressionNode()      {}

@@ -88,7 +88,6 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.And, p.parseInfixExpr)
 	p.registerInfix(token.Or, p.parseInfixExpr)
 	p.registerInfix(token.LeftParen, p.parseCallExpr)
-
 	return p
 }
 
@@ -179,6 +178,12 @@ func (p *Parser) parseStatement() ast.Stmt {
 		return p.parseVarDeclarationStmt()
 	case token.Return:
 		return p.parseReturnStmt()
+	case token.Identifier:
+		if p.peekTokenIs(token.Assign) {
+			return p.parseAssignmentStmt()
+		} else {
+			return p.parseExpressionStmt()
+		}
 	default:
 		return p.parseExpressionStmt()
 	}
@@ -251,6 +256,27 @@ func (p *Parser) parseBlockStmt() *ast.BlockStmt {
 		p.nextToken() // what is this advance for
 	}
 	return block
+}
+
+func (p *Parser) parseAssignmentStmt() ast.Stmt {
+
+	ident := &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
+
+	if !p.expectPeek(token.Assign) {
+		return nil
+	}
+	p.nextToken() // advance past =
+
+	stmt := &ast.VarAssignmentStmt{Identifier: ident, Token: p.currToken}
+	val := p.parseExpression(LOWEST) // Maybe this should be LOWEST, but since the only thing lower than ASSIGNMENT is LOWEST i think we are ok
+	stmt.Value = val
+
+	if !p.expectPeek(token.Semicolon) {
+		return nil
+	}
+	p.nextToken() // advance past semi
+
+	return stmt
 }
 
 // Expressions

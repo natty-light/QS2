@@ -32,8 +32,16 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 		if isError(val) {
 			return val
 		}
-		s.Set(node.Name.Value, val, node.Constant)
-
+		s.DeclareVar(node.Name.Value, val, node.Constant)
+	case *ast.VarAssignmentStmt:
+		val := Eval(node.Value, s)
+		if isError(val) {
+			return val
+		}
+		errorMaybe := s.AssignVar(node.Identifier.Value, val)
+		if isError(errorMaybe) {
+			return errorMaybe
+		}
 	// Literals
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value, TokenLine: node.Token.Line}
@@ -303,7 +311,7 @@ func extendFunctionScope(fn *object.Function, args []object.Object) *object.Scop
 	scope := object.NewEnclosedScope(fn.Scope)
 
 	for paramIdx, param := range fn.Parameters {
-		scope.Set(param.Value, args[paramIdx], true) // arguments from a function should be constant
+		scope.DeclareVar(param.Value, args[paramIdx], true) // arguments from a function should be constant
 	}
 
 	return scope
