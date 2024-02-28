@@ -8,3 +8,5 @@ func add(a, b) {
 add support for % and integer division
 
 instanceof operator?
+
+ensure that line number tracking for booleans work, since we set the line number in the creation function
