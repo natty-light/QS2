@@ -4,3 +4,5 @@ add support for defining functions like:
 func add(a, b) {
     a + b
 }
+
+add support for % and integer division
