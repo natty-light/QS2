@@ -10,7 +10,7 @@ const (
 	NullObj    ObjectType = "Null"
 )
 
-type RuntimeValue interface {
+type Object interface {
 	Type() ObjectType
 	Inspect() string
 }
