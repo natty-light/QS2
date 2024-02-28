@@ -32,6 +32,9 @@ func Eval(node ast.Node) object.Object {
 		return evalBlockStmt(node)
 	case *ast.IfExpr:
 		return evalIfExpr(node)
+	case *ast.ReturnStmt:
+		val := Eval(node.ReturnValue)
+		return &object.ReturnValue{Value: val}
 	}
 
 	return nil
