@@ -178,6 +178,7 @@ func TestErrorHandling(t *testing.T) {
 			"unknown operator: Boolean + Boolean",
 			3,
 		},
+		{"foobar", "identifier not found: foobar", 1},
 	}
 
 	for _, tt := range tests {
@@ -200,6 +201,22 @@ func TestErrorHandling(t *testing.T) {
 	}
 }
 
+func TestVarDeclarationStmts(t *testing.T) {
+	tests := []struct {
+		source   string
+		expected int64
+	}{
+		{"mut a = 5; a;", 5},
+		{"const a = 5 * 5; a;", 25},
+		{"mut a = 5; mut b = a; b;", 5},
+		{"const a = 5; mut b = 5; const c = a + b + 5; c;", 15},
+	}
+
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.source), tt.expected)
+	}
+}
+
 func testNullObject(t *testing.T, obj object.Object) bool {
 	if obj != NULL {
 		t.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
@@ -213,8 +230,8 @@ func testEval(source string) object.Object {
 	p := parser.New(l)
 
 	program := p.ParseProgram()
-
-	return Eval(program)
+	scope := object.NewScope()
+	return Eval(program, scope)
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {

@@ -9,7 +9,8 @@ const (
 	BooleanObj     ObjectType = "Boolean"
 	NullObj        ObjectType = "Null"
 	ReturnValueObj ObjectType = "ReturnValue"
-	ErrorObj       ObjectType = "ErrorObj"
+	ErrorObj       ObjectType = "Error"
+	VariableObj    ObjectType = "Variable"
 )
 
 type Object interface {
@@ -42,6 +43,12 @@ type (
 		Message    string
 		OriginLine int
 	}
+
+	Variable struct {
+		Value     Object
+		Constant  bool
+		TokenLine int
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -62,6 +69,10 @@ func (r *ReturnValue) Type() ObjectType {
 
 func (e *Error) Type() ObjectType {
 	return ErrorObj
+}
+
+func (v *Variable) Type() ObjectType {
+	return VariableObj
 }
 
 func (i *Integer) Line() int {
@@ -102,4 +113,8 @@ func (n *Null) Inspect() string {
 
 func (e *Error) Inspect() string {
 	return fmt.Sprintf("Honk! Error: %s on line %d", e.Message, e.Line())
+}
+
+func (v *Variable) Inspect() string {
+	return v.Value.Inspect()
 }

@@ -3,6 +3,7 @@ package repl
 import (
 	"QuonkScript/evaluator"
 	"QuonkScript/lexer"
+	"QuonkScript/object"
 	"QuonkScript/parser"
 	"bufio"
 	"fmt"
@@ -13,6 +14,7 @@ const PROMPT = ">>"
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	scope := object.NewScope()
 	fmt.Fprint(out, "QuonkScript REPL v0.1\n")
 	for {
 		fmt.Fprint(out, PROMPT)
@@ -33,7 +35,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program, scope)
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")

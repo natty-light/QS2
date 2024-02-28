@@ -12,22 +12,29 @@ var (
 	FALSE = &object.Boolean{Value: false}
 )
 
-func Eval(node ast.Node) object.Object {
+func Eval(node ast.Node, s *object.Scope) object.Object {
 	switch node := node.(type) {
 	// Statements
 	case *ast.Program:
-		return evalProgram(node)
+		return evalProgram(node, s)
 	case *ast.ExpressionStmt:
-		return Eval(node.Expr)
+		return Eval(node.Expr, s)
 	case *ast.ReturnStmt:
-		val := Eval(node.ReturnValue)
+		val := Eval(node.ReturnValue, s)
 		if isError(val) {
 			return val
 		}
 		return &object.ReturnValue{Value: val}
 	case *ast.BlockStmt:
-		return evalBlockStmt(node)
-
+		return evalBlockStmt(node, s)
+	case *ast.VarDeclarationStmt:
+		val := Eval(node.Value, s)
+		if isError(val) {
+			return val
+		}
+		s.Set(node.Name.Value, val, node.Constant)
+	case *ast.Identifier:
+		return evalIdentifier(node, s)
 	// Literals
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value, TokenLine: node.Token.Line}
@@ -36,36 +43,36 @@ func Eval(node ast.Node) object.Object {
 
 	// Expressions
 	case *ast.PrefixExpr:
-		right := Eval(node.Right)
+		right := Eval(node.Right, s)
 		if isError(right) {
 			return right
 		}
 		return evalPrefixExpr(node.Operator, right)
 	case *ast.InfixExpr:
-		left := Eval(node.Left)
+		left := Eval(node.Left, s)
 		if isError(left) {
 			return left
 		}
 
-		right := Eval(node.Right)
+		right := Eval(node.Right, s)
 		if isError(right) {
 			return right
 		}
 
 		return evalInfixExpr(node.Operator, left, right)
 	case *ast.IfExpr:
-		return evalIfExpr(node)
+		return evalIfExpr(node, s)
 	}
 
 	return nil
 }
 
 // Statements
-func evalProgram(program *ast.Program) object.Object {
+func evalProgram(program *ast.Program, s *object.Scope) object.Object {
 	var result object.Object
 
 	for _, stmt := range program.Stmts {
-		result = Eval(stmt)
+		result = Eval(stmt, s)
 
 		switch result := result.(type) {
 		case *object.ReturnValue:
@@ -78,11 +85,11 @@ func evalProgram(program *ast.Program) object.Object {
 	return result
 }
 
-func evalBlockStmt(block *ast.BlockStmt) object.Object {
+func evalBlockStmt(block *ast.BlockStmt, s *object.Scope) object.Object {
 	var result object.Object
 
 	for _, stmt := range block.Stmts {
-		result = Eval(stmt)
+		result = Eval(stmt, s)
 
 		// we do not unwrap the return value here so it can bubble up
 		if result != nil {
@@ -190,21 +197,32 @@ func evalBooleanComparisonExpr(operator string, left, right object.Object) objec
 	}
 }
 
-func evalIfExpr(expr *ast.IfExpr) object.Object {
-	condition := Eval(expr.Condition)
+func evalIfExpr(expr *ast.IfExpr, s *object.Scope) object.Object {
+	condition := Eval(expr.Condition, s)
 	if isError(condition) {
 		return condition
 	}
 
 	if isTruthy(condition) {
-		return Eval(expr.Consequence)
+		return Eval(expr.Consequence, s)
 	} else if expr.Alternative != nil {
-		return Eval(expr.Alternative)
+		return Eval(expr.Alternative, s)
 	} else {
 		return NULL
 	}
 }
 
+func evalIdentifier(node *ast.Identifier, s *object.Scope) object.Object {
+	val, ok := s.Get(node.Value)
+
+	if !ok {
+		return newError(node.Token.Line, "identifier not found: %s", node.Value)
+	}
+
+	return val.Value
+}
+
+// Utilty functions
 func nativeBoolToBooleanObject(input bool, line int) *object.Boolean {
 	if input {
 		TRUE.TokenLine = line
