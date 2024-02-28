@@ -138,36 +138,36 @@ func TestErrorHandling(t *testing.T) {
 		expectedMessage string
 		expectedLine    int
 	}{
-		// {
-		// 	"5 + true;",
-		// 	"type mismatch: Integer + Boolean",
-		// 	1,
-		// },
-		// {
-		// 	"5 + true; 5;",
-		// 	"type mismatch: Integer + Boolean",
-		// 	1,
-		// },
-		// {
-		// 	"-true",
-		// 	"unknown operation - for type Boolean",
-		// 	1,
-		// },
-		// {
-		// 	"true + false;",
-		// 	"unknown operator: Boolean + Boolean",
-		// 	1,
-		// },
-		// {
-		// 	"5; true + false; 5",
-		// 	"unknown operator: Boolean + Boolean",
-		// 	1,
-		// },
-		// {
-		// 	"if (10 > 1) { true + false; }",
-		// 	"unknown operator: Boolean + Boolean",
-		// 	1,
-		// },
+		{
+			"5 + true;",
+			"type mismatch: Integer + Boolean",
+			1,
+		},
+		{
+			"5 + true; 5;",
+			"type mismatch: Integer + Boolean",
+			1,
+		},
+		{
+			"-true",
+			"unknown operation - for type Boolean",
+			1,
+		},
+		{
+			"true + false;",
+			"unknown operator: Boolean + Boolean",
+			1,
+		},
+		{
+			"5; true + false; 5",
+			"unknown operator: Boolean + Boolean",
+			1,
+		},
+		{
+			"if (10 > 1) { true + false; }",
+			"unknown operator: Boolean + Boolean",
+			1,
+		},
 		{
 			` if (10 > 1) {
 		  		if (10 > 1) {
