@@ -6,3 +6,5 @@ func add(a, b) {
 }
 
 add support for % and integer division
+
+instanceof operator?
