@@ -24,6 +24,13 @@ func Run(filename string) {
 
 	program := p.ParseProgram()
 
+	if len(p.Errors()) > 0 {
+		fmt.Println("Honk! Parser errors:")
+		for _, err := range p.Errors() {
+			fmt.Println(err)
+		}
+	}
+
 	result := evaluator.Eval(program, scope)
-	fmt.Println(result)
+	fmt.Println(result.Inspect())
 }
