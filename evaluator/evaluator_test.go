@@ -265,6 +265,31 @@ func TestClosures(t *testing.T) {
 	testIntegerObject(t, testEval(input), 4)
 }
 
+func TestVariableAssignment(t *testing.T) {
+	tests := []struct {
+		source   string
+		expected int64
+	}{
+		{"mut y = 5; y = 6; y;", 6},
+		{
+			`
+			mut x = 5;
+			const fn = func () { x = 7; }
+			fn();
+			x;
+			`,
+			7,
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.source)
+		if !testIntegerObject(t, evaluated, tt.expected) {
+			return
+		}
+	}
+}
+
 func testNullObject(t *testing.T, obj object.Object) bool {
 	if obj != NULL {
 		t.Errorf("object is not NULL. got=%T (%+v)", obj, obj)

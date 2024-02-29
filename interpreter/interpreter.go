@@ -23,7 +23,7 @@ func Run(filename string) {
 	scope := object.NewScope()
 
 	program := p.ParseProgram()
-	// parser.PrintAST(prog)
+
 	result := evaluator.Eval(program, scope)
 	fmt.Println(result)
 }

@@ -67,8 +67,8 @@ func (s *Scope) AssignVar(name string, val Object) Object {
 
 func (s *Scope) Resolve(name string, line int) (*Scope, bool) {
 	// all we need to know is if the variable exists in this scope
-	_, ok, _ := s.Get(name)
-	if ok {
+	_, ok, fromOuter := s.Get(name)
+	if ok && !fromOuter {
 		return s, true
 	}
 	if s.outer == nil {
