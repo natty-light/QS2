@@ -29,8 +29,9 @@ func Run(filename string) {
 		for _, err := range p.Errors() {
 			fmt.Println(err)
 		}
+	} else {
+		result := evaluator.Eval(program, scope)
+		fmt.Println(result.Inspect())
 	}
 
-	result := evaluator.Eval(program, scope)
-	fmt.Println(result.Inspect())
 }
