@@ -26,3 +26,5 @@ const counter = makeCounter(1);
 counter();
 counter();
 counter();
+
+allow declaring but not initializing mutable variables
