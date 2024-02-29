@@ -267,7 +267,7 @@ func (p *Parser) parseAssignmentStmt() ast.Stmt {
 	}
 	p.nextToken() // advance past =
 
-	stmt := &ast.VarAssignmentStmt{Identifier: ident, Token: p.currToken}
+	stmt := &ast.VarAssignmentStmt{Identifier: ident, Token: ident.Token}
 	val := p.parseExpression(LOWEST) // Maybe this should be LOWEST, but since the only thing lower than ASSIGNMENT is LOWEST i think we are ok
 	stmt.Value = val
 

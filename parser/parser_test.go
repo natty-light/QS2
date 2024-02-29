@@ -645,7 +645,7 @@ func TestVarAssignmentExpr(t *testing.T) {
 		checkParserErrors(t, p)
 
 		if len(program.Stmts) != 1 {
-			t.Fatalf("program.Stmts doe snot contain 1 statement. got=%d", len(program.Stmts))
+			t.Fatalf("program.Stmts does not contain 1 statement. got=%d", len(program.Stmts))
 		}
 
 		expr, ok := program.Stmts[0].(*ast.VarAssignmentStmt)
@@ -712,6 +712,11 @@ func testVarAssignmentStmt(t *testing.T, s ast.Stmt, ident string) bool {
 
 	if !ok {
 		t.Errorf("e not *ast.VarAssignmentExpr. got=%T", s)
+		return false
+	}
+
+	if varAssignExpr.Identifier.TokenLiteral() != ident {
+		t.Errorf("varAssignExpr.Identifier.TokenLiteral() not '%s'. got=%s", ident, varAssignExpr.Identifier.TokenLiteral())
 		return false
 	}
 
