@@ -274,7 +274,6 @@ func (p *Parser) parseAssignmentStmt() ast.Stmt {
 	if !p.expectPeek(token.Semicolon) {
 		return nil
 	}
-	p.nextToken() // advance past semi
 
 	return stmt
 }
