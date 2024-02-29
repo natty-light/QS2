@@ -65,14 +65,26 @@ type (
 
 // Expressions and literals
 type (
-	Identifier struct {
-		Token token.Token // token.Ident
-		Value string
-	}
-
+	// Literals
 	IntegerLiteral struct {
 		Token token.Token
 		Value int64
+	}
+
+	BooleanLiteral struct {
+		Token token.Token
+		Value bool
+	}
+
+	FunctionLiteral struct {
+		Token      token.Token
+		Parameters []*Identifier
+		Body       *BlockStmt
+	}
+	// Expressions
+	Identifier struct {
+		Token token.Token // token.Ident
+		Value string
 	}
 
 	PrefixExpr struct {
@@ -88,22 +100,11 @@ type (
 		Right    Expr
 	}
 
-	BooleanLiteral struct {
-		Token token.Token
-		Value bool
-	}
-
 	IfExpr struct {
 		Token       token.Token
 		Condition   Expr
 		Consequence *BlockStmt
 		Alternative *BlockStmt
-	}
-
-	FunctionLiteral struct {
-		Token      token.Token
-		Parameters []*Identifier
-		Body       *BlockStmt
 	}
 
 	CallExpr struct {
