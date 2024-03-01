@@ -19,6 +19,7 @@ const (
 	comma = ','
 	colon = ':'
 	dot   = '.'
+	quote = '"'
 
 	plus   = '+'
 	star   = '*'
@@ -80,6 +81,18 @@ func (l *Lexer) readNumber() string {
 	return l.source[position:l.position]
 }
 
+func (l *Lexer) readString() string {
+	position := l.position + 1 // advance past ""
+
+	for {
+		l.readChar()
+		if l.char == quote || l.char == 0 {
+			break
+		}
+	}
+	return l.source[position:l.position]
+}
+
 func (l *Lexer) skipWhitespace() {
 	for l.char == ' ' || l.char == '\t' || l.char == '\n' || l.char == '\r' {
 		l.readChar()
@@ -121,7 +134,10 @@ func (l *Lexer) NextToken() token.Token {
 		tok = token.MakeToken(token.Colon, l.char, l.line)
 	case dot:
 		tok = token.MakeToken(token.Dot, l.char, l.line)
-
+	case quote:
+		tok.Type = token.String
+		tok.Line = l.line
+		tok.Literal = l.readString()
 	// Symbols
 	case eqSym:
 		if l.peekChar() == eqSym {

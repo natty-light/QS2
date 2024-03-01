@@ -25,6 +25,8 @@ func TestNextToken(t *testing.T) {
 	7 <= 6;
 	true && false;
 	true || false;
+	"foobar";
+	"foo bar";
 	`
 
 	tests := []struct {
@@ -139,6 +141,12 @@ func TestNextToken(t *testing.T) {
 		{token.Or, "||", 19},
 		{token.False, "false", 19},
 		{token.Semicolon, ";", 19},
+
+		{token.String, "foobar", 20},
+		{token.Semicolon, ";", 20},
+
+		{token.String, "foo bar", 21},
+		{token.Semicolon, ";", 21},
 
 		{token.EOF, "", 0},
 	}
