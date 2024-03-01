@@ -81,6 +81,12 @@ type (
 		Parameters []*Identifier
 		Body       *BlockStmt
 	}
+
+	StringLiteral struct {
+		Token token.Token
+		Value string
+	}
+
 	// Expressions
 	Identifier struct {
 		Token token.Token // token.Ident
@@ -173,6 +179,10 @@ func (c *CallExpr) TokenLiteral() string {
 
 func (v *VarAssignmentStmt) TokenLiteral() string {
 	return v.Token.Literal
+}
+
+func (s *StringLiteral) TokenLiteral() string {
+	return s.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -327,6 +337,10 @@ func (v *VarAssignmentStmt) String() string {
 	return out.String()
 }
 
+func (s *StringLiteral) String() string {
+	return s.Token.Literal
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -343,3 +357,4 @@ func (b *BooleanLiteral) expressionNode()  {}
 func (i *IfExpr) expressionNode()          {}
 func (f *FunctionLiteral) expressionNode() {}
 func (c *CallExpr) expressionNode()        {}
+func (s *StringLiteral) expressionNode()   {}

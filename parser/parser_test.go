@@ -664,6 +664,25 @@ func TestVarAssignmentExpr(t *testing.T) {
 	}
 }
 
+func TestStringLiteralExpr(t *testing.T) {
+	source := `"Hello, World!`
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Stmts[0].(*ast.ExpressionStmt)
+	literal, ok := stmt.Expr.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("expr not *ast.StringLiteral. got=%T", stmt.Expr)
+	}
+
+	if literal.Value != "Hello, World!" {
+		t.Errorf("literal.Value not %q. got=%q", "Hello, World!", literal.Value)
+	}
+}
+
 // Utilities
 
 func checkParserErrors(t *testing.T, p *Parser) {
