@@ -365,6 +365,83 @@ func TestArrayLiterals(t *testing.T) {
 	testIntegerObject(t, result.Elements[2], 6)
 }
 
+func TestArrayIndexExpressions(t *testing.T) {
+	tests := []struct {
+		source               string
+		expected             interface{}
+		expectedErrorMessage interface{}
+	}{
+		{
+			"[1, 2, 3][0]",
+			1,
+			nil,
+		},
+		{
+			"[1, 2, 3][1]",
+			2,
+			nil,
+		},
+		{
+			"[1, 2, 3][2]",
+			3,
+			nil,
+		},
+		{
+			"const myArray = [1, 2, 3]; myArray[2];",
+			3,
+			nil,
+		},
+		{
+			"const myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+			6,
+			nil,
+		},
+		{
+			"const myArray = [1, 2, 3]; const i = myArray[0]; myArray[i]",
+			2,
+			nil,
+		},
+		{
+			"[1, 2, 3][3]",
+			nil,
+			"array index out of bounds",
+		},
+		{
+			"[1, 2, 3][-1]",
+			3,
+			nil,
+		},
+		{
+			"[1, 2, 3][-2]",
+			2,
+			nil,
+		},
+		{
+			"[1, 2, 3][-3]",
+			1,
+			nil,
+		},
+		{
+			"[1, 2, 3][-4]",
+			nil,
+			"array index out of bounds",
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.source)
+		integer, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			err := evaluated.(*object.Error)
+			if err.Message != tt.expectedErrorMessage {
+				t.Fatalf("error has wrong message. expected=%q. got=%q", tt.expectedErrorMessage, err.Message)
+			}
+		}
+	}
+}
+
 func testNullObject(t *testing.T, obj object.Object) bool {
 	if obj != NULL {
 		t.Errorf("object is not NULL. got=%T (%+v)", obj, obj)

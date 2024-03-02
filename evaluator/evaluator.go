@@ -93,6 +93,17 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 		}
 
 		return applyFunction(function, args, node.Token.Line)
+	case *ast.IndexExpr:
+		left := Eval(node.Left, s)
+		if isError(left) {
+			return left
+		}
+		index := Eval(node.Index, s)
+		if isError(index) {
+			return index
+		}
+
+		return evalIndexExpr(left, index)
 	}
 
 	return nil
@@ -282,6 +293,34 @@ func evalExpressions(exprs []ast.Expr, s *object.Scope) []object.Object {
 	}
 
 	return result
+}
+
+func evalIndexExpr(left, index object.Object) object.Object {
+	switch {
+	case left.Type() == object.ArrayObj && index.Type() == object.IntegerObj:
+		return evalArrayIndexExpr(left, index)
+	default:
+		return newError(left.Line(), "index operator not supported: %s", left.Type())
+	}
+}
+
+func evalArrayIndexExpr(array, index object.Object) object.Object {
+	arrayObj := array.(*object.Array)
+	idx := index.(*object.Integer).Value
+	arrLen := int64(len(arrayObj.Elements))
+	maxIdx := arrLen - 1
+
+	if (idx >= 0 && idx > maxIdx) || (idx < 0 && idx < -arrLen) {
+		return newError(arrayObj.TokenLine, "array index out of bounds")
+	}
+
+	if idx >= 0 {
+		return arrayObj.Elements[idx]
+	} else {
+		// since idx < 0 here, we check against the max len. Example: idx = -2, len = 3 will return elems[1],
+		// the second to last elem
+		return arrayObj.Elements[arrLen+idx]
+	}
 }
 
 // Function calls
