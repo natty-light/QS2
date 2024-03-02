@@ -252,7 +252,7 @@ func evalIfExpr(expr *ast.IfExpr, s *object.Scope) object.Object {
 }
 
 func evalIdentifier(node *ast.Identifier, s *object.Scope) object.Object {
-	if val, ok, _ := s.Get(node.Value); ok {
+	if val, _, ok := s.Get(node.Value); ok {
 		return val.Value
 	}
 
