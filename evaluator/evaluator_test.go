@@ -326,8 +326,26 @@ func TestBuiltInFunction(t *testing.T) {
 		{`len("")`, 0},
 		{`len("four")`, 4},
 		{`len("hello world")`, 11},
-		{`len(1)`, "argument to `len` not supported, got Integer"},
-		{`len("one", "two")`, "wrong number of arguments for `len`. got=2, want=1"},
+		{`len(1)`, "argument to `len` of wrong type. got=Integer"},
+		{`len("one", "two")`, "`len` expects one argument"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.source)
+
+		switch expected := tt.expected.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expected))
+		case string:
+			errObj, ok := evaluated.(*object.Error)
+			if !ok {
+				t.Errorf("object is not Error. got=%T (%+v)", evaluated, evaluated)
+				continue
+			}
+			if errObj.Message != expected {
+				t.Errorf("wrong error message. expected=%q, got=%q", expected, errObj.Message)
+			}
+		}
 	}
 }
 

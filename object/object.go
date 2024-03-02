@@ -9,7 +9,7 @@ import (
 )
 
 type ObjectType string
-type BuiltInFunction func(args ...Object) Object
+type BuiltInFunction func(line int, args ...Object) Object
 
 const (
 	IntegerObj     ObjectType = "Integer"
@@ -73,7 +73,8 @@ type (
 	}
 
 	BuiltIn struct {
-		Fn BuiltInFunction
+		Fn        BuiltInFunction
+		TokenLine int
 	}
 )
 
@@ -139,6 +140,10 @@ func (f *Function) Line() int {
 
 func (s *String) Line() int {
 	return s.TokenLine
+}
+
+func (b *BuiltIn) Line() int {
+	return b.TokenLine
 }
 
 func (i *Integer) Inspect() string {

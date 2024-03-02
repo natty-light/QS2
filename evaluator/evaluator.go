@@ -86,7 +86,7 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 			return args[0]
 		}
 
-		return applyFunction(function, args)
+		return applyFunction(function, args, node.Token.Line)
 	}
 
 	return nil
@@ -252,13 +252,16 @@ func evalIfExpr(expr *ast.IfExpr, s *object.Scope) object.Object {
 }
 
 func evalIdentifier(node *ast.Identifier, s *object.Scope) object.Object {
-	val, ok, _ := s.Get(node.Value)
-
-	if !ok {
-		return newError(node.Token.Line, "identifier not found: %s", node.Value)
+	if val, ok, _ := s.Get(node.Value); ok {
+		return val.Value
 	}
 
-	return val.Value
+	if builtin, ok := builtIns[node.Value]; ok {
+		return builtin
+	}
+
+	return newError(node.Token.Line, "identifier not found: %s", node.Value)
+
 }
 
 func evalExpressions(exprs []ast.Expr, s *object.Scope) []object.Object {
@@ -276,17 +279,17 @@ func evalExpressions(exprs []ast.Expr, s *object.Scope) []object.Object {
 }
 
 // Function calls
-func applyFunction(fn object.Object, args []object.Object) object.Object {
-	function, ok := fn.(*object.Function)
-
-	if !ok {
-		return newError(fn.Line(), "cannot call non-function value %s", fn.Type())
+func applyFunction(fn object.Object, args []object.Object, line int) object.Object {
+	switch fn := fn.(type) {
+	case *object.Function:
+		extendedScope := extendFunctionScope(fn, args)
+		evaluated := Eval(fn.Body, extendedScope)
+		return unwrapReturnValue(evaluated)
+	case *object.BuiltIn:
+		return fn.Fn(line, args...)
+	default:
+		return newError(line, "not a function: %s", fn.Type())
 	}
-
-	extendedScope := extendFunctionScope(function, args)
-	evaluated := Eval(function.Body, extendedScope)
-	return unwrapReturnValue(evaluated)
-
 }
 
 // Utilty functions
