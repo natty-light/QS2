@@ -19,6 +19,7 @@ const (
 	Elseif TokenType = "Elseif"
 	Func   TokenType = "Func"
 	Return TokenType = "Return"
+	For    TokenType = "For"
 
 	// Grouping
 	LeftParen          TokenType = "LeftParen"

@@ -28,6 +28,7 @@ func TestNextToken(t *testing.T) {
 	"foobar";
 	"foo bar";
 	[1, 2];
+	for (x < 10) { x }
 	`
 
 	tests := []struct {
@@ -155,6 +156,16 @@ func TestNextToken(t *testing.T) {
 		{token.Integer, "2", 22},
 		{token.RightSquareBracket, "]", 22},
 		{token.Semicolon, ";", 22},
+
+		{token.For, "for", 23},
+		{token.LeftParen, "(", 23},
+		{token.Identifier, "x", 23},
+		{token.LessThan, "<", 23},
+		{token.Integer, "10", 23},
+		{token.RightParen, ")", 23},
+		{token.LeftCurlyBracket, "{", 23},
+		{token.Identifier, "x", 23},
+		{token.RightCurlyBracket, "}", 23},
 
 		{token.EOF, "", 0},
 	}
