@@ -21,6 +21,7 @@ const (
 	FunctionObj    ObjectType = "Function"
 	StringObj      ObjectType = "String"
 	BuiltInObj     ObjectType = "BuiltIn"
+	ArrayObj       ObjectType = "Array"
 )
 
 type Object interface {
@@ -76,6 +77,11 @@ type (
 		Fn        BuiltInFunction
 		TokenLine int
 	}
+
+	Array struct {
+		Elements  []Object
+		TokenLine int
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -114,6 +120,10 @@ func (s *String) Type() ObjectType {
 	return StringObj
 }
 
+func (a *Array) Type() ObjectType {
+	return ArrayObj
+}
+
 func (i *Integer) Line() int {
 	return i.TokenLine
 }
@@ -144,6 +154,10 @@ func (s *String) Line() int {
 
 func (b *BuiltIn) Line() int {
 	return b.TokenLine
+}
+
+func (a *Array) Line() int {
+	return a.TokenLine
 }
 
 func (i *Integer) Inspect() string {
@@ -193,4 +207,19 @@ func (s *String) Inspect() string {
 
 func (b *BuiltIn) Inspect() string {
 	return "builtin function"
+}
+
+func (a *Array) Inspect() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for _, e := range a.Elements {
+		elements = append(elements, e.Inspect())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+
+	return out.String()
 }
