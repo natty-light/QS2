@@ -24,10 +24,10 @@ func (s *Scope) Get(name string) (Variable, bool, bool) {
 	obj, ok := s.store[name]
 	fromOuter := false
 	if !ok && s.outer != nil {
-		obj, _, ok = s.outer.Get(name)
+		obj, ok, _ = s.outer.Get(name)
 		fromOuter = true
 	}
-	return obj, fromOuter, ok
+	return obj, ok, fromOuter
 }
 
 func (s *Scope) Set(name string, val Object, isConstant bool, line int) Object {
@@ -37,7 +37,7 @@ func (s *Scope) Set(name string, val Object, isConstant bool, line int) Object {
 
 func (s *Scope) DeclareVar(name string, val Object, isConst bool) Object {
 
-	_, fromOuter, ok := s.Get(name)
+	_, ok, fromOuter := s.Get(name)
 
 	// If the variable already exists in this scope we cannot redeclare it
 	if ok && !fromOuter {
@@ -67,7 +67,7 @@ func (s *Scope) AssignVar(name string, val Object) Object {
 
 func (s *Scope) Resolve(name string, line int) (*Scope, bool) {
 	// all we need to know is if the variable exists in this scope
-	_, fromOuter, ok := s.Get(name)
+	_, ok, fromOuter := s.Get(name)
 	if ok && !fromOuter {
 		return s, true
 	}
