@@ -51,6 +51,8 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 		params := node.Parameters
 		body := node.Body
 		return &object.Function{Parameters: params, Scope: s, Body: body}
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value, TokenLine: node.Token.Line}
 	// Expressions
 	case *ast.Identifier:
 		return evalIdentifier(node, s)

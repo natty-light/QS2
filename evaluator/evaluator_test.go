@@ -290,6 +290,20 @@ func TestVariableAssignment(t *testing.T) {
 	}
 }
 
+func TestStringLiteral(t *testing.T) {
+	source := `"Hello, World!"`
+	evaluated := testEval(source)
+
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if str.Value != "Hello, World!" {
+		t.Errorf("String has wrong value. got=%q", str.Value)
+	}
+}
+
 func testNullObject(t *testing.T, obj object.Object) bool {
 	if obj != NULL {
 		t.Errorf("object is not NULL. got=%T (%+v)", obj, obj)

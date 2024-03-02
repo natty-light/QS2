@@ -18,6 +18,7 @@ const (
 	ErrorObj       ObjectType = "Error"
 	VariableObj    ObjectType = "Variable"
 	FunctionObj    ObjectType = "Function"
+	StringObj      ObjectType = "String"
 )
 
 type Object interface {
@@ -63,6 +64,11 @@ type (
 		Scope      *Scope
 		TokenLine  int
 	}
+
+	String struct {
+		Value     string
+		TokenLine int
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -93,6 +99,10 @@ func (f *Function) Type() ObjectType {
 	return FunctionObj
 }
 
+func (s *String) Type() ObjectType {
+	return StringObj
+}
+
 func (i *Integer) Line() int {
 	return i.TokenLine
 }
@@ -115,6 +125,10 @@ func (e *Error) Line() int {
 
 func (f *Function) Line() int {
 	return f.TokenLine
+}
+
+func (s *String) Line() int {
+	return s.TokenLine
 }
 
 func (i *Integer) Inspect() string {
@@ -156,4 +170,8 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 
 	return out.String()
+}
+
+func (s *String) Inspect() string {
+	return s.Value
 }
