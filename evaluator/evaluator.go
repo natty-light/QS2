@@ -55,7 +55,7 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 		return &object.String{Value: node.Value, TokenLine: node.Token.Line}
 	case *ast.ArrayLiteral:
 		elements := evalExpressions(node.Elements, s)
-		if len(elements) == 0 && isError(elements[0]) {
+		if len(elements) == 1 && isError(elements[0]) {
 			return elements[0]
 		}
 		return &object.Array{Elements: elements, TokenLine: node.Token.Line}

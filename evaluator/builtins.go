@@ -1,6 +1,8 @@
 package evaluator
 
-import "QuonkScript/object"
+import (
+	"QuonkScript/object"
+)
 
 var builtIns = map[string]*object.BuiltIn{
 	"len": &object.BuiltIn{
@@ -51,30 +53,78 @@ var builtIns = map[string]*object.BuiltIn{
 			return NULL
 		},
 	},
-	// This has a dependecy cycle caused by calling Eval inside of applyFunction
-	//"map": &object.BuiltIn{
-	//	Fn: func(line int, args ...object.Object) object.Object {
-	//		if len(args) != 2 {
-	//			return newError(line, "`map` expects 2 arguments. got=%d", len(args))
-	//		}
-	//
-	//		if args[0].Type() != object.ArrayObj {
-	//			return newError(line, "`map` expects array as first argument")
-	//		}
-	//		arr := args[0].(*object.Array)
-	//
-	//		if args[1].Type() != object.FunctionObj {
-	//			return newError(line, "`map` expects callback as first argument")
-	//		}
-	//		// Callback will have its own scope
-	//		callback := args[1].(*object.Function)
-	//		ret := &object.Array{TokenLine: line, Elements: make([]object.Object, 0)}
-	//
-	//		for _, e := range arr.Elements {
-	//			res := applyFunction(callback, []object.Object{e}, line)
-	//			ret.Elements = append(ret.Elements, res)
-	//		}
-	//		return ret
-	//	},
-	//},
+	"rest": &object.BuiltIn{
+		Fn: func(line int, args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError(line, "`rest` expects one argument")
+			}
+			if args[0].Type() != object.ArrayObj {
+				return newError(line, "argument of `rest` must be array type")
+			}
+			arr := args[0].(*object.Array)
+			length := len(arr.Elements)
+			if length > 0 {
+				newElems := make([]object.Object, length-1, length-1)
+				copy(newElems, arr.Elements[1:length])
+				return &object.Array{Elements: newElems}
+			}
+			return NULL
+		},
+	},
+	"append": &object.BuiltIn{
+		Fn: func(line int, args ...object.Object) object.Object {
+			if len(args) != 2 {
+				return newError(line, "`append` expects two arguments")
+			}
+
+			if args[0].Type() != object.ArrayObj {
+				return newError(line, "first argument to `append` must be array")
+			}
+
+			arr := args[0].(*object.Array)
+			length := len(arr.Elements)
+
+			newElems := make([]object.Object, length+1)
+			copy(newElems, arr.Elements)
+			newElems[length] = args[1]
+
+			return &object.Array{Elements: newElems}
+		},
+	},
+	"slice": &object.BuiltIn{
+		Fn: func(line int, args ...object.Object) object.Object {
+			if len(args) != 3 {
+				return newError(line, "`slice` expects three arguments")
+			}
+
+			if args[0].Type() != object.ArrayObj {
+				return newError(line, "first argument to `slice` must be array")
+			}
+			if args[1].Type() != object.IntegerObj {
+				return newError(line, "`start` argument to `slice` must be int")
+			}
+
+			if args[2].Type() != object.IntegerObj {
+				return newError(line, "`end` argument to `slice` must be int")
+			}
+
+			arr := args[0].(*object.Array)
+			start := args[1].(*object.Integer).Value
+			end := args[2].(*object.Integer).Value
+			arrLength := int64(len(arr.Elements) - 1)
+
+			if start < 0 {
+				start = 0
+			}
+			if end > arrLength {
+				end = arrLength - 1
+			}
+			slicedLength := int64(end - start)
+
+			newElems := make([]object.Object, slicedLength)
+			copy(newElems, arr.Elements[start:end])
+
+			return &object.Array{Elements: newElems}
+		},
+	},
 }
