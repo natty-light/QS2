@@ -9,6 +9,7 @@ import (
 )
 
 type ObjectType string
+type BuiltInFunction func(args ...Object) Object
 
 const (
 	IntegerObj     ObjectType = "Integer"
@@ -19,6 +20,7 @@ const (
 	VariableObj    ObjectType = "Variable"
 	FunctionObj    ObjectType = "Function"
 	StringObj      ObjectType = "String"
+	BuiltInObj     ObjectType = "BuiltIn"
 )
 
 type Object interface {
@@ -69,6 +71,10 @@ type (
 		Value     string
 		TokenLine int
 	}
+
+	BuiltIn struct {
+		Fn BuiltInFunction
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -97,6 +103,10 @@ func (v *Variable) Type() ObjectType {
 
 func (f *Function) Type() ObjectType {
 	return FunctionObj
+}
+
+func (b *BuiltIn) Type() ObjectType {
+	return BuiltInObj
 }
 
 func (s *String) Type() ObjectType {
@@ -174,4 +184,8 @@ func (f *Function) Inspect() string {
 
 func (s *String) Inspect() string {
 	return s.Value
+}
+
+func (b *BuiltIn) Inspect() string {
+	return "builtin function"
 }

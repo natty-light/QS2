@@ -318,6 +318,19 @@ func TestStringConcatenation(t *testing.T) {
 	}
 }
 
+func TestBuiltInFunction(t *testing.T) {
+	tests := []struct {
+		source   string
+		expected interface{}
+	}{
+		{`len("")`, 0},
+		{`len("four")`, 4},
+		{`len("hello world")`, 11},
+		{`len(1)`, "argument to `len` not supported, got Integer"},
+		{`len("one", "two")`, "wrong number of arguments for `len`. got=2, want=1"},
+	}
+}
+
 func testNullObject(t *testing.T, obj object.Object) bool {
 	if obj != NULL {
 		t.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
