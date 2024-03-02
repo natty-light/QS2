@@ -74,6 +74,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.If, p.parseIfExpr)
 	p.registerPrefix(token.Func, p.parseFunctionLiteral)
 	p.registerPrefix(token.String, p.parseStringLiteral)
+	p.registerPrefix(token.LeftSquareBracket, p.parseArrayLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.Plus, p.parseInfixExpr)
@@ -449,7 +450,7 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 
 func (p *Parser) parseCallExpr(function ast.Expr) ast.Expr {
 	expr := &ast.CallExpr{Token: p.currToken, Function: function}
-	expr.Arguments = p.parseCallArguments()
+	expr.Arguments = p.parseExpressionList(token.RightParen)
 	return expr
 }
 
@@ -479,4 +480,36 @@ func (p *Parser) parseCallArguments() []ast.Expr {
 
 func (p *Parser) parseStringLiteral() ast.Expr {
 	return &ast.StringLiteral{Token: p.currToken, Value: p.currToken.Literal}
+}
+
+func (p *Parser) parseArrayLiteral() ast.Expr {
+	array := &ast.ArrayLiteral{Token: p.currToken}
+
+	array.Elements = p.parseExpressionList(token.RightSquareBracket)
+
+	return array
+}
+
+func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expr {
+	list := []ast.Expr{}
+
+	if p.peekTokenIs(end) {
+		p.nextToken()
+		return list
+	}
+	p.nextToken() // advance past opening toke
+
+	list = append(list, p.parseExpression(LOWEST))
+
+	for p.peekTokenIs(token.Comma) {
+		p.nextToken() // advance to commma
+		p.nextToken() // advance past comma
+		list = append(list, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(end) {
+		return nil
+	}
+
+	return list
 }

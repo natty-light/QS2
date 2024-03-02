@@ -121,7 +121,7 @@ func (l *Lexer) NextToken() token.Token {
 	case rightCurlyBracket:
 		tok = token.MakeToken(token.RightCurlyBracket, l.char, l.line)
 	case leftSquareBracket:
-		tok = token.MakeToken(token.RightSquareBracket, l.char, l.line)
+		tok = token.MakeToken(token.LeftSquareBracket, l.char, l.line)
 	case rightSquareBracket:
 		tok = token.MakeToken(token.RightSquareBracket, l.char, l.line)
 

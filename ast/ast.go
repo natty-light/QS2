@@ -87,6 +87,11 @@ type (
 		Value string
 	}
 
+	ArrayLiteral struct {
+		Token    token.Token
+		Elements []Expr
+	}
+
 	// Expressions
 	Identifier struct {
 		Token token.Token // token.Ident
@@ -161,7 +166,7 @@ func (b *BooleanLiteral) TokenLiteral() string {
 	return b.Token.Literal
 }
 
-func (i IfExpr) TokenLiteral() string {
+func (i *IfExpr) TokenLiteral() string {
 	return i.Token.Literal
 }
 
@@ -183,6 +188,10 @@ func (v *VarAssignmentStmt) TokenLiteral() string {
 
 func (s *StringLiteral) TokenLiteral() string {
 	return s.Token.Literal
+}
+
+func (a *ArrayLiteral) TokenLiteral() string {
+	return a.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -341,6 +350,21 @@ func (s *StringLiteral) String() string {
 	return s.Token.Literal
 }
 
+func (a *ArrayLiteral) String() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+
+	for _, el := range a.Elements {
+		elements = append(elements, el.String())
+	}
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -358,3 +382,4 @@ func (i *IfExpr) expressionNode()          {}
 func (f *FunctionLiteral) expressionNode() {}
 func (c *CallExpr) expressionNode()        {}
 func (s *StringLiteral) expressionNode()   {}
+func (s *ArrayLiteral) expressionNode()    {}
