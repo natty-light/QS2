@@ -123,6 +123,12 @@ type (
 		Function  Expr
 		Arguments []Expr
 	}
+
+	IndexExpr struct {
+		Token token.Token
+		Left  Expr
+		Index Expr
+	}
 )
 
 // Node interfaces
@@ -192,6 +198,10 @@ func (s *StringLiteral) TokenLiteral() string {
 
 func (a *ArrayLiteral) TokenLiteral() string {
 	return a.Token.Literal
+}
+
+func (i *IndexExpr) TokenLiteral() string {
+	return i.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -365,6 +375,18 @@ func (a *ArrayLiteral) String() string {
 	return out.String()
 }
 
+func (i *IndexExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(i.Left.String())
+	out.WriteString("[")
+	out.WriteString(i.Index.String())
+	out.WriteString("])")
+
+	return out.String()
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -382,4 +404,5 @@ func (i *IfExpr) expressionNode()          {}
 func (f *FunctionLiteral) expressionNode() {}
 func (c *CallExpr) expressionNode()        {}
 func (s *StringLiteral) expressionNode()   {}
-func (s *ArrayLiteral) expressionNode()    {}
+func (a *ArrayLiteral) expressionNode()    {}
+func (i *IndexExpr) expressionNode()       {}
