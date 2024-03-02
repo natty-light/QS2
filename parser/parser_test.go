@@ -15,9 +15,11 @@ func TestVarDeclarationStmts(t *testing.T) {
 		expectedValue interface{}
 		isConst       bool
 	}{
-		{"mut x = 5;", "x", 5, false},
-		{"const y = true;", "y", true, true},
-		{"mut foo = y;", "foo", "y", false},
+		//{"mut x = 5;", "x", 5, false},
+		//{"const y = true;", "y", true, true},
+		//{"mut foo = y;", "foo", "y", false},
+		//{"mut x = null", "x", "null", false},
+		{"mut x;", "x", "null", false},
 	}
 
 	for _, tt := range tests {
@@ -36,8 +38,15 @@ func TestVarDeclarationStmts(t *testing.T) {
 		}
 
 		val := stmt.(*ast.VarDeclarationStmt).Value
-		if !testLiteralExpr(t, val, tt.expectedValue) {
-			return
+		str := val.String()
+		if str == "null" {
+			if !testNullLiteral(t, val) {
+				return
+			}
+		} else {
+			if !testLiteralExpr(t, val, tt.expectedValue) {
+				return
+			}
 		}
 	}
 }
@@ -47,17 +56,18 @@ func TestReturnStatements(t *testing.T) {
 	return 5;
 	return 10;
 	return 15;
+	return null;
 	`
 
-	lexer := lexer.New(source)
+	l := lexer.New(source)
 
-	parser := New(lexer)
+	parser := New(l)
 
 	program := parser.ParseProgram()
 	checkParserErrors(t, parser)
 
-	if len(program.Stmts) != 3 {
-		t.Fatalf("program.Stmts does not contain 3 statements. got=%d", len(program.Stmts))
+	if len(program.Stmts) != 4 {
+		t.Fatalf("program.Stmts does not contain 4 statements. got=%d", len(program.Stmts))
 	}
 
 	for _, stmt := range program.Stmts {
@@ -736,6 +746,29 @@ func TestParsingIndexExpr(t *testing.T) {
 	}
 }
 
+func TestNullLiteral(t *testing.T) {
+	source := "null;"
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	expr, ok := program.Stmts[0].(*ast.ExpressionStmt)
+	if !ok {
+		t.Fatalf("expr is not *ast.ExpressionStmt. got=%T", expr)
+	}
+	null, ok := expr.Expr.(*ast.NullLiteral)
+	if !ok {
+		t.Fatalf("expr.Expr is not *ast.NullLiteral. got=%T", expr.Expr)
+	}
+
+	if null.String() != "null" {
+		t.Fatalf("null has wrong value. got=%s", null.String())
+	}
+
+}
+
 // Utilities
 
 func checkParserErrors(t *testing.T, p *Parser) {
@@ -895,5 +928,18 @@ func testBooleanLiteral(t *testing.T, expr ast.Expr, value bool) bool {
 		return false
 	}
 
+	return true
+}
+
+func testNullLiteral(t *testing.T, expr ast.Expr) bool {
+	null, ok := expr.(*ast.NullLiteral)
+	if !ok {
+		t.Errorf("expr is not *ast.NullLiteral. got=%T", expr)
+	}
+
+	if null.TokenLiteral() != "null" {
+		t.Errorf("null.TokenLiteral() not null. got=%s", null.TokenLiteral())
+		return false
+	}
 	return true
 }

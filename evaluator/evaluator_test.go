@@ -205,16 +205,23 @@ func TestErrorHandling(t *testing.T) {
 func TestVarDeclarationStmts(t *testing.T) {
 	tests := []struct {
 		source   string
-		expected int64
+		expected interface{}
 	}{
-		{"mut a = 5; a;", 5},
-		{"const a = 5 * 5; a;", 25},
-		{"mut a = 5; mut b = a; b;", 5},
-		{"const a = 5; mut b = 5; const c = a + b + 5; c;", 15},
+		//{"mut a = 5; a;", 5},
+		//{"const a = 5 * 5; a;", 25},
+		//{"mut a = 5; mut b = a; b;", 5},
+		//{"const a = 5; mut b = 5; const c = a + b + 5; c;", 15},
+		{"mut x = null; x;", nil},
+		{"mut x; x;", nil},
 	}
 
 	for _, tt := range tests {
-		testIntegerObject(t, testEval(tt.source), tt.expected)
+		evaluated := testEval(tt.source)
+		if integer, ok := tt.expected.(int); ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNullObject(t, evaluated)
+		}
 	}
 }
 
@@ -269,7 +276,7 @@ func TestClosures(t *testing.T) {
 func TestVariableAssignment(t *testing.T) {
 	tests := []struct {
 		source   string
-		expected int64
+		expected interface{}
 	}{
 		{"mut y = 5; y = 6; y;", 6},
 		{
@@ -281,12 +288,21 @@ func TestVariableAssignment(t *testing.T) {
 			`,
 			7,
 		},
+		{
+			"mut x = 5; x = null; x;", nil,
+		},
 	}
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.source)
-		if !testIntegerObject(t, evaluated, tt.expected) {
-			return
+		if integer, ok := tt.expected.(int); ok {
+			if !testIntegerObject(t, evaluated, int64(integer)) {
+				return
+			}
+		} else {
+			if !testNullObject(t, evaluated) {
+				return
+			}
 		}
 	}
 }

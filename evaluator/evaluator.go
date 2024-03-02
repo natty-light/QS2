@@ -59,6 +59,8 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 			return elements[0]
 		}
 		return &object.Array{Elements: elements, TokenLine: node.Token.Line}
+	case *ast.NullLiteral:
+		return NULL
 	// Expressions
 	case *ast.Identifier:
 		return evalIdentifier(node, s)

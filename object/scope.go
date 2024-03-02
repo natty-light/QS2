@@ -1,6 +1,8 @@
 package object
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func NewScope() *Scope {
 	s := make(map[string]Variable)
@@ -37,6 +39,9 @@ func (s *Scope) Set(name string, val Object, isConstant bool, line int) Object {
 }
 
 func (s *Scope) DeclareVar(name string, val Object, isConst bool) Object {
+	if isConst && val.Type() == NullObj {
+		return newError(val.Line(), "const variable %s must be initialized", name)
+	}
 
 	_, fromOuter, ok := s.Get(name)
 

@@ -92,6 +92,10 @@ type (
 		Elements []Expr
 	}
 
+	NullLiteral struct {
+		Token token.Token
+	}
+
 	// Expressions
 	Identifier struct {
 		Token token.Token // token.Ident
@@ -202,6 +206,10 @@ func (a *ArrayLiteral) TokenLiteral() string {
 
 func (i *IndexExpr) TokenLiteral() string {
 	return i.Token.Literal
+}
+
+func (n *NullLiteral) TokenLiteral() string {
+	return n.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -387,6 +395,10 @@ func (i *IndexExpr) String() string {
 	return out.String()
 }
 
+func (n *NullLiteral) String() string {
+	return "null"
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -406,3 +418,4 @@ func (c *CallExpr) expressionNode()        {}
 func (s *StringLiteral) expressionNode()   {}
 func (a *ArrayLiteral) expressionNode()    {}
 func (i *IndexExpr) expressionNode()       {}
+func (n *NullLiteral) expressionNode()     {}

@@ -77,6 +77,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.Func, p.parseFunctionLiteral)
 	p.registerPrefix(token.String, p.parseStringLiteral)
 	p.registerPrefix(token.LeftSquareBracket, p.parseArrayLiteral)
+	p.registerPrefix(token.Null, p.parseNullLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.Plus, p.parseInfixExpr)
@@ -207,6 +208,18 @@ func (p *Parser) parseVarDeclarationStmt() *ast.VarDeclarationStmt {
 	}
 
 	stmt.Name = &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
+
+	if p.peekTokenIs(token.Semicolon) {
+		if isConst {
+			p.errors = append(p.errors, fmt.Sprintf("Honk! const variable must be initialized on line %d", p.currToken.Line))
+		} else {
+			p.nextToken() // advance past semi
+			// I am unsure about creating this token here, but it's not being added to the list of tokens, so it should
+			// be fine
+			stmt.Value = &ast.NullLiteral{Token: token.Token{Literal: "null", Type: token.Null, Line: p.currToken.Line}}
+			return stmt
+		}
+	}
 
 	if !p.expectPeek(token.Assign) {
 		return nil
@@ -529,4 +542,8 @@ func (p *Parser) parseIndexExpr(left ast.Expr) ast.Expr {
 	}
 
 	return expr
+}
+
+func (p *Parser) parseNullLiteral() ast.Expr {
+	return &ast.NullLiteral{Token: p.currToken}
 }
