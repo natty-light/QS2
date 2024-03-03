@@ -138,10 +138,10 @@ var builtIns = map[string]*object.BuiltIn{
 			for _, a := range args {
 				elems = append(elems, a.Inspect())
 			}
-			out.WriteString(strings.Join(elems, ", "))
+			out.WriteString(strings.Join(elems, " "))
 
 			fmt.Println(out.String())
-			return NULL
+			return nil
 		},
 	},
 }
