@@ -342,9 +342,16 @@ func evalForStmt(node *ast.ForStmt, s *object.Scope) object.Object {
 	}
 	condition := conditionVal.(*object.Boolean).Value
 
-	if condition {
+	for condition {
 		Eval(node.Body, s)
-		evalForStmt(node, s)
+
+		conditionVal = Eval(node.Condition, s)
+
+		if conditionVal.Type() != object.BooleanObj {
+			return newError(node.Token.Line, "condition for for loop must evaluate to a boolean")
+		}
+		condition = conditionVal.(*object.Boolean).Value
+
 	}
 	return nil
 }
