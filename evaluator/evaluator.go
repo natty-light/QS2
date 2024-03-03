@@ -42,6 +42,11 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 		if isError(errorMaybe) {
 			return errorMaybe
 		}
+	case *ast.ForStmt:
+		errorMaybe := evalForStmt(node, s)
+		if isError(errorMaybe) {
+			return errorMaybe
+		}
 	// Literals
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value, TokenLine: node.Token.Line}
@@ -323,6 +328,21 @@ func evalArrayIndexExpr(array, index object.Object) object.Object {
 		// the second to last elem
 		return arrayObj.Elements[arrLen+idx]
 	}
+}
+
+func evalForStmt(node *ast.ForStmt, s *object.Scope) object.Object {
+	conditionVal := Eval(node.Condition, s)
+
+	if conditionVal.Type() != object.BooleanObj {
+		return newError(node.Token.Line, "condition for for loop must evaluate to a boolean")
+	}
+	condition := conditionVal.(*object.Boolean).Value
+
+	if condition {
+		Eval(node.Body, s)
+		evalForStmt(node, s)
+	}
+	return nil
 }
 
 // Function calls

@@ -2,6 +2,9 @@ package evaluator
 
 import (
 	"QuonkScript/object"
+	"bytes"
+	"fmt"
+	"strings"
 )
 
 var builtIns = map[string]*object.BuiltIn{
@@ -125,6 +128,20 @@ var builtIns = map[string]*object.BuiltIn{
 			copy(newElems, arr.Elements[start:end])
 
 			return &object.Array{Elements: newElems}
+		},
+	},
+	"print": &object.BuiltIn{
+		Fn: func(line int, args ...object.Object) object.Object {
+			var out bytes.Buffer
+
+			elems := make([]string, 0)
+			for _, a := range args {
+				elems = append(elems, a.Inspect())
+			}
+			out.WriteString(strings.Join(elems, ", "))
+
+			fmt.Println(out.String())
+			return NULL
 		},
 	},
 }

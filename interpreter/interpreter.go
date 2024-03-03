@@ -31,7 +31,9 @@ func Run(filename string) {
 		}
 	} else {
 		result := evaluator.Eval(program, scope)
-		fmt.Println(result.Inspect())
+		if result != nil {
+			fmt.Println(result.Inspect())
+		}
 	}
 
 }
