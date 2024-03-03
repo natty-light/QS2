@@ -225,6 +225,10 @@ func evalIntegerInfixExpr(operator string, left, right object.Object) object.Obj
 		return nativeBoolToBooleanObject(leftVal < rightVal, left.Line())
 	case ">":
 		return nativeBoolToBooleanObject(leftVal > rightVal, left.Line())
+	case ">=":
+		return nativeBoolToBooleanObject(leftVal >= rightVal, left.Line())
+	case "<=":
+		return nativeBoolToBooleanObject(leftVal <= rightVal, left.Line())
 	case "==":
 		return nativeBoolToBooleanObject(leftVal == rightVal, left.Line())
 	case "!=":
