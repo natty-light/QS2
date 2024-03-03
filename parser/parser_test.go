@@ -645,7 +645,7 @@ func TestCallExprArgsParsing(t *testing.T) {
 	}
 }
 
-func TestVarAssignmentExpr(t *testing.T) {
+func TestVarAssignmentStmt(t *testing.T) {
 	tests := []struct {
 		source        string
 		expectedIdent string
@@ -767,6 +767,45 @@ func TestNullLiteral(t *testing.T) {
 		t.Fatalf("null has wrong value. got=%s", null.String())
 	}
 
+}
+
+func TestParsingForStmts(t *testing.T) {
+	source := "for (x < 10) { x }"
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Stmts) != 1 {
+		t.Fatalf("program.Stmts has too many elements. want=1, got=%d", len(program.Stmts))
+	}
+
+	stmt, ok := program.Stmts[0].(*ast.ForStmt)
+	if !ok {
+		t.Fatalf("program.Stmts[0] is not *ast.ForStmt. got=%T", program.Stmts[0])
+	}
+
+	condition := stmt.Condition
+	if !testInfixExpr(t, condition, "x", "<", 10) {
+		return
+	}
+
+	body := stmt.Body
+
+	if len(body.Stmts) != 1 {
+		t.Fatalf("body.Stmts has wrong number of eleents. want=1, got=%d", len(body.Stmts))
+	}
+
+	expr, ok := body.Stmts[0].(*ast.ExpressionStmt)
+	if !ok {
+		t.Fatalf("body.Stmts[0] not *ast.ExpressionStmt. got=%T", body.Stmts[0])
+	}
+
+	ident := expr.Expr.(*ast.Identifier)
+	if !testIdentifier(t, ident, "x") {
+		return
+	}
 }
 
 // Utilities

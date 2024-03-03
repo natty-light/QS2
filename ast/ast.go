@@ -61,6 +61,12 @@ type (
 		Identifier *Identifier
 		Value      Expr
 	}
+
+	ForStmt struct {
+		Token     token.Token
+		Condition Expr
+		Body      *BlockStmt
+	}
 )
 
 // Expressions and literals
@@ -210,6 +216,10 @@ func (i *IndexExpr) TokenLiteral() string {
 
 func (n *NullLiteral) TokenLiteral() string {
 	return n.Token.Literal
+}
+
+func (f *ForStmt) TokenLiteral() string {
+	return f.Token.Literal
 }
 
 func (p *Program) String() string {
@@ -399,12 +409,25 @@ func (n *NullLiteral) String() string {
 	return "null"
 }
 
+func (f *ForStmt) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("for (")
+	out.WriteString(f.Condition.String())
+	out.WriteString(") {")
+	out.WriteString(f.Body.String())
+	out.WriteString("}")
+
+	return out.String()
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
 func (e *ExpressionStmt) statementNode()     {}
 func (b *BlockStmt) statementNode()          {}
 func (v *VarAssignmentStmt) statementNode()  {}
+func (f *ForStmt) statementNode()            {}
 
 // Expressions
 func (i *Identifier) expressionNode()      {}

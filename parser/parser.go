@@ -190,6 +190,8 @@ func (p *Parser) parseStatement() ast.Stmt {
 		} else {
 			return p.parseExpressionStmt()
 		}
+	case token.For:
+		return p.parseForStmt()
 	default:
 		return p.parseExpressionStmt()
 	}
@@ -546,4 +548,25 @@ func (p *Parser) parseIndexExpr(left ast.Expr) ast.Expr {
 
 func (p *Parser) parseNullLiteral() ast.Expr {
 	return &ast.NullLiteral{Token: p.currToken}
+}
+
+func (p *Parser) parseForStmt() *ast.ForStmt {
+	forStmt := &ast.ForStmt{Token: p.currToken}
+	if !p.expectPeek(token.LeftParen) {
+		return nil
+	}
+	p.nextToken() // advance past for
+
+	forStmt.Condition = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RightParen) {
+		return nil
+	}
+	if !p.expectPeek(token.LeftCurlyBracket) {
+		return nil
+	}
+
+	forStmt.Body = p.parseBlockStmt()
+
+	return forStmt
 }
