@@ -66,6 +66,8 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 		return &object.Array{Elements: elements}
 	case *ast.NullLiteral:
 		return NULL
+	case *ast.HashLiteral:
+		return evalHashLiteral(node, s, node.Token.Line)
 	// Expressions
 	case *ast.Identifier:
 		return evalIdentifier(node, s)
@@ -310,6 +312,8 @@ func evalIndexExpr(left, index object.Object, line int) object.Object {
 	switch {
 	case left.Type() == object.ArrayObj && index.Type() == object.IntegerObj:
 		return evalArrayIndexExpr(left, index, line)
+	case left.Type() == object.HashObj:
+		return evalHashIndexExpr(left, index, line)
 	default:
 		return newError(line, "index operator not supported: %s", left.Type())
 	}
@@ -356,6 +360,32 @@ func evalForStmt(node *ast.ForStmt, s *object.Scope) object.Object {
 	return nil
 }
 
+func evalHashLiteral(node *ast.HashLiteral, s *object.Scope, line int) object.Object {
+	pairs := make(map[object.HashKey]object.HashPair)
+
+	for keyNode, valueNode := range node.Pairs {
+		key := Eval(keyNode, s)
+		if isError(key) {
+			return key
+		}
+
+		hashKey, ok := key.(object.Hashable)
+		if !ok {
+			return newError(line, "unusable as hash key: %s", key.Type())
+		}
+
+		value := Eval(valueNode, s)
+		if isError(value) {
+			return value
+		}
+
+		hashed := hashKey.HashKey()
+		pairs[hashed] = object.HashPair{Key: key, Value: value}
+	}
+
+	return &object.Hash{Pairs: pairs}
+}
+
 // Function calls
 func applyFunction(fn object.Object, args []object.Object, line int) object.Object {
 	switch fn := fn.(type) {
@@ -368,6 +398,22 @@ func applyFunction(fn object.Object, args []object.Object, line int) object.Obje
 	default:
 		return newError(line, "not a function: %s", fn.Type())
 	}
+}
+
+func evalHashIndexExpr(hash, index object.Object, line int) object.Object {
+	hashObj := hash.(*object.Hash)
+
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return newError(line, "unusable as hash key: %s", index.Type())
+	}
+
+	pair, ok := hashObj.Pairs[key.HashKey()]
+	if !ok {
+		return NULL
+	}
+
+	return pair.Value
 }
 
 // Utilty functions
