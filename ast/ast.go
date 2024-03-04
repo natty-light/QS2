@@ -102,6 +102,11 @@ type (
 		Token token.Token
 	}
 
+	HashLiteral struct {
+		Token token.Token
+		Pairs map[Expr]Expr
+	}
+
 	// Expressions
 	Identifier struct {
 		Token token.Token // token.Ident
@@ -222,6 +227,11 @@ func (f *ForStmt) TokenLiteral() string {
 	return f.Token.Literal
 }
 
+func (h *HashLiteral) TokenLiteral() string {
+	return h.Token.Literal
+}
+
+// Statements
 func (p *Program) String() string {
 	var out bytes.Buffer
 
@@ -269,22 +279,6 @@ func (e *ExpressionStmt) String() string {
 	return ""
 }
 
-func (i *IfExpr) String() string {
-	var out bytes.Buffer
-
-	out.WriteString("if")
-	out.WriteString(i.Condition.String())
-	out.WriteString(" ")
-	out.WriteString(i.Consequence.String())
-
-	if i.Alternative != nil {
-		out.WriteString("else ")
-		out.WriteString(i.Alternative.String())
-	}
-
-	return out.String()
-}
-
 func (b *BlockStmt) String() string {
 	var out bytes.Buffer
 
@@ -295,13 +289,21 @@ func (b *BlockStmt) String() string {
 	return out.String()
 }
 
+func (f *ForStmt) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("for (")
+	out.WriteString(f.Condition.String())
+	out.WriteString(") {")
+	out.WriteString(f.Body.String())
+	out.WriteString("}")
+
+	return out.String()
+}
+
 // Expressions
 func (i *Identifier) String() string {
 	return i.Value
-}
-
-func (i *IntegerLiteral) String() string {
-	return i.Token.Literal
 }
 
 func (p *PrefixExpr) String() string {
@@ -323,28 +325,6 @@ func (i *InfixExpr) String() string {
 	out.WriteString(" " + i.Operator + " ")
 	out.WriteString(i.Right.String())
 	out.WriteString(")")
-
-	return out.String()
-}
-
-func (b *BooleanLiteral) String() string {
-	return b.Token.Literal
-}
-
-func (f *FunctionLiteral) String() string {
-	var out bytes.Buffer
-
-	params := make([]string, 0)
-
-	for _, p := range f.Parameters {
-		params = append(params, p.String())
-	}
-
-	out.WriteString(f.TokenLiteral())
-	out.WriteString("(")
-	out.WriteString(strings.Join(params, ", "))
-	out.WriteString(") ")
-	out.WriteString(f.Body.String())
 
 	return out.String()
 }
@@ -374,6 +354,39 @@ func (v *VarAssignmentStmt) String() string {
 	return out.String()
 }
 
+func (i *IndexExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(i.Left.String())
+	out.WriteString("[")
+	out.WriteString(i.Index.String())
+	out.WriteString("])")
+
+	return out.String()
+}
+
+func (i *IfExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("if")
+	out.WriteString(i.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(i.Consequence.String())
+
+	if i.Alternative != nil {
+		out.WriteString("else ")
+		out.WriteString(i.Alternative.String())
+	}
+
+	return out.String()
+}
+
+// Literals
+func (i *IntegerLiteral) String() string {
+	return i.Token.Literal
+}
+
 func (s *StringLiteral) String() string {
 	return s.Token.Literal
 }
@@ -393,29 +406,41 @@ func (a *ArrayLiteral) String() string {
 	return out.String()
 }
 
-func (i *IndexExpr) String() string {
-	var out bytes.Buffer
-
-	out.WriteString("(")
-	out.WriteString(i.Left.String())
-	out.WriteString("[")
-	out.WriteString(i.Index.String())
-	out.WriteString("])")
-
-	return out.String()
-}
-
 func (n *NullLiteral) String() string {
 	return "null"
 }
 
-func (f *ForStmt) String() string {
+func (b *BooleanLiteral) String() string {
+	return b.Token.Literal
+}
+
+func (f *FunctionLiteral) String() string {
 	var out bytes.Buffer
 
-	out.WriteString("for (")
-	out.WriteString(f.Condition.String())
-	out.WriteString(") {")
+	params := make([]string, 0)
+
+	for _, p := range f.Parameters {
+		params = append(params, p.String())
+	}
+
+	out.WriteString(f.TokenLiteral())
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
 	out.WriteString(f.Body.String())
+
+	return out.String()
+}
+
+func (h *HashLiteral) String() string {
+	var out bytes.Buffer
+
+	pairs := []string{}
+	for key, val := range h.Pairs {
+		pairs = append(pairs, key.String()+":"+val.String())
+	}
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
 	out.WriteString("}")
 
 	return out.String()
@@ -442,3 +467,4 @@ func (s *StringLiteral) expressionNode()   {}
 func (a *ArrayLiteral) expressionNode()    {}
 func (i *IndexExpr) expressionNode()       {}
 func (n *NullLiteral) expressionNode()     {}
+func (h *HashLiteral) expressionNode()     {}

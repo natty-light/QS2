@@ -29,6 +29,7 @@ func TestNextToken(t *testing.T) {
 	"foo bar";
 	[1, 2];
 	for (x < 10) { x }
+	{"foo": "bar" }
 	`
 
 	tests := []struct {
@@ -166,6 +167,12 @@ func TestNextToken(t *testing.T) {
 		{token.LeftCurlyBracket, "{", 23},
 		{token.Identifier, "x", 23},
 		{token.RightCurlyBracket, "}", 23},
+
+		{token.LeftCurlyBracket, "{", 24},
+		{token.String, "foo", 24},
+		{token.Colon, ":", 24},
+		{token.String, "bar", 24},
+		{token.RightCurlyBracket, "}", 24},
 
 		{token.EOF, "", 0},
 	}

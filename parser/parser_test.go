@@ -808,6 +808,174 @@ func TestParsingForStmts(t *testing.T) {
 	}
 }
 
+func TestParsingHashLiteralsStringKeys(t *testing.T) {
+	source := `{"one": 1, "two": 2, "three": 3}`
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Stmts[0].(*ast.ExpressionStmt)
+	hash, ok := stmt.Expr.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("expr is not *ast.HashLiteral. got=%T", stmt.Expr)
+	}
+
+	if len(hash.Pairs) != 3 {
+		t.Errorf("hash.Pairs has wrong length. want=3, got=%d", len(hash.Pairs))
+	}
+
+	expected := map[string]int64{
+		"one":   1,
+		"two":   2,
+		"three": 3,
+	}
+
+	for key, val := range hash.Pairs {
+		literal, ok := key.(*ast.StringLiteral)
+		if !ok {
+			t.Errorf("key is not *ast.StringLiteral. got=%T", key)
+		}
+
+		expectedVal := expected[literal.String()]
+
+		testIntegerLiteral(t, val, expectedVal)
+	}
+}
+
+func TestParsingHashLiteralsBooleanKeys(t *testing.T) {
+	source := `{true: 1, false: 2}`
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Stmts[0].(*ast.ExpressionStmt)
+	hash, ok := stmt.Expr.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("expr is not *ast.HashLiteral. got=%T", stmt.Expr)
+	}
+
+	if len(hash.Pairs) != 2 {
+		t.Errorf("hash.Pairs has wrong length. want=2, got=%d", len(hash.Pairs))
+	}
+
+	expected := map[string]int64{
+		"true":  1,
+		"false": 2,
+	}
+
+	for key, val := range hash.Pairs {
+		literal, ok := key.(*ast.BooleanLiteral)
+		if !ok {
+			t.Errorf("key is not *ast.StringLiteral. got=%T", key)
+		}
+
+		expectedVal := expected[literal.String()]
+
+		testIntegerLiteral(t, val, expectedVal)
+	}
+}
+
+func TestParsingHashLiteralsIntegerKeys(t *testing.T) {
+	source := `{1: 1, 2: 2, 3: 3}`
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Stmts[0].(*ast.ExpressionStmt)
+	hash, ok := stmt.Expr.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("expr is not *ast.HashLiteral. got=%T", stmt.Expr)
+	}
+
+	if len(hash.Pairs) != 3 {
+		t.Errorf("hash.Pairs has wrong length. want=3, got=%d", len(hash.Pairs))
+	}
+
+	expected := map[string]int64{
+		"1": 1,
+		"2": 2,
+		"3": 3,
+	}
+
+	for key, val := range hash.Pairs {
+		literal, ok := key.(*ast.IntegerLiteral)
+		if !ok {
+			t.Errorf("key is not *ast.StringLiteral. got=%T", key)
+		}
+
+		expectedVal := expected[literal.String()]
+
+		testIntegerLiteral(t, val, expectedVal)
+	}
+}
+
+func TestParsingEmptyHashLiteral(t *testing.T) {
+	source := "{}"
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Stmts[0].(*ast.ExpressionStmt)
+	hash, ok := stmt.Expr.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("expr is not *ast.HashLiteral. got=%T", stmt.Expr)
+	}
+
+	if len(hash.Pairs) != 0 {
+		t.Errorf("hash.Pairs has wrong length. want=0, got=%d", len(hash.Pairs))
+	}
+}
+
+func TestParsingHashLiteralWithExpressions(t *testing.T) {
+	source := `{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5 }`
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Stmts[0].(*ast.ExpressionStmt)
+	hash, ok := stmt.Expr.(*ast.HashLiteral)
+	if !ok {
+		t.Fatalf("exp is not ast.HashLiteral. got=%T", stmt.Expr)
+	}
+	if len(hash.Pairs) != 3 {
+		t.Errorf("hash.Pairs has wrong length. got=%d", len(hash.Pairs))
+	}
+	tests := map[string]func(expr ast.Expr){
+		"one": func(e ast.Expr) {
+			testInfixExpr(t, e, 0, "+", 1)
+		},
+		"two": func(e ast.Expr) {
+			testInfixExpr(t, e, 10, "-", 8)
+		},
+		"three": func(e ast.Expr) {
+			testInfixExpr(t, e, 15, "/", 5)
+		},
+	}
+	for key, value := range hash.Pairs {
+		literal, ok := key.(*ast.StringLiteral)
+		if !ok {
+			t.Errorf("key is not ast.StringLiteral. got=%T", key)
+			continue
+		}
+		testFunc, ok := tests[literal.String()]
+		if !ok {
+			t.Errorf("No test function for key %q found", literal.String())
+			continue
+		}
+		testFunc(value)
+	}
+}
+
 // Utilities
 
 func checkParserErrors(t *testing.T, p *Parser) {

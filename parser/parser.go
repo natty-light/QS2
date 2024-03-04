@@ -78,6 +78,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.String, p.parseStringLiteral)
 	p.registerPrefix(token.LeftSquareBracket, p.parseArrayLiteral)
 	p.registerPrefix(token.Null, p.parseNullLiteral)
+	p.registerPrefix(token.LeftCurlyBracket, p.parseHashLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.Plus, p.parseInfixExpr)
@@ -110,7 +111,7 @@ func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 }
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("no prefix parse function for %s found", t)
+	msg := fmt.Sprintf("Honk! no prefix parse function for %s found", t)
 	p.errors = append(p.errors, msg)
 }
 
@@ -569,4 +570,31 @@ func (p *Parser) parseForStmt() *ast.ForStmt {
 	forStmt.Body = p.parseBlockStmt()
 
 	return forStmt
+}
+
+func (p *Parser) parseHashLiteral() ast.Expr {
+	hash := &ast.HashLiteral{Token: p.currToken}
+	hash.Pairs = make(map[ast.Expr]ast.Expr)
+
+	for !p.peekTokenIs(token.RightCurlyBracket) {
+		p.nextToken()
+		key := p.parseExpression(LOWEST)
+		if !p.expectPeek(token.Colon) {
+			return nil
+		}
+		p.nextToken()
+		val := p.parseExpression(LOWEST)
+
+		hash.Pairs[key] = val
+
+		if !p.peekTokenIs(token.RightCurlyBracket) && !p.expectPeek(token.Comma) {
+			return nil
+		}
+	}
+
+	if !p.expectPeek(token.RightCurlyBracket) {
+		return nil
+	}
+
+	return hash
 }

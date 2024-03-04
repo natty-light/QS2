@@ -4,6 +4,7 @@ import (
 	"QuonkScript/ast"
 	"bytes"
 	"fmt"
+	"hash/fnv"
 
 	"strings"
 )
@@ -22,13 +23,20 @@ const (
 	StringObj      ObjectType = "String"
 	BuiltInObj     ObjectType = "BuiltIn"
 	ArrayObj       ObjectType = "Array"
+	HashObj        ObjectType = "Hash"
 )
 
-type Object interface {
-	Type() ObjectType
-	Inspect() string
-	Line() int
-}
+type (
+	Object interface {
+		Type() ObjectType
+		Inspect() string
+		Line() int
+	}
+
+	Hashable interface {
+		HashKey() HashKey
+	}
+)
 
 type (
 	Integer struct {
@@ -82,6 +90,21 @@ type (
 		Elements  []Object
 		TokenLine int
 	}
+
+	HashKey struct {
+		Type  ObjectType
+		Value uint64
+	}
+
+	HashPair struct {
+		Key   Object
+		Value Object
+	}
+
+	Hash struct {
+		Pairs     map[HashKey]HashPair
+		TokenLine int
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -124,6 +147,10 @@ func (a *Array) Type() ObjectType {
 	return ArrayObj
 }
 
+func (h *Hash) Type() ObjectType {
+	return HashObj
+}
+
 func (i *Integer) Line() int {
 	return i.TokenLine
 }
@@ -158,6 +185,10 @@ func (b *BuiltIn) Line() int {
 
 func (a *Array) Line() int {
 	return a.TokenLine
+}
+
+func (h *Hash) Line() int {
+	return h.TokenLine
 }
 
 func (i *Integer) Inspect() string {
@@ -222,4 +253,42 @@ func (a *Array) Inspect() string {
 	out.WriteString("]")
 
 	return out.String()
+}
+
+func (h *Hash) Inspect() string {
+	var out bytes.Buffer
+
+	pairs := []string{}
+	for _, pair := range h.Pairs {
+		pairs = append(pairs, fmt.Sprintf("%s: %s", pair.Key.Inspect(), pair.Value.Inspect()))
+	}
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
+
+	return out.String()
+}
+
+// HashKey functions
+func (b *Boolean) HashKey() HashKey {
+	var val uint64
+
+	if b.Value {
+		val = 1
+	} else {
+		val = 0
+	}
+
+	return HashKey{Type: b.Type(), Value: val}
+}
+
+func (i *Integer) HashKey() HashKey {
+	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
+}
+
+func (s *String) HashKey() HashKey {
+	h := fnv.New64a()
+	h.Write([]byte(s.Value))
+
+	return HashKey{Type: s.Type(), Value: h.Sum64()}
 }
