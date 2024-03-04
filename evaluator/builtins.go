@@ -144,4 +144,23 @@ var builtIns = map[string]*object.BuiltIn{
 			return nil
 		},
 	},
+	"keys": &object.BuiltIn{
+		Fn: func(line int, args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError(line, "`keys` expects one argument")
+			}
+
+			hash, ok := args[0].(*object.Hash)
+			if !ok {
+				return newError(line, "unknown argument type for `keys`: %T", args[0])
+			}
+
+			keys := make([]object.Object, 0)
+			for key, _ := range hash.Pairs {
+				keys = append(keys, key.ObjectValue)
+			}
+
+			return &object.Array{Elements: keys}
+		},
+	},
 }

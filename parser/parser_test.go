@@ -697,7 +697,7 @@ func TestStringLiteralExpr(t *testing.T) {
 	}
 
 	if literal.Value != "Hello, World!" {
-		t.Errorf("literal.Value not %q. got=%q", "Hello, World!", literal.Value)
+		t.Errorf("literal.HashValue not %q. got=%q", "Hello, World!", literal.Value)
 	}
 }
 
@@ -1002,7 +1002,7 @@ func testVarDeclarationStmt(t *testing.T, s ast.Stmt, name string, isConst bool)
 	}
 
 	if varDeclStmt.Name.Value != name {
-		t.Errorf("varDeclStmt.Name.Value not '%s'. got=%s", name, varDeclStmt.Name.Value)
+		t.Errorf("varDeclStmt.Name.HashValue not '%s'. got=%s", name, varDeclStmt.Name.Value)
 		return false
 	}
 
@@ -1047,7 +1047,7 @@ func testIntegerLiteral(t *testing.T, i ast.Expr, value int64) bool {
 	}
 
 	if integ.Value != value {
-		t.Errorf("integ.Value not %d. got=%d", value, integ.Value)
+		t.Errorf("integ.HashValue not %d. got=%d", value, integ.Value)
 		return false
 	}
 
@@ -1068,7 +1068,7 @@ func testIdentifier(t *testing.T, expr ast.Expr, value string) bool {
 	}
 
 	if ident.Value != value {
-		t.Errorf("ident.Value not %s. got=%s", value, ident.Value)
+		t.Errorf("ident.HashValue not %s. got=%s", value, ident.Value)
 		return false
 	}
 
@@ -1126,7 +1126,7 @@ func testBooleanLiteral(t *testing.T, expr ast.Expr, value bool) bool {
 	}
 
 	if boolean.Value != value {
-		t.Errorf("boolean.Value not %t. got=%t", value, boolean.Value)
+		t.Errorf("boolean.HashValue not %t. got=%t", value, boolean.Value)
 		return false
 	}
 
