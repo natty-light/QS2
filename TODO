@@ -6,25 +6,3 @@ func add(a, b) {
 }
 
 add support for % and integer division
-
-instanceof operator?
-
-ensure that line number tracking for booleans work, since we set the line number in the creation function
-
-figure out why this doesnt work
-const makeCounter = func(x) {
-    mut count = x;
-
-    return func() {
-        count = count + 1
-        return count
-    }
-}
-
-const counter = makeCounter(1);
-
-counter();
-counter();
-counter();
-
-allow declaring but not initializing mutable variables
