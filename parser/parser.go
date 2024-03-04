@@ -215,6 +215,7 @@ func (p *Parser) parseVarDeclarationStmt() *ast.VarDeclarationStmt {
 	if p.peekTokenIs(token.Semicolon) {
 		if isConst {
 			p.errors = append(p.errors, fmt.Sprintf("Honk! const variable must be initialized on line %d", p.currToken.Line))
+			return nil
 		} else {
 			p.nextToken() // advance past semi
 			// I am unsure about creating this token here, but it's not being added to the list of tokens, so it should
