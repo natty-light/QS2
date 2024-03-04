@@ -4,6 +4,7 @@ import (
 	"QuonkScript/ast"
 	"QuonkScript/lexer"
 	"fmt"
+	"strconv"
 	"testing"
 )
 
@@ -976,6 +977,29 @@ func TestParsingHashLiteralWithExpressions(t *testing.T) {
 	}
 }
 
+func TestFloatLiteralExpr(t *testing.T) {
+	source := "5.2"
+
+	l := lexer.New(source)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Stmts) != 1 {
+		t.Fatalf("program has not enough statements. got=%d", len(program.Stmts))
+	}
+	stmt, ok := program.Stmts[0].(*ast.ExpressionStmt)
+
+	if !ok {
+		t.Fatalf("program.Stmts[0] not ast.ExpressionStmt. got=%T", stmt)
+	}
+
+	if !testFloatLiteral(t, stmt.Expr, 5.2) {
+		return
+	}
+}
+
 // Utilities
 
 func checkParserErrors(t *testing.T, p *Parser) {
@@ -1148,5 +1172,26 @@ func testNullLiteral(t *testing.T, expr ast.Expr) bool {
 		t.Errorf("null.TokenLiteral() not null. got=%s", null.TokenLiteral())
 		return false
 	}
+	return true
+}
+
+func testFloatLiteral(t *testing.T, i ast.Expr, value float64) bool {
+	float, ok := i.(*ast.FloatLiteral)
+	if !ok {
+		t.Errorf("i not *ast.FloatLiteral. got=%T", float)
+		return false
+	}
+
+	if float.Value != value {
+		t.Errorf("float.Value not %f. got=%f", value, float.Value)
+		return false
+	}
+
+	valAsStr := strconv.FormatFloat(value, 'f', -1, 64)
+	if float.TokenLiteral() != valAsStr {
+		t.Errorf("float.TokenLiteral not %s. got=%s", valAsStr, float.TokenLiteral())
+		return false
+	}
+
 	return true
 }

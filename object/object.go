@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"hash/fnv"
+	"strconv"
 
 	"strings"
 )
@@ -24,6 +25,7 @@ const (
 	BuiltInObj     ObjectType = "BuiltIn"
 	ArrayObj       ObjectType = "Array"
 	HashObj        ObjectType = "Hash"
+	FloatObj       ObjectType = "Float"
 )
 
 type (
@@ -94,6 +96,10 @@ type (
 	Hash struct {
 		Pairs map[HashKey]HashPair
 	}
+
+	Float struct {
+		Value float64
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -138,6 +144,10 @@ func (a *Array) Type() ObjectType {
 
 func (h *Hash) Type() ObjectType {
 	return HashObj
+}
+
+func (f *Float) Type() ObjectType {
+	return FloatObj
 }
 
 func (i *Integer) Inspect() string {
@@ -216,6 +226,10 @@ func (h *Hash) Inspect() string {
 	out.WriteString("}")
 
 	return out.String()
+}
+
+func (f *Float) Inspect() string {
+	return strconv.FormatFloat(f.Value, 'f', -1, 64)
 }
 
 // HashKey functions

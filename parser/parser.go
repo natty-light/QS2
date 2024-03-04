@@ -80,6 +80,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LeftSquareBracket, p.parseArrayLiteral)
 	p.registerPrefix(token.Null, p.parseNullLiteral)
 	p.registerPrefix(token.LeftCurlyBracket, p.parseHashLiteral)
+	p.registerPrefix(token.Float, p.parseFloatLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.Plus, p.parseInfixExpr)
@@ -600,4 +601,20 @@ func (p *Parser) parseHashLiteral() ast.Expr {
 	}
 
 	return hash
+}
+
+func (p *Parser) parseFloatLiteral() ast.Expr {
+	literal := &ast.FloatLiteral{Token: p.currToken}
+
+	value, err := strconv.ParseFloat(p.currToken.Literal, 64)
+
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as float", p.currToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	literal.Value = value
+
+	return literal
 }
