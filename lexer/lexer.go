@@ -73,12 +73,16 @@ func (l *Lexer) readIdentifer() string {
 	return l.source[position:l.position]
 }
 
-func (l *Lexer) readNumber() string {
+func (l *Lexer) readNumber() (string, bool) {
 	position := l.position
-	for utils.IsNumeric(string(l.char)) {
+	encounteredDecimal := false
+	for utils.IsNumeric(string(l.char)) || (!encounteredDecimal && l.char == dot) {
+		if l.char == dot {
+			encounteredDecimal = true
+		}
 		l.readChar() // This just advances the position pointer
 	}
-	return l.source[position:l.position]
+	return l.source[position:l.position], encounteredDecimal
 }
 
 func (l *Lexer) readString() string {
@@ -216,8 +220,14 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Line = l.line
 			return tok // This is to avoid the l.readChar() call before this functions return
 		} else if utils.IsNumeric(string(l.char)) {
-			tok.Type = token.Integer
-			tok.Literal = l.readNumber()
+
+			literal, decimal := l.readNumber()
+			if decimal {
+				tok.Type = token.Float
+			} else {
+				tok.Type = token.Integer
+			}
+			tok.Literal = literal
 			tok.Line = l.line
 			return tok // This is to avoid the l.readChar() call before this functions return
 		} else {
