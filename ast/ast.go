@@ -107,11 +107,6 @@ type (
 		Pairs map[Expr]Expr
 	}
 
-	FloatLiteral struct {
-		Token token.Token
-		Value float64
-	}
-
 	// Expressions
 	Identifier struct {
 		Token token.Token // token.Ident
@@ -234,10 +229,6 @@ func (f *ForStmt) TokenLiteral() string {
 
 func (h *HashLiteral) TokenLiteral() string {
 	return h.Token.Literal
-}
-
-func (f *FloatLiteral) TokenLiteral() string {
-	return f.Token.Literal
 }
 
 // Statements
@@ -455,10 +446,6 @@ func (h *HashLiteral) String() string {
 	return out.String()
 }
 
-func (f *FloatLiteral) String() string {
-	return f.Token.Literal
-}
-
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -481,4 +468,3 @@ func (a *ArrayLiteral) expressionNode()    {}
 func (i *IndexExpr) expressionNode()       {}
 func (n *NullLiteral) expressionNode()     {}
 func (h *HashLiteral) expressionNode()     {}
-func (f *FloatLiteral) expressionNode()    {}
