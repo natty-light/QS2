@@ -30,7 +30,6 @@ type (
 	Object interface {
 		Type() ObjectType
 		Inspect() string
-		Line() int
 	}
 
 	Hashable interface {
@@ -40,22 +39,17 @@ type (
 
 type (
 	Integer struct {
-		Value     int64
-		TokenLine int
+		Value int64
 	}
 
 	Boolean struct {
-		Value     bool
-		TokenLine int
+		Value bool
 	}
 
-	Null struct {
-		TokenLine int
-	}
+	Null struct{}
 
 	ReturnValue struct {
-		Value     Object
-		TokenLine int
+		Value Object
 	}
 
 	Error struct {
@@ -64,31 +58,26 @@ type (
 	}
 
 	Variable struct {
-		Value     Object
-		Constant  bool
-		TokenLine int
+		Value    Object
+		Constant bool
 	}
 
 	Function struct {
 		Parameters []*ast.Identifier
 		Body       *ast.BlockStmt
 		Scope      *Scope
-		TokenLine  int
 	}
 
 	String struct {
-		Value     string
-		TokenLine int
+		Value string
 	}
 
 	BuiltIn struct {
-		Fn        BuiltInFunction
-		TokenLine int
+		Fn BuiltInFunction
 	}
 
 	Array struct {
-		Elements  []Object
-		TokenLine int
+		Elements []Object
 	}
 
 	HashKey struct {
@@ -102,8 +91,7 @@ type (
 	}
 
 	Hash struct {
-		Pairs     map[HashKey]HashPair
-		TokenLine int
+		Pairs map[HashKey]HashPair
 	}
 )
 
@@ -151,46 +139,6 @@ func (h *Hash) Type() ObjectType {
 	return HashObj
 }
 
-func (i *Integer) Line() int {
-	return i.TokenLine
-}
-
-func (b *Boolean) Line() int {
-	return b.TokenLine
-}
-
-func (n *Null) Line() int {
-	return n.TokenLine
-}
-
-func (r *ReturnValue) Line() int {
-	return r.TokenLine
-}
-
-func (e *Error) Line() int {
-	return e.OriginLine
-}
-
-func (f *Function) Line() int {
-	return f.TokenLine
-}
-
-func (s *String) Line() int {
-	return s.TokenLine
-}
-
-func (b *BuiltIn) Line() int {
-	return b.TokenLine
-}
-
-func (a *Array) Line() int {
-	return a.TokenLine
-}
-
-func (h *Hash) Line() int {
-	return h.TokenLine
-}
-
 func (i *Integer) Inspect() string {
 	return fmt.Sprintf("%d", i.Value)
 }
@@ -208,7 +156,7 @@ func (n *Null) Inspect() string {
 }
 
 func (e *Error) Inspect() string {
-	return fmt.Sprintf("Honk! Error: %s on line %d", e.Message, e.Line())
+	return fmt.Sprintf("Honk! Error: %s on line %d", e.Message, e.OriginLine)
 }
 
 func (v *Variable) Inspect() string {

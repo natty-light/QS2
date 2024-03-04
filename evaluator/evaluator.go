@@ -32,13 +32,13 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 		if isError(val) {
 			return val
 		}
-		s.DeclareVar(node.Name.Value, val, node.Constant)
+		s.DeclareVar(node.Name.Value, val, node.Constant, node.Token.Line)
 	case *ast.VarAssignmentStmt:
 		val := Eval(node.Value, s)
 		if isError(val) {
 			return val
 		}
-		errorMaybe := s.AssignVar(node.Identifier.Value, val)
+		errorMaybe := s.AssignVar(node.Identifier.Value, val, node.Token.Line)
 		if isError(errorMaybe) {
 			return errorMaybe
 		}
@@ -49,21 +49,21 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 		}
 	// Literals
 	case *ast.IntegerLiteral:
-		return &object.Integer{Value: node.Value, TokenLine: node.Token.Line}
+		return &object.Integer{Value: node.Value}
 	case *ast.BooleanLiteral:
-		return nativeBoolToBooleanObject(node.Value, node.Token.Line)
+		return nativeBoolToBooleanObject(node.Value)
 	case *ast.FunctionLiteral:
 		params := node.Parameters
 		body := node.Body
 		return &object.Function{Parameters: params, Scope: s, Body: body}
 	case *ast.StringLiteral:
-		return &object.String{Value: node.Value, TokenLine: node.Token.Line}
+		return &object.String{Value: node.Value}
 	case *ast.ArrayLiteral:
 		elements := evalExpressions(node.Elements, s)
 		if len(elements) == 1 && isError(elements[0]) {
 			return elements[0]
 		}
-		return &object.Array{Elements: elements, TokenLine: node.Token.Line}
+		return &object.Array{Elements: elements}
 	case *ast.NullLiteral:
 		return NULL
 	// Expressions
@@ -74,7 +74,7 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 		if isError(right) {
 			return right
 		}
-		return evalPrefixExpr(node.Operator, right)
+		return evalPrefixExpr(node.Operator, right, node.Token.Line)
 	case *ast.InfixExpr:
 		left := Eval(node.Left, s)
 		if isError(left) {
@@ -86,7 +86,7 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 			return right
 		}
 
-		return evalInfixExpr(node.Operator, left, right)
+		return evalInfixExpr(node.Operator, left, right, node.Token.Line)
 	case *ast.IfExpr:
 		return evalIfExpr(node, s)
 	case *ast.CallExpr:
@@ -110,7 +110,7 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 			return index
 		}
 
-		return evalIndexExpr(left, index)
+		return evalIndexExpr(left, index, node.Token.Line)
 	}
 
 	return nil
@@ -153,14 +153,14 @@ func evalBlockStmt(block *ast.BlockStmt, s *object.Scope) object.Object {
 }
 
 // Expressions
-func evalPrefixExpr(operator string, right object.Object) object.Object {
+func evalPrefixExpr(operator string, right object.Object, line int) object.Object {
 	switch operator {
 	case "!":
 		return evalBangOperatorExpr(right)
 	case "-":
-		return evalMinusOperatorExpr(right)
+		return evalMinusOperatorExpr(right, line)
 	default:
-		return newError(right.Line(), "unknown operation %s for type %s", operator, right.Type())
+		return newError(line, "unknown operation %s for type %s", operator, right.Type())
 	}
 }
 
@@ -177,9 +177,9 @@ func evalBangOperatorExpr(right object.Object) object.Object {
 	}
 }
 
-func evalMinusOperatorExpr(right object.Object) object.Object {
+func evalMinusOperatorExpr(right object.Object, line int) object.Object {
 	if right.Type() != object.IntegerObj {
-		return newError(right.Line(), "unknown operation - for type %s", string(right.Type()))
+		return newError(line, "unknown operation - for type %s", string(right.Type()))
 	}
 
 	value := right.(*object.Integer).Value
@@ -187,67 +187,67 @@ func evalMinusOperatorExpr(right object.Object) object.Object {
 }
 
 // The order of the switch statements matter here
-func evalInfixExpr(operator string, left, right object.Object) object.Object {
+func evalInfixExpr(operator string, left, right object.Object, line int) object.Object {
 	switch {
 	case left.Type() == object.IntegerObj && right.Type() == object.IntegerObj:
-		return evalIntegerInfixExpr(operator, left, right)
+		return evalIntegerInfixExpr(operator, left, right, line)
 	case left.Type() == object.StringObj && right.Type() == object.StringObj:
-		return evalStringInfixExpr(operator, left, right)
+		return evalStringInfixExpr(operator, left, right, line)
 	case operator == "==":
-		return nativeBoolToBooleanObject(left == right, left.Line())
+		return nativeBoolToBooleanObject(left == right)
 	case operator == "!=":
-		return nativeBoolToBooleanObject(right != left, left.Line())
+		return nativeBoolToBooleanObject(right != left)
 	case operator == "&&" && left.Type() == object.BooleanObj && right.Type() == object.BooleanObj:
 		fallthrough
 	case operator == "||" && left.Type() == object.BooleanObj && right.Type() == object.BooleanObj:
 		return evalBooleanComparisonExpr(operator, left, right)
 	case left.Type() != right.Type():
-		return newError(left.Line(), "type mismatch: %s %s %s", left.Type(), operator, right.Type())
+		return newError(line, "type mismatch: %s %s %s", left.Type(), operator, right.Type())
 	default:
-		return newError(left.Line(), "unknown operator: %s %s %s", left.Type(), operator, right.Type())
+		return newError(line, "unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 
-func evalIntegerInfixExpr(operator string, left, right object.Object) object.Object {
+func evalIntegerInfixExpr(operator string, left, right object.Object, line int) object.Object {
 	leftVal := left.(*object.Integer).Value
 	rightVal := right.(*object.Integer).Value
 
 	switch operator {
 	case "+":
-		return &object.Integer{Value: leftVal + rightVal, TokenLine: left.Line()}
+		return &object.Integer{Value: leftVal + rightVal}
 	case "-":
-		return &object.Integer{Value: leftVal - rightVal, TokenLine: left.Line()}
+		return &object.Integer{Value: leftVal - rightVal}
 	case "*":
-		return &object.Integer{Value: leftVal * rightVal, TokenLine: left.Line()}
+		return &object.Integer{Value: leftVal * rightVal}
 	case "/":
-		return &object.Integer{Value: leftVal / rightVal, TokenLine: left.Line()}
+		return &object.Integer{Value: leftVal / rightVal}
 	case "<":
-		return nativeBoolToBooleanObject(leftVal < rightVal, left.Line())
+		return nativeBoolToBooleanObject(leftVal < rightVal)
 	case ">":
-		return nativeBoolToBooleanObject(leftVal > rightVal, left.Line())
+		return nativeBoolToBooleanObject(leftVal > rightVal)
 	case ">=":
-		return nativeBoolToBooleanObject(leftVal >= rightVal, left.Line())
+		return nativeBoolToBooleanObject(leftVal >= rightVal)
 	case "<=":
-		return nativeBoolToBooleanObject(leftVal <= rightVal, left.Line())
+		return nativeBoolToBooleanObject(leftVal <= rightVal)
 	case "==":
-		return nativeBoolToBooleanObject(leftVal == rightVal, left.Line())
+		return nativeBoolToBooleanObject(leftVal == rightVal)
 	case "!=":
-		return nativeBoolToBooleanObject(leftVal != rightVal, left.Line())
+		return nativeBoolToBooleanObject(leftVal != rightVal)
 	default:
-		return newError(left.Line(), "unknown operator: %s %s %s", left.Type(), operator, right.Type())
+		return newError(line, "unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 
-func evalStringInfixExpr(operator string, left, right object.Object) object.Object {
+func evalStringInfixExpr(operator string, left, right object.Object, line int) object.Object {
 	if operator != "+" {
-		return newError(left.Line(), "unknown operator: %s %s %s", left.Type(), operator, right.Type())
+		return newError(line, "unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 
 	leftVal := left.(*object.String).Value
 	rightVal := right.(*object.String).Value
 
 	// Not sure about this line number here
-	return &object.String{Value: leftVal + rightVal, TokenLine: left.Line()}
+	return &object.String{Value: leftVal + rightVal}
 }
 
 func evalBooleanComparisonExpr(operator string, left, right object.Object) object.Object {
@@ -256,9 +256,9 @@ func evalBooleanComparisonExpr(operator string, left, right object.Object) objec
 
 	switch operator {
 	case "&&":
-		return nativeBoolToBooleanObject(leftVal && rightVal, left.Line())
+		return nativeBoolToBooleanObject(leftVal && rightVal)
 	case "||":
-		return nativeBoolToBooleanObject(leftVal || rightVal, left.Line())
+		return nativeBoolToBooleanObject(leftVal || rightVal)
 	default:
 		return NULL
 	}
@@ -306,23 +306,23 @@ func evalExpressions(exprs []ast.Expr, s *object.Scope) []object.Object {
 	return result
 }
 
-func evalIndexExpr(left, index object.Object) object.Object {
+func evalIndexExpr(left, index object.Object, line int) object.Object {
 	switch {
 	case left.Type() == object.ArrayObj && index.Type() == object.IntegerObj:
-		return evalArrayIndexExpr(left, index)
+		return evalArrayIndexExpr(left, index, line)
 	default:
-		return newError(left.Line(), "index operator not supported: %s", left.Type())
+		return newError(line, "index operator not supported: %s", left.Type())
 	}
 }
 
-func evalArrayIndexExpr(array, index object.Object) object.Object {
+func evalArrayIndexExpr(array, index object.Object, line int) object.Object {
 	arrayObj := array.(*object.Array)
 	idx := index.(*object.Integer).Value
 	arrLen := int64(len(arrayObj.Elements))
 	maxIdx := arrLen - 1
 
 	if (idx >= 0 && idx > maxIdx) || (idx < 0 && idx < -arrLen) {
-		return newError(arrayObj.TokenLine, "array index out of bounds")
+		return newError(line, "array index out of bounds")
 	}
 
 	if idx >= 0 {
@@ -360,7 +360,7 @@ func evalForStmt(node *ast.ForStmt, s *object.Scope) object.Object {
 func applyFunction(fn object.Object, args []object.Object, line int) object.Object {
 	switch fn := fn.(type) {
 	case *object.Function:
-		extendedScope := extendFunctionScope(fn, args)
+		extendedScope := extendFunctionScope(fn, args, line)
 		evaluated := Eval(fn.Body, extendedScope)
 		return unwrapReturnValue(evaluated)
 	case *object.BuiltIn:
@@ -371,12 +371,10 @@ func applyFunction(fn object.Object, args []object.Object, line int) object.Obje
 }
 
 // Utilty functions
-func nativeBoolToBooleanObject(input bool, line int) *object.Boolean {
+func nativeBoolToBooleanObject(input bool) *object.Boolean {
 	if input {
-		TRUE.TokenLine = line
 		return TRUE
 	}
-	FALSE.TokenLine = line
 	return FALSE
 }
 
@@ -404,11 +402,11 @@ func isError(obj object.Object) bool {
 	return false
 }
 
-func extendFunctionScope(fn *object.Function, args []object.Object) *object.Scope {
+func extendFunctionScope(fn *object.Function, args []object.Object, line int) *object.Scope {
 	scope := object.NewEnclosedScope(fn.Scope)
 
 	for paramIdx, param := range fn.Parameters {
-		scope.DeclareVar(param.Value, args[paramIdx], true) // arguments from a function should be constant
+		scope.DeclareVar(param.Value, args[paramIdx], true, line) // arguments from a function should be constant
 	}
 
 	return scope

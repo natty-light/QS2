@@ -196,8 +196,8 @@ func TestErrorHandling(t *testing.T) {
 			t.Errorf("wrong error message. expected=%q, got=%q", tt.expectedMessage, errObj.Message)
 		}
 
-		if errObj.Line() != tt.expectedLine {
-			t.Errorf("wrong line. expected=%d, got=%d", tt.expectedLine, errObj.Line())
+		if errObj.OriginLine != tt.expectedLine {
+			t.Errorf("wrong line. expected=%d, got=%d", tt.expectedLine, errObj.OriginLine)
 		}
 	}
 }
