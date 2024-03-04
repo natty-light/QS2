@@ -548,6 +548,39 @@ func TestHashIndexExpressions(t *testing.T) {
 	}
 }
 
+func TestFloatExpressions(t *testing.T) {
+	tests := []struct {
+		source   string
+		expected float64
+	}{
+		{
+			`5.2 + 2.5`,
+			7.7,
+		},
+		{
+			`2.2 * 3.3`,
+			7.26,
+		},
+		{
+			`2.2 - 1.1`,
+			1.1,
+		},
+		{
+			`2 + 4.2`,
+			6.2,
+		},
+		{
+			`4 * 1.1`,
+			4.4,
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.source)
+		testFloatObject(t, evaluated, tt.expected)
+	}
+}
+
 // Utils
 
 func testNullObject(t *testing.T, obj object.Object) bool {
@@ -591,6 +624,21 @@ func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 
 	if result.Value != expected {
 		t.Errorf("object has wrong value. got=%t, want=%t", result.Value, expected)
+		return false
+	}
+
+	return true
+}
+
+func testFloatObject(t *testing.T, obj object.Object, expected float64) bool {
+	result, ok := obj.(*object.Float)
+	if !ok {
+		t.Errorf("object is not *object.Float. got=%T (%+v)", obj, obj)
+		return false
+	}
+
+	if result.Value != expected {
+		t.Errorf("object has wrong value. got=%f, want=%f", result.Value, expected)
 		return false
 	}
 
