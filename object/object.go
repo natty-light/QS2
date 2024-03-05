@@ -85,7 +85,7 @@ type (
 	HashKey struct {
 		Type        ObjectType
 		HashValue   uint64
-		ObjectValue Object
+		ObjectValue interface{}
 	}
 
 	HashPair struct {
@@ -242,16 +242,16 @@ func (b *Boolean) HashKey() HashKey {
 		val = 0
 	}
 
-	return HashKey{Type: b.Type(), HashValue: val, ObjectValue: b}
+	return HashKey{Type: b.Type(), HashValue: val, ObjectValue: b.Value}
 }
 
 func (i *Integer) HashKey() HashKey {
-	return HashKey{Type: i.Type(), HashValue: uint64(i.Value), ObjectValue: i}
+	return HashKey{Type: i.Type(), HashValue: uint64(i.Value), ObjectValue: i.Value}
 }
 
 func (s *String) HashKey() HashKey {
 	h := fnv.New64a()
 	h.Write([]byte(s.Value))
 
-	return HashKey{Type: s.Type(), HashValue: h.Sum64(), ObjectValue: s}
+	return HashKey{Type: s.Type(), HashValue: h.Sum64(), ObjectValue: s.Value}
 }

@@ -157,7 +157,14 @@ var builtIns = map[string]*object.BuiltIn{
 
 			keys := make([]object.Object, 0)
 			for key, _ := range hash.Pairs {
-				keys = append(keys, key.ObjectValue)
+				switch val := key.ObjectValue.(type) {
+				case bool:
+					keys = append(keys, &object.Boolean{Value: val})
+				case string:
+					keys = append(keys, &object.String{Value: val})
+				case int64:
+					keys = append(keys, &object.Integer{Value: val})
+				}
 			}
 
 			return &object.Array{Elements: keys}
