@@ -1,8 +1,8 @@
-Add support for float literals
-
 add support for defining functions like:
 func add(a, b) {
     a + b
 }
 
-add support for % and integer division
+add support integer division
+
+propagate line numbers into macro system somehow?

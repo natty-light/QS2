@@ -6,3 +6,5 @@ There are some deviations, including:
 - Line numbers in error messages
 - For loops
 - Support for && and || in logical expressions
+
+In the macro system, line numbers are not propagated to the newly created tokens
