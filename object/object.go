@@ -26,6 +26,7 @@ const (
 	ArrayObj       ObjectType = "Array"
 	HashObj        ObjectType = "Hash"
 	FloatObj       ObjectType = "Float"
+	QuoteObj       ObjectType = "Quote"
 )
 
 type (
@@ -100,6 +101,10 @@ type (
 	Float struct {
 		Value float64
 	}
+
+	Quote struct {
+		Node ast.Node
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -148,6 +153,10 @@ func (h *Hash) Type() ObjectType {
 
 func (f *Float) Type() ObjectType {
 	return FloatObj
+}
+
+func (q *Quote) Type() ObjectType {
+	return QuoteObj
 }
 
 func (i *Integer) Inspect() string {
@@ -230,6 +239,10 @@ func (h *Hash) Inspect() string {
 
 func (f *Float) Inspect() string {
 	return strconv.FormatFloat(f.Value, 'f', -1, 64)
+}
+
+func (q *Quote) Inspect() string {
+	return "QUOTE(" + q.Node.String() + ")"
 }
 
 // HashKey functions

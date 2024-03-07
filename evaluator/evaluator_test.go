@@ -644,3 +644,118 @@ func testFloatObject(t *testing.T, obj object.Object, expected float64) bool {
 
 	return true
 }
+
+func TestQuote(t *testing.T) {
+	tests := []struct {
+		source   string
+		expected string
+	}{
+		{
+			`quote(5)`,
+			`5`,
+		},
+		{
+			`quote(5 + 8)`,
+			`(5 + 8)`,
+		},
+		{
+			`quote(foobar)`,
+			`foobar`,
+		},
+		{
+			`quote(foo + bar)`,
+			`(foo + bar)`,
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.source)
+		quote, ok := evaluated.(*object.Quote)
+		if !ok {
+			t.Fatalf("expected *object.Quote. got=%T (%+v)", evaluated, evaluated)
+		}
+
+		if quote.Node == nil {
+			t.Fatalf("quote.Node is nil")
+		}
+
+		if quote.Node.String() != tt.expected {
+			t.Errorf("not equal. got=%q, want=%q", quote.Node.String(), tt.expected)
+		}
+	}
+}
+
+func TestQuoteUnquote(t *testing.T) {
+	tests := []struct {
+		source   string
+		expected string
+	}{
+		{
+			`quote(unquote(4))`,
+			`4`,
+		},
+		{
+			`quote(unquote(4 + 4))`,
+			`8`,
+		},
+		{
+			`quote(unquote(4 + 4) + 8)`,
+			`(8 + 8)`,
+		},
+		{
+			`quote(unquote(2.5 + 1.5))`,
+			`4.000000`,
+		},
+		{
+			`mut foo = 8;
+					quote(foo)`,
+			`foo`,
+		},
+		{
+			`mut foo = 8;
+  					quote(unquote(foo))`,
+			`8`,
+		},
+		{
+			`quote(unquote(true))`,
+			`true`,
+		},
+		{
+			`quote(unquote(true == false))`,
+			`false`,
+		},
+		{
+			`quote(unquote(true || false))`,
+			`true`,
+		},
+		{
+			`quote(unquote(true && false))`,
+			`false`,
+		},
+		{
+			`quote(unquote(quote(4 + 4)))`,
+			`(4 + 4)`,
+		},
+		{
+			`mut quotedInfixExpr = quote(4 + 4)
+			quote(unquote(4 + 4) + unquote(quotedInfixExpr))`,
+			`(8 + (4 + 4))`,
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.source)
+		quote, ok := evaluated.(*object.Quote)
+		if !ok {
+			t.Fatalf("expected *object.Quote. got=%T (%+v)", evaluated, evaluated)
+		}
+
+		if quote.Node == nil {
+			t.Fatalf("quote.Node is nil")
+		}
+
+		if quote.Node.String() != tt.expected {
+			t.Errorf("not equal. got=%q, want=%q", quote.Node.String(), tt.expected)
+		}
+	}
+}

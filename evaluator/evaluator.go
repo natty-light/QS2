@@ -94,6 +94,9 @@ func Eval(node ast.Node, s *object.Scope) object.Object {
 	case *ast.IfExpr:
 		return evalIfExpr(node, s)
 	case *ast.CallExpr:
+		if node.Function.TokenLiteral() == "quote" {
+			return quote(node.Arguments[0], s)
+		}
 		function := Eval(node.Function, s)
 		if isError(function) {
 			return function
