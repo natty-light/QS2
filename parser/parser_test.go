@@ -1000,6 +1000,47 @@ func TestFloatLiteralExpr(t *testing.T) {
 	}
 }
 
+func TestMacroLiteralParsing(t *testing.T) {
+	source := `macro(x, y) { x + y; }`
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Stmts) != 1 {
+		t.Fatalf("program.Stmts does not contain %d statements. got=%d\n", 1, len(program.Stmts))
+	}
+
+	stmt, ok := program.Stmts[0].(*ast.ExpressionStmt)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not *ast.ExpressionStmt. got=%T", program.Stmts[0])
+	}
+
+	macro, ok := stmt.Expr.(*ast.MacroLiteral)
+	if !ok {
+		t.Fatalf("stmt.Expr is not *ast.MacroLiteral. got=%T", stmt.Expr)
+	}
+
+	if len(macro.Parameters) != 2 {
+		t.Fatalf("macro literal parameters wrong. want 2, got=%d\n", len(macro.Parameters))
+	}
+
+	testLiteralExpr(t, macro.Parameters[0], "x")
+	testLiteralExpr(t, macro.Parameters[1], "y")
+
+	if len(macro.Body.Stmts) != 1 {
+		t.Fatalf("macro.Body.Stmts does not contain %d statements. got=%d\n", 1, len(macro.Body.Stmts))
+	}
+
+	bodyStmt, ok := macro.Body.Stmts[0].(*ast.ExpressionStmt)
+	if !ok {
+		t.Fatalf("macro body stmt is not *ast.ExpressionStmt. got=%T", macro.Body.Stmts[0])
+	}
+
+	testInfixExpr(t, bodyStmt.Expr, "x", "+", "y")
+}
+
 // Utilities
 
 func checkParserErrors(t *testing.T, p *Parser) {

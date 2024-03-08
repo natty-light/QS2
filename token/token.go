@@ -21,6 +21,7 @@ const (
 	Func   TokenType = "Func"
 	Return TokenType = "Return"
 	For    TokenType = "For"
+	Macro  TokenType = "Macro"
 
 	// Grouping
 	LeftParen          TokenType = "LeftParen"

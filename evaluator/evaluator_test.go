@@ -759,3 +759,87 @@ func TestQuoteUnquote(t *testing.T) {
 		}
 	}
 }
+
+func TestDefineMacros(t *testing.T) {
+	source := `mut number = 1;
+	           mut f = func(x, y) { x + y; };
+               mut m = macro(x, y) { x + y; };
+			   mut anotherM;
+			   anotherM = macro(x, y) { x - y; };
+		       `
+
+	scope := object.NewScope()
+	l := lexer.New(source)
+	p := parser.New(l)
+	program := p.ParseProgram()
+
+	DefineMacros(program, scope)
+
+	if len(program.Stmts) != 2 {
+		t.Fatalf("program.Statements does not contain 2 statements. got=%d", len(program.Stmts))
+	}
+
+	_, _, ok := scope.Get("number")
+	if ok {
+		t.Fatalf("number should not be defined")
+	}
+
+	_, _, ok = scope.Get("f")
+	if ok {
+		t.Fatalf("f should not be defined")
+	}
+
+	obj, _, ok := scope.Get("m")
+	if !ok {
+		t.Fatalf("macro not in scope")
+	}
+
+	macro, ok := obj.Value.(*object.Macro)
+	if !ok {
+		t.Fatalf("object is not Macro. got=%T (%+v)", obj.Value, obj.Value)
+	}
+
+	if len(macro.Parameters) != 2 {
+		t.Fatalf("macro parameters wrong. want=2, got=%d", len(macro.Parameters))
+	}
+
+	if macro.Parameters[0].String() != "x" {
+		t.Fatalf("parameter is not 'x'. got=%q", macro.Parameters[0])
+	}
+
+	if macro.Parameters[1].String() != "y" {
+		t.Fatalf("parameter is not 'y'. got=%q", macro.Parameters[1])
+	}
+
+	expectedBody := "(x + y)"
+	if macro.Body.String() != expectedBody {
+		t.Fatalf("body is not %q. got=%q", expectedBody, macro.Body.String())
+	}
+
+	anotherObj, _, ok := scope.Get("anotherM")
+	if !ok {
+		t.Fatalf("macro not in scope")
+	}
+
+	anotherMacro, ok := anotherObj.Value.(*object.Macro)
+	if !ok {
+		t.Fatalf("object is not Macro. got=%T (%+v)", anotherObj.Value, anotherObj.Value)
+	}
+
+	if len(anotherMacro.Parameters) != 2 {
+		t.Fatalf("macro parameters wrong. want=2, got=%d", len(anotherMacro.Parameters))
+	}
+
+	if anotherMacro.Parameters[0].String() != "x" {
+		t.Fatalf("parameter is not 'x'. got=%q", anotherMacro.Parameters[0])
+	}
+
+	if anotherMacro.Parameters[1].String() != "y" {
+		t.Fatalf("parameter is not 'y'. got=%q", anotherMacro.Parameters[1])
+	}
+
+	anotherExpectedBody := "(x - y)"
+	if anotherMacro.Body.String() != anotherExpectedBody {
+		t.Fatalf("body is not %q. got=%q", anotherExpectedBody, anotherMacro.Body.String())
+	}
+}

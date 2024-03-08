@@ -112,6 +112,12 @@ type (
 		Value float64
 	}
 
+	MacroLiteral struct {
+		Token      token.Token
+		Parameters []*Identifier
+		Body       *BlockStmt
+	}
+
 	// Expressions
 	Identifier struct {
 		Token token.Token // token.Ident
@@ -238,6 +244,10 @@ func (h *HashLiteral) TokenLiteral() string {
 
 func (f *FloatLiteral) TokenLiteral() string {
 	return f.Token.Literal
+}
+
+func (m *MacroLiteral) TokenLiteral() string {
+	return m.Token.Literal
 }
 
 // Statements
@@ -459,6 +469,24 @@ func (f *FloatLiteral) String() string {
 	return f.Token.Literal
 }
 
+func (m *MacroLiteral) String() string {
+	var out bytes.Buffer
+
+	params := make([]string, 0)
+
+	for _, p := range m.Parameters {
+		params = append(params, p.String())
+	}
+
+	out.WriteString(m.TokenLiteral())
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString(m.Body.String())
+
+	return out.String()
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -482,3 +510,4 @@ func (i *IndexExpr) expressionNode()       {}
 func (n *NullLiteral) expressionNode()     {}
 func (h *HashLiteral) expressionNode()     {}
 func (f *FloatLiteral) expressionNode()    {}
+func (m *MacroLiteral) expressionNode()    {}

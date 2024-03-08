@@ -251,6 +251,7 @@ var keywords = map[string]token.TokenType{
 	"func":   token.Func,
 	"return": token.Return,
 	"for":    token.For,
+	"macro":  token.Macro,
 }
 
 func LookupIdent(ident string) token.TokenType {

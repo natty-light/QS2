@@ -27,6 +27,7 @@ const (
 	HashObj        ObjectType = "Hash"
 	FloatObj       ObjectType = "Float"
 	QuoteObj       ObjectType = "Quote"
+	MacroObj       ObjectType = "Macro"
 )
 
 type (
@@ -105,6 +106,12 @@ type (
 	Quote struct {
 		Node ast.Node
 	}
+
+	Macro struct {
+		Parameters []*ast.Identifier
+		Body       *ast.BlockStmt
+		Scope      *Scope
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -157,6 +164,10 @@ func (f *Float) Type() ObjectType {
 
 func (q *Quote) Type() ObjectType {
 	return QuoteObj
+}
+
+func (m *Macro) Type() ObjectType {
+	return MacroObj
 }
 
 func (i *Integer) Inspect() string {
@@ -243,6 +254,23 @@ func (f *Float) Inspect() string {
 
 func (q *Quote) Inspect() string {
 	return "QUOTE(" + q.Node.String() + ")"
+}
+
+func (m *Macro) Inspect() string {
+	var out bytes.Buffer
+
+	params := []string{}
+	for _, p := range m.Parameters {
+		params = append(params, p.String())
+	}
+
+	out.WriteString("macro(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") {\n")
+	out.WriteString(m.Body.String())
+	out.WriteString("\n}")
+
+	return out.String()
 }
 
 // HashKey functions
