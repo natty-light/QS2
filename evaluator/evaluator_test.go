@@ -775,8 +775,8 @@ func TestDefineMacros(t *testing.T) {
 
 	DefineMacros(program, scope)
 
-	if len(program.Stmts) != 2 {
-		t.Fatalf("program.Statements does not contain 2 statements. got=%d", len(program.Stmts))
+	if len(program.Stmts) != 3 {
+		t.Fatalf("program.Statements does not contain 3 statements. got=%d", len(program.Stmts))
 	}
 
 	_, _, ok := scope.Get("number")
