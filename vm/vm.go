@@ -49,6 +49,31 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpAdd:
+			right := vm.pop()
+			left := vm.pop()
+
+			switch true {
+			case left.Type() == object.IntegerObj && right.Type() == object.IntegerObj:
+				leftVal := left.(*object.Integer).Value
+				rightVal := right.(*object.Integer).Value
+				result := leftVal + rightVal
+				err := vm.push(&object.Integer{Value: result})
+				if err != nil {
+					panic(err)
+				}
+			case left.Type() == object.FloatObj && right.Type() == object.FloatObj:
+				leftVal := left.(*object.Float).Value
+				rightVal := right.(*object.Float).Value
+				result := leftVal + rightVal
+				err := vm.push(&object.Float{Value: result})
+				if err != nil {
+					panic(err)
+				}
+			default:
+				return fmt.Errorf("type mismatch: %s + %s", left.Type(), right.Type())
+			}
+
 		}
 	}
 	return nil
@@ -62,4 +87,14 @@ func (vm *VM) push(o object.Object) error {
 	vm.sp++
 
 	return nil
+}
+
+func (vm *VM) pop() object.Object {
+	o := vm.head()
+	vm.sp--
+	return o
+}
+
+func (vm *VM) head() object.Object {
+	return vm.stack[vm.sp-1]
 }

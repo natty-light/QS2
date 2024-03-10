@@ -19,7 +19,7 @@ func TestIntegerArithmetic(t *testing.T) {
 	tests := []vmTestCase{
 		{"1", 1},
 		{"2", 2},
-		{"1 + 2", 2}, // FIXME
+		{"1 + 2", 3}, // FIXME
 	}
 
 	runVmTests(t, tests)
@@ -29,7 +29,7 @@ func TestFLoatArithmetic(t *testing.T) {
 	tests := []vmTestCase{
 		{"1.0", 1.0},
 		{"2.0", 2.0},
-		{"1.0 + 2.0", 2.0}, // FIXME
+		{"1.0 + 2.0", 3.0}, // FIXME
 	}
 
 	runVmTests(t, tests)
