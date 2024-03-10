@@ -22,6 +22,8 @@ func main() {
 	if len(args) == 1 {
 		// If no filename was passed as a command line argument, run the repl
 		repl.Start(os.Stdin, os.Stdout)
+	} else if args[1] == "--vm" {
+		repl.StartVM(os.Stdin, os.Stdout)
 	} else {
 		if args[1] == "interpret" {
 			Interpret(args[2])
@@ -88,7 +90,7 @@ func Run(filename string) {
 	}
 
 	comp := compiler.New()
-	err = comp.Compile(program)
+	_, err = comp.Compile(program)
 	if err != nil {
 		fmt.Printf("Compiler error: %s\n", err)
 		return
@@ -123,7 +125,7 @@ func Compile(filename string) {
 	}
 
 	comp := compiler.New()
-	err = comp.Compile(program)
+	_, err = comp.Compile(program)
 	if err != nil {
 		fmt.Printf("Honk! Compiler error: %s\n", err)
 		return
