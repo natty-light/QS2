@@ -1,9 +1,10 @@
 package main
 
 import (
-	"QuonkScript/interpreter"
-	"QuonkScript/repl"
+	"fmt"
 	"os"
+	"quonk/interpreter"
+	"quonk/repl"
 )
 
 func main() {
@@ -14,8 +15,15 @@ func main() {
 		// If no filename was passed as a command line argument, run the repl
 		repl.Start(os.Stdin, os.Stdout)
 	} else {
-		// Script name should be second arg
-		interpreter.Run(args[1])
+		if args[1] == "run" {
+			interpreter.Run(args[2])
+		} else if args[1] == "compile" {
+			// TODO: implement compile
+		} else if args[1] == "exec" {
+			// TODO: implement reading intermediate bytecode file
+		} else if args[1] == "help" {
+			fmt.Println("Usage: QuonkScript [run|compile|exec|help] [filename]")
+		}
 	}
 
 }

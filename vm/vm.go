@@ -1,10 +1,10 @@
 package vm
 
 import (
-	"QuonkScript/code"
-	"QuonkScript/compiler"
-	"QuonkScript/object"
 	"fmt"
+	"quonk/code"
+	"quonk/compiler"
+	"quonk/object"
 )
 
 const StackSize = 2048

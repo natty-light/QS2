@@ -1,13 +1,13 @@
 package repl
 
 import (
-	"QuonkScript/evaluator"
-	"QuonkScript/lexer"
-	"QuonkScript/object"
-	"QuonkScript/parser"
 	"bufio"
 	"fmt"
 	"io"
+	"quonk/evaluator"
+	"quonk/lexer"
+	"quonk/object"
+	"quonk/parser"
 )
 
 const PROMPT = ">>"

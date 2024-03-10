@@ -1,8 +1,8 @@
 package lexer
 
 import (
-	"QuonkScript/token"
-	"QuonkScript/utils"
+	"quonk/token"
+	"quonk/utils"
 )
 
 const (

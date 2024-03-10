@@ -1,12 +1,12 @@
 package interpreter
 
 import (
-	"QuonkScript/evaluator"
-	"QuonkScript/lexer"
-	"QuonkScript/object"
-	"QuonkScript/parser"
 	"fmt"
 	"os"
+	"quonk/evaluator"
+	"quonk/lexer"
+	"quonk/object"
+	"quonk/parser"
 )
 
 func Run(filename string) {

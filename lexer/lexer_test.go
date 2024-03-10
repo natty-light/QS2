@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"QuonkScript/token"
+	"quonk/token"
 	"testing"
 )
 

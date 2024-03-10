@@ -1,12 +1,12 @@
 package compiler
 
 import (
-	"QuonkScript/ast"
-	"QuonkScript/code"
-	"QuonkScript/lexer"
-	"QuonkScript/object"
-	"QuonkScript/parser"
 	"fmt"
+	"quonk/ast"
+	"quonk/code"
+	"quonk/lexer"
+	"quonk/object"
+	"quonk/parser"
 	"testing"
 )
 

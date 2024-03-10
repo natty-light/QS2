@@ -1,10 +1,10 @@
 package evaluator
 
 import (
-	"QuonkScript/lexer"
-	"QuonkScript/object"
-	"QuonkScript/parser"
 	"fmt"
+	"quonk/lexer"
+	"quonk/object"
+	"quonk/parser"
 	"testing"
 )
 

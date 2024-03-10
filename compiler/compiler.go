@@ -1,10 +1,10 @@
 package compiler
 
 import (
-	"QuonkScript/ast"
-	"QuonkScript/code"
-	"QuonkScript/object"
 	"fmt"
+	"quonk/ast"
+	"quonk/code"
+	"quonk/object"
 )
 
 type Compiler struct {

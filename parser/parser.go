@@ -1,10 +1,10 @@
 package parser
 
 import (
-	"QuonkScript/ast"
-	"QuonkScript/lexer"
-	"QuonkScript/token"
 	"fmt"
+	"quonk/ast"
+	"quonk/lexer"
+	"quonk/token"
 	"strconv"
 )
 

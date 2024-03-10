@@ -1,9 +1,9 @@
 package evaluator
 
 import (
-	"QuonkScript/ast"
-	"QuonkScript/object"
 	"fmt"
+	"quonk/ast"
+	"quonk/object"
 )
 
 var (

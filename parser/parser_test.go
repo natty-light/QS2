@@ -1,9 +1,9 @@
 package parser
 
 import (
-	"QuonkScript/ast"
-	"QuonkScript/lexer"
 	"fmt"
+	"quonk/ast"
+	"quonk/lexer"
 	"strconv"
 	"testing"
 )

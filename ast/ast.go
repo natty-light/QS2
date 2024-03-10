@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"QuonkScript/token"
 	"bytes"
+	"quonk/token"
 	"strings"
 )
 

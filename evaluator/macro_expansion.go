@@ -1,8 +1,8 @@
 package evaluator
 
 import (
-	"QuonkScript/ast"
-	"QuonkScript/object"
+	"quonk/ast"
+	"quonk/object"
 )
 
 func DefineMacros(program *ast.Program, scope *object.Scope) {

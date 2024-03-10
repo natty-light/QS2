@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"QuonkScript/token"
+	"quonk/token"
 	"testing"
 )
 

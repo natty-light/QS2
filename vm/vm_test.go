@@ -1,12 +1,12 @@
 package vm
 
 import (
-	"QuonkScript/ast"
-	"QuonkScript/compiler"
-	"QuonkScript/lexer"
-	"QuonkScript/object"
-	"QuonkScript/parser"
 	"fmt"
+	"quonk/ast"
+	"quonk/compiler"
+	"quonk/lexer"
+	"quonk/object"
+	"quonk/parser"
 	"testing"
 )
 

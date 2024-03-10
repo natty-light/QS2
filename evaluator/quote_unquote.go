@@ -1,10 +1,10 @@
 package evaluator
 
 import (
-	"QuonkScript/ast"
-	"QuonkScript/object"
-	"QuonkScript/token"
 	"fmt"
+	"quonk/ast"
+	"quonk/object"
+	"quonk/token"
 )
 
 func quote(node ast.Node, s *object.Scope) object.Object {

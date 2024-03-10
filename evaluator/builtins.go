@@ -1,9 +1,9 @@
 package evaluator
 
 import (
-	"QuonkScript/object"
 	"bytes"
 	"fmt"
+	"quonk/object"
 	"strings"
 )
 

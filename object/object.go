@@ -1,10 +1,10 @@
 package object
 
 import (
-	"QuonkScript/ast"
 	"bytes"
 	"fmt"
 	"hash/fnv"
+	"quonk/ast"
 	"strconv"
 
 	"strings"

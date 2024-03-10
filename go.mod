@@ -1,3 +1,3 @@
-module QuonkScript
+module quonk
 
 go 1.20
