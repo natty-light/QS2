@@ -27,7 +27,9 @@ func main() {
 		} else if args[1] == "run" {
 			Run(args[2])
 		} else if args[1] == "compile" {
-			Compile(args[2])
+			// TODO: implement writing intermediate bytecode file
+			//Compile(args[2])
+			fmt.Println("Honk! Compile not implemented yet")
 		} else if args[1] == "exec" {
 			// TODO: implement reading intermediate bytecode file
 			fmt.Println("Honk! Exec not implemented yet")
