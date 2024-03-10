@@ -8,7 +8,7 @@ import (
 )
 
 var builtIns = map[string]*object.BuiltIn{
-	"len": &object.BuiltIn{
+	"len": {
 		Fn: func(line int, args ...object.Object) object.Object {
 			if len(args) != 1 {
 				return newError(line, "`len` expects one argument")
@@ -23,7 +23,7 @@ var builtIns = map[string]*object.BuiltIn{
 			}
 		},
 	},
-	"first": &object.BuiltIn{
+	"first": {
 		Fn: func(line int, args ...object.Object) object.Object {
 			if len(args) != 1 {
 				return newError(line, "`first` expects a single argument. got=%d", len(args))
@@ -39,7 +39,7 @@ var builtIns = map[string]*object.BuiltIn{
 			return NULL
 		},
 	},
-	"last": &object.BuiltIn{
+	"last": {
 		Fn: func(line int, args ...object.Object) object.Object {
 			if len(args) != 1 {
 				return newError(line, "`last` expects a single argument. got=%d", len(args))
@@ -56,7 +56,7 @@ var builtIns = map[string]*object.BuiltIn{
 			return NULL
 		},
 	},
-	"rest": &object.BuiltIn{
+	"rest": {
 		Fn: func(line int, args ...object.Object) object.Object {
 			if len(args) != 1 {
 				return newError(line, "`rest` expects one argument")
@@ -67,14 +67,14 @@ var builtIns = map[string]*object.BuiltIn{
 			arr := args[0].(*object.Array)
 			length := len(arr.Elements)
 			if length > 0 {
-				newElems := make([]object.Object, length-1, length-1)
+				newElems := make([]object.Object, length-1)
 				copy(newElems, arr.Elements[1:length])
 				return &object.Array{Elements: newElems}
 			}
 			return NULL
 		},
 	},
-	"append": &object.BuiltIn{
+	"append": {
 		Fn: func(line int, args ...object.Object) object.Object {
 			if len(args) != 2 {
 				return newError(line, "`append` expects two arguments")
@@ -94,7 +94,7 @@ var builtIns = map[string]*object.BuiltIn{
 			return &object.Array{Elements: newElems}
 		},
 	},
-	"slice": &object.BuiltIn{
+	"slice": {
 		Fn: func(line int, args ...object.Object) object.Object {
 			if len(args) != 3 {
 				return newError(line, "`slice` expects three arguments")
@@ -130,7 +130,7 @@ var builtIns = map[string]*object.BuiltIn{
 			return &object.Array{Elements: newElems}
 		},
 	},
-	"print": &object.BuiltIn{
+	"print": {
 		Fn: func(line int, args ...object.Object) object.Object {
 			var out bytes.Buffer
 
@@ -144,7 +144,7 @@ var builtIns = map[string]*object.BuiltIn{
 			return nil
 		},
 	},
-	"keys": &object.BuiltIn{
+	"keys": {
 		Fn: func(line int, args ...object.Object) object.Object {
 			if len(args) != 1 {
 				return newError(line, "`keys` expects one argument")
@@ -156,7 +156,7 @@ var builtIns = map[string]*object.BuiltIn{
 			}
 
 			keys := make([]object.Object, 0)
-			for key, _ := range hash.Pairs {
+			for key := range hash.Pairs {
 				switch val := key.ObjectValue.(type) {
 				case bool:
 					keys = append(keys, &object.Boolean{Value: val})
