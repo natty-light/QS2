@@ -49,29 +49,10 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
-		case code.OpAdd:
-			right := vm.pop()
-			left := vm.pop()
-
-			switch true {
-			case left.Type() == object.IntegerObj && right.Type() == object.IntegerObj:
-				leftVal := left.(*object.Integer).Value
-				rightVal := right.(*object.Integer).Value
-				result := leftVal + rightVal
-				err := vm.push(&object.Integer{Value: result})
-				if err != nil {
-					panic(err)
-				}
-			case left.Type() == object.FloatObj && right.Type() == object.FloatObj:
-				leftVal := left.(*object.Float).Value
-				rightVal := right.(*object.Float).Value
-				result := leftVal + rightVal
-				err := vm.push(&object.Float{Value: result})
-				if err != nil {
-					panic(err)
-				}
-			default:
-				return fmt.Errorf("type mismatch: %s + %s", left.Type(), right.Type())
+		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
+			err := vm.executeBinaryOperation(op)
+			if err != nil {
+				return err
 			}
 		case code.OpPop:
 			vm.pop()
@@ -102,4 +83,64 @@ func (vm *VM) pop() object.Object {
 
 func (vm *VM) head() object.Object {
 	return vm.stack[vm.sp-1]
+}
+
+func (vm *VM) executeBinaryOperation(op code.Opcode) error {
+	right := vm.pop()
+	left := vm.pop()
+
+	leftType := left.Type()
+	rightType := right.Type()
+
+	if leftType == object.IntegerObj && rightType == object.IntegerObj {
+		return vm.executeBinaryIntegerOperation(op, left, right)
+	}
+
+	if leftType == object.FloatObj && rightType == object.FloatObj {
+		return vm.executeBinaryFloatOperation(op, left, right)
+	}
+
+	return fmt.Errorf("unsupported types for binary operation: %s %s", leftType, rightType)
+}
+
+func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left, right object.Object) error {
+	leftVal := left.(*object.Integer).Value
+	rightVal := right.(*object.Integer).Value
+
+	var result int64
+	switch op {
+	case code.OpAdd:
+		result = leftVal + rightVal
+	case code.OpSub:
+		result = leftVal - rightVal
+	case code.OpMul:
+		result = leftVal * rightVal
+	case code.OpDiv:
+		result = leftVal / rightVal
+	default:
+		return fmt.Errorf("unknown integer operator: %d", op)
+	}
+
+	return vm.push(&object.Integer{Value: result})
+}
+
+func (vm *VM) executeBinaryFloatOperation(op code.Opcode, left, right object.Object) error {
+	leftVal := left.(*object.Float).Value
+	rightVal := right.(*object.Float).Value
+
+	var result float64
+	switch op {
+	case code.OpAdd:
+		result = leftVal + rightVal
+	case code.OpSub:
+		result = leftVal - rightVal
+	case code.OpMul:
+		result = leftVal * rightVal
+	case code.OpDiv:
+		result = leftVal / rightVal
+	default:
+		return fmt.Errorf("unknown float operator: %d", op)
+	}
+
+	return vm.push(&object.Float{Value: result})
 }
