@@ -253,6 +253,15 @@ func (vm *VM) executeBangOperator() error {
 	case False:
 		return vm.push(True)
 	default:
+		if operand.Type() == object.IntegerObj {
+			if operand.(*object.Integer).Value == 0 {
+				return vm.push(True)
+			}
+		} else if operand.Type() == object.FloatObj {
+			if operand.(*object.Float).Value == 0 {
+				return vm.push(True)
+			}
+		}
 		return vm.push(False)
 	}
 }
