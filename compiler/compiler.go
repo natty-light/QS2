@@ -24,31 +24,37 @@ func New() *Compiler {
 	}
 }
 
-func (c *Compiler) Compile(node ast.Node) error {
+func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
+	var err error
+	var t object.ObjectType
 	switch node := node.(type) {
 	case *ast.Program:
 		for _, s := range node.Stmts {
-			err := c.Compile(s)
+			t, err = c.Compile(s)
 			if err != nil {
-				return err
+				return object.ErrorObj, err
 			}
 		}
 	case *ast.ExpressionStmt:
-		err := c.Compile(node.Expr)
+		t, err = c.Compile(node.Expr)
 		if err != nil {
-			return err
+			return object.ErrorObj, err
 		}
 		c.emit(code.OpPop)
 	case *ast.InfixExpr:
 		if node.Operator == "<" || node.Operator == "<=" {
-			err := c.Compile(node.Right)
+			rightType, err := c.Compile(node.Right)
 			if err != nil {
-				return err
+				return object.ErrorObj, err
 			}
 
-			err = c.Compile(node.Left)
+			leftType, err := c.Compile(node.Left)
 			if err != nil {
-				return err
+				return object.ErrorObj, err
+			}
+
+			if leftType != rightType {
+				return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s", leftType, node.Operator, rightType)
 			}
 
 			if node.Operator == "<" {
@@ -56,18 +62,24 @@ func (c *Compiler) Compile(node ast.Node) error {
 			} else {
 				c.emit(code.OpGte)
 			}
-			return nil
+			return object.BooleanObj, nil
 		}
 
-		err := c.Compile(node.Left)
+		leftType, err := c.Compile(node.Left)
 		if err != nil {
-			return err
+			return object.NullObj, err
 		}
 
-		err = c.Compile(node.Right)
+		rightType, err := c.Compile(node.Right)
 		if err != nil {
-			return err
+			return object.ErrorObj, err
 		}
+
+		if leftType != rightType {
+			return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s", leftType, node.Operator, rightType)
+		}
+
+		t = object.BooleanObj
 
 		switch node.Operator {
 		case "+":
@@ -91,22 +103,25 @@ func (c *Compiler) Compile(node ast.Node) error {
 		case "||":
 			c.emit(code.OpOr)
 		default:
-			return fmt.Errorf("unknown operator %s", node.Operator)
+			return object.ErrorObj, fmt.Errorf("unknown operator %s", node.Operator)
 		}
 	case *ast.IntegerLiteral:
+		t = object.IntegerObj
 		integer := &object.Integer{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(integer))
 	case *ast.FloatLiteral:
+		t = object.FloatObj
 		float := &object.Float{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(float))
 	case *ast.BooleanLiteral:
+		t = object.BooleanObj
 		if node.Value {
 			c.emit(code.OpTrue)
 		} else {
 			c.emit(code.OpFalse)
 		}
 	}
-	return nil
+	return t, nil
 }
 
 func (c *Compiler) Bytecode() *Bytecode {
