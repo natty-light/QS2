@@ -73,10 +73,15 @@ func (vm *VM) Run() error {
 			default:
 				return fmt.Errorf("type mismatch: %s + %s", left.Type(), right.Type())
 			}
-
+		case code.OpPop:
+			vm.pop()
 		}
 	}
 	return nil
+}
+
+func (vm *VM) LastPoppedStackElem() object.Object {
+	return vm.stack[vm.sp]
 }
 
 func (vm *VM) push(o object.Object) error {

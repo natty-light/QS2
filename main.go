@@ -97,7 +97,7 @@ func Run(filename string) {
 		return
 	}
 
-	stackTop := machine.StackTop()
+	stackTop := machine.LastPoppedStackElem()
 	fmt.Println(stackTop.Inspect())
 }
 
