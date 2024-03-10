@@ -207,10 +207,6 @@ func evalInfixExpr(operator string, left, right object.Object, line int) object.
 		return evalStringInfixExpr(operator, left, right, line)
 	case left.Type() == object.FloatObj && right.Type() == object.FloatObj:
 		return evalFloatInfixExpr(operator, left, right, line)
-	case left.Type() == object.FloatObj && right.Type() == object.IntegerObj:
-		return evalFloatIntInfixExpr(operator, left, right, line)
-	case left.Type() == object.IntegerObj && right.Type() == object.FloatObj:
-		return evalIntFloatInfixExpr(operator, left, right, line)
 	case operator == "==":
 		return nativeBoolToBooleanObject(left == right)
 	case operator == "!=":
@@ -486,70 +482,6 @@ func unwrapReturnValue(obj object.Object) object.Object {
 
 func evalFloatInfixExpr(operator string, left, right object.Object, line int) object.Object {
 	leftVal := left.(*object.Float).Value
-	rightVal := right.(*object.Float).Value
-
-	switch operator {
-	case "+":
-		return &object.Float{Value: leftVal + rightVal}
-	case "-":
-		return &object.Float{Value: leftVal - rightVal}
-	case "*":
-		return &object.Float{Value: leftVal * rightVal}
-	case "/":
-		return &object.Float{Value: leftVal / rightVal}
-	case "%":
-		return &object.Integer{Value: int64(leftVal) % int64(rightVal)}
-	case "<":
-		return nativeBoolToBooleanObject(leftVal < rightVal)
-	case ">":
-		return nativeBoolToBooleanObject(leftVal > rightVal)
-	case ">=":
-		return nativeBoolToBooleanObject(leftVal >= rightVal)
-	case "<=":
-		return nativeBoolToBooleanObject(leftVal <= rightVal)
-	case "==":
-		return nativeBoolToBooleanObject(leftVal == rightVal)
-	case "!=":
-		return nativeBoolToBooleanObject(leftVal != rightVal)
-	default:
-		return newError(line, "unknown operator: %s %s %s", left.Type(), operator, right.Type())
-	}
-}
-
-func evalFloatIntInfixExpr(operator string, left, right object.Object, line int) object.Object {
-	leftVal := left.(*object.Float).Value
-	rightVal := float64(right.(*object.Integer).Value)
-
-	switch operator {
-	case "+":
-		return &object.Float{Value: leftVal + rightVal}
-	case "-":
-		return &object.Float{Value: leftVal - rightVal}
-	case "*":
-		return &object.Float{Value: leftVal * rightVal}
-	case "/":
-		return &object.Float{Value: leftVal / rightVal}
-	case "%":
-		return &object.Integer{Value: int64(leftVal) % int64(rightVal)}
-	case "<":
-		return nativeBoolToBooleanObject(leftVal < rightVal)
-	case ">":
-		return nativeBoolToBooleanObject(leftVal > rightVal)
-	case ">=":
-		return nativeBoolToBooleanObject(leftVal >= rightVal)
-	case "<=":
-		return nativeBoolToBooleanObject(leftVal <= rightVal)
-	case "==":
-		return nativeBoolToBooleanObject(leftVal == rightVal)
-	case "!=":
-		return nativeBoolToBooleanObject(leftVal != rightVal)
-	default:
-		return newError(line, "unknown operator: %s %s %s", left.Type(), operator, right.Type())
-	}
-}
-
-func evalIntFloatInfixExpr(operator string, left, right object.Object, line int) object.Object {
-	leftVal := float64(left.(*object.Integer).Value)
 	rightVal := right.(*object.Float).Value
 
 	switch operator {
