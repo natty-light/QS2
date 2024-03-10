@@ -97,27 +97,36 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s on line %d", leftType, node.Operator, rightType, node.Token.Line)
 		}
 
-		t = object.BooleanObj
-
 		switch node.Operator {
+
 		case "+":
+			t = leftType
 			c.emit(code.OpAdd)
 		case "-":
+			t = leftType
 			c.emit(code.OpSub)
 		case "*":
+			t = leftType
 			c.emit(code.OpMul)
 		case "/":
+			t = leftType
 			c.emit(code.OpDiv)
 		case "==":
+			t = object.BooleanObj
 			c.emit(code.OpEqual)
 		case "!=":
+			t = object.BooleanObj
 			c.emit(code.OpNotEqual)
 		case ">":
+			t = object.BooleanObj
 			c.emit(code.OpGt)
 		case ">=":
+			t = object.BooleanObj
 			c.emit(code.OpGte)
 		case "&&":
+			t = object.BooleanObj
 			c.emit(code.OpAnd)
+			t = object.BooleanObj
 		case "||":
 			c.emit(code.OpOr)
 		default:
