@@ -30,6 +30,7 @@ func main() {
 			Compile(args[2])
 		} else if args[1] == "exec" {
 			// TODO: implement reading intermediate bytecode file
+			fmt.Println("Honk! Exec not implemented yet")
 		} else if args[1] == "help" {
 			fmt.Println("Usage: quonk [interpret|run|compile|exec|help] [filename]")
 		}
@@ -121,7 +122,7 @@ func Compile(filename string) {
 	comp := compiler.New()
 	err = comp.Compile(program)
 	if err != nil {
-		fmt.Printf("Compiler error: %s\n", err)
+		fmt.Printf("Honk! Compiler error: %s\n", err)
 		return
 	}
 
@@ -143,7 +144,7 @@ func Exec(filename string) {
 	machine := vm.New(bytecode)
 	err = machine.Run()
 	if err != nil {
-		fmt.Printf("Runtime error: %s\n", err)
+		fmt.Printf("Honk! Runtime error: %s\n", err)
 		return
 	}
 
