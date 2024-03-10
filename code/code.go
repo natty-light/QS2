@@ -17,6 +17,14 @@ const (
 	OpSub
 	OpMul
 	OpDiv
+	OpTrue
+	OpFalse
+	// OpEqual
+	// OpNotEqual
+	// OpGt
+	// OpGte
+	// OpAnd
+	// OpOr
 )
 
 type (
@@ -33,6 +41,14 @@ var definitions = map[Opcode]*Definition{
 	OpSub:      {"OpSub", []int{}},
 	OpMul:      {"OpMul", []int{}},
 	OpDiv:      {"OpDiv", []int{}},
+	OpTrue:     {"OpTrue", []int{}},
+	OpFalse:    {"OpFalse", []int{}},
+	// OpEqual:    {"OpEqual", []int{}},
+	// OpNotEqual: {"OpNotEqual", []int{}},
+	// OpGt:       {"OpGt", []int{}},
+	// OpGte:      {"OpGte", []int{}},
+	// OpAnd:      {"OpAnd", []int{}},
+	// OpOr:       {"OpOr", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {
@@ -119,7 +135,7 @@ func (ins Instructions) fmtInstruction(def *Definition, operands []int) string {
 	}
 	switch operandCount {
 	case 0:
-		return fmt.Sprintf("%s", def.Name)
+		return def.Name
 	case 1:
 		return fmt.Sprintf("%s %d", def.Name, operands[0])
 	}

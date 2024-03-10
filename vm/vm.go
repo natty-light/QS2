@@ -9,6 +9,9 @@ import (
 
 const StackSize = 2048
 
+var True = &object.Boolean{Value: true}
+var False = &object.Boolean{Value: false}
+
 type VM struct {
 	constants    []object.Object
 	instructions code.Instructions
@@ -56,6 +59,21 @@ func (vm *VM) Run() error {
 			}
 		case code.OpPop:
 			vm.pop()
+		case code.OpTrue:
+			err := vm.push(True)
+			if err != nil {
+				return err
+			}
+		case code.OpFalse:
+			err := vm.push(False)
+			if err != nil {
+				return err
+			}
+			// case code.OpEqual, code.OpNotEqual, code.OpGt, code.OpGte, code.OpAnd, code.OpOr:
+			// 	err := vm.executeComparison(op)
+			// 	if err != nil {
+			// 		return err
+			// 	}
 		}
 	}
 	return nil
@@ -143,4 +161,96 @@ func (vm *VM) executeBinaryFloatOperation(op code.Opcode, left, right object.Obj
 	}
 
 	return vm.push(&object.Float{Value: result})
+}
+
+// func (vm *VM) executeComparison(op code.Opcode) error {
+// 	right := vm.pop()
+// 	left := vm.pop()
+
+// 	leftType := left.Type()
+// 	rightType := right.Type()
+
+// 	if leftType == object.IntegerObj && rightType == object.IntegerObj {
+// 		return vm.executeIntegerComparison(op, left, right)
+// 	}
+
+// 	if leftType == object.FloatObj && rightType == object.FloatObj {
+// 		return vm.executeFloatComparison(op, left, right)
+
+// 	}
+
+// 	switch op {
+// 	case code.OpEqual:
+// 		return vm.push(nativeBoolToBooleanObject(left == right))
+// 	case code.OpNotEqual:
+// 		return vm.push(nativeBoolToBooleanObject(left != right))
+// 	case code.OpAnd:
+// 		return vm.push(nativeBoolToBooleanObject(isTruthy(left) && isTruthy(right)))
+// 	case code.OpOr:
+// 		return vm.push(nativeBoolToBooleanObject(isTruthy(left) || isTruthy(right)))
+// 	default:
+// 		return fmt.Errorf("unknown operator: %d", op)
+// 	}
+// }
+
+// func (vm *VM) executeIntegerComparison(op code.Opcode, left, right object.Object) error {
+// 	leftVal := left.(*object.Integer).Value
+// 	rightVal := right.(*object.Integer).Value
+
+// 	var result bool
+// 	switch op {
+// 	case code.OpEqual:
+// 		result = leftVal == rightVal
+// 	case code.OpNotEqual:
+// 		result = leftVal != rightVal
+// 	case code.OpGt:
+// 		result = leftVal > rightVal
+// 	case code.OpGte:
+// 		result = leftVal >= rightVal
+// 	default:
+// 		return fmt.Errorf("unknown integer operator: %d", op)
+// 	}
+
+// 	return vm.push(nativeBoolToBooleanObject(result))
+// }
+
+// func (vm *VM) executeFloatComparison(op code.Opcode, left, right object.Object) error {
+// 	leftVal := left.(*object.Float).Value
+// 	rightVal := right.(*object.Float).Value
+
+// 	var result bool
+// 	switch op {
+// 	case code.OpEqual:
+// 		result = leftVal == rightVal
+// 	case code.OpNotEqual:
+// 		result = leftVal != rightVal
+// 	case code.OpGt:
+// 		result = leftVal > rightVal
+// 	case code.OpGte:
+// 		result = leftVal >= rightVal
+// 	default:
+// 		return fmt.Errorf("unknown float operator: %d", op)
+// 	}
+
+// 	return vm.push(nativeBoolToBooleanObject(result))
+// }
+
+// utility functions
+func nativeBoolToBooleanObject(input bool) *object.Boolean {
+	if input {
+		return True
+	}
+	return False
+}
+
+// TODO: Add NULL support
+func isTruthy(obj object.Object) bool {
+	switch obj {
+	case False:
+		return false
+	case True:
+		return true
+	default:
+		return true
+	}
 }

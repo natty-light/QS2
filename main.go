@@ -14,6 +14,7 @@ import (
 	"quonk/vm"
 )
 
+// TODO : unfuck this
 func main() {
 
 	args := os.Args

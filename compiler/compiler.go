@@ -40,6 +40,29 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 		c.emit(code.OpPop)
 	case *ast.InfixExpr:
+		// if node.Operator == "<" || node.Operator == "<=" {
+		// 	rightObjectType, err := c.Compile(node.Right)
+		// 	if err != nil {
+		// 		return object.NullObj, err
+		// 	}
+
+		// 	leftObjectType, err := c.Compile(node.Left)
+		// 	if err != nil {
+		// 		return object.NullObj, err
+		// 	}
+
+		// 	if leftObjectType != rightObjectType {
+		// 		return object.NullObj, fmt.Errorf("type mismatch: %s %s %s", leftObjectType, node.Operator, rightObjectType)
+		// 	}
+
+		// 	if node.Operator == "<" {
+		// 		c.emit(code.OpGt)
+		// 	} else {
+		// 		c.emit(code.OpGte)
+		// 	}
+		// 	return object.BooleanObj, nil
+		// }
+
 		err := c.Compile(node.Left)
 		if err != nil {
 			return err
@@ -49,6 +72,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+
 		switch node.Operator {
 		case "+":
 			c.emit(code.OpAdd)
@@ -58,6 +82,18 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpMul)
 		case "/":
 			c.emit(code.OpDiv)
+		// case "==":
+		// 	c.emit(code.OpEqual)
+		// case "!=":
+		// 	c.emit(code.OpNotEqual)
+		// case ">":
+		// 	c.emit(code.OpGt)
+		// case ">=":
+		// 	c.emit(code.OpGte)
+		// case "&&":
+		// 	c.emit(code.OpAnd)
+		// case "||":
+		// 	c.emit(code.OpOr)
 		default:
 			return fmt.Errorf("unknown operator %s", node.Operator)
 		}
@@ -67,6 +103,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.FloatLiteral:
 		float := &object.Float{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(float))
+	case *ast.BooleanLiteral:
+		if node.Value {
+			c.emit(code.OpTrue)
+		} else {
+			c.emit(code.OpFalse)
+		}
 	}
 	return nil
 }
