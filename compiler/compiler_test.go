@@ -31,6 +31,21 @@ func TestIntegerArithmetic(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestFloatArithmetic(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			source:            "1.1 + 2.2",
+			expectedConstants: []interface{}{1.1, 2.2},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 
