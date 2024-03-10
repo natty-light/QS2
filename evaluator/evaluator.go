@@ -180,6 +180,12 @@ func evalBangOperatorExpr(right object.Object) object.Object {
 	case NULL:
 		return TRUE
 	default:
+		if right.Type() == object.IntegerObj && right.(*object.Integer).Value == 0 {
+			return TRUE
+		} else if right.Type() == object.FloatObj && right.(*object.Float).Value == 0 {
+			return TRUE
+		}
+
 		return FALSE
 	}
 }
