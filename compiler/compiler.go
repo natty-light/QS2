@@ -54,7 +54,7 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			}
 
 			if leftType != rightType {
-				return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s", leftType, node.Operator, rightType)
+				return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s on line %d", leftType, node.Operator, rightType, node.Token.Line)
 			}
 
 			if node.Operator == "<" {
@@ -76,7 +76,7 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 		}
 
 		if leftType != rightType {
-			return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s", leftType, node.Operator, rightType)
+			return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s on line %d", leftType, node.Operator, rightType, node.Token.Line)
 		}
 
 		t = object.BooleanObj
@@ -103,7 +103,7 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 		case "||":
 			c.emit(code.OpOr)
 		default:
-			return object.ErrorObj, fmt.Errorf("unknown operator %s", node.Operator)
+			return object.ErrorObj, fmt.Errorf("unknown operator %s on line %d", node.Operator, node.Token.Line)
 		}
 	case *ast.IntegerLiteral:
 		t = object.IntegerObj
