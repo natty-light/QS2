@@ -31,7 +31,7 @@ func main() {
 		} else if args[1] == "exec" {
 			// TODO: implement reading intermediate bytecode file
 		} else if args[1] == "help" {
-			fmt.Println("Usage: quonk [interpret|compile|exec|help] [filename]")
+			fmt.Println("Usage: quonk [interpret|run|compile|exec|help] [filename]")
 		}
 	}
 
