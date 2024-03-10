@@ -19,12 +19,12 @@ const (
 	OpDiv
 	OpTrue
 	OpFalse
-	// OpEqual
-	// OpNotEqual
-	// OpGt
-	// OpGte
-	// OpAnd
-	// OpOr
+	OpEqual
+	OpNotEqual
+	OpGt
+	OpGte
+	OpAnd
+	OpOr
 )
 
 type (
@@ -43,12 +43,12 @@ var definitions = map[Opcode]*Definition{
 	OpDiv:      {"OpDiv", []int{}},
 	OpTrue:     {"OpTrue", []int{}},
 	OpFalse:    {"OpFalse", []int{}},
-	// OpEqual:    {"OpEqual", []int{}},
-	// OpNotEqual: {"OpNotEqual", []int{}},
-	// OpGt:       {"OpGt", []int{}},
-	// OpGte:      {"OpGte", []int{}},
-	// OpAnd:      {"OpAnd", []int{}},
-	// OpOr:       {"OpOr", []int{}},
+	OpEqual:    {"OpEqual", []int{}},
+	OpNotEqual: {"OpNotEqual", []int{}},
+	OpGt:       {"OpGt", []int{}},
+	OpGte:      {"OpGte", []int{}},
+	OpAnd:      {"OpAnd", []int{}},
+	OpOr:       {"OpOr", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {
