@@ -42,6 +42,7 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 		}
 		c.emit(code.OpPop)
 	case *ast.InfixExpr:
+
 		if node.Operator == "<" || node.Operator == "<=" {
 			rightType, err := c.Compile(node.Right)
 			if err != nil {
@@ -102,6 +103,23 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			c.emit(code.OpAnd)
 		case "||":
 			c.emit(code.OpOr)
+		default:
+			return object.ErrorObj, fmt.Errorf("unknown operator %s on line %d", node.Operator, node.Token.Line)
+		}
+	case *ast.PrefixExpr:
+		t, err = c.Compile(node.Right)
+		if err != nil {
+			return object.ErrorObj, err
+		}
+
+		switch node.Operator {
+		case "!":
+			c.emit(code.OpBang)
+		case "-":
+			if t != object.IntegerObj && t != object.FloatObj {
+				return object.ErrorObj, fmt.Errorf("unknown operator %s for type %s on line %d", node.Operator, t, node.Token.Line)
+			}
+			c.emit(code.OpMinus)
 		default:
 			return object.ErrorObj, fmt.Errorf("unknown operator %s on line %d", node.Operator, node.Token.Line)
 		}

@@ -25,6 +25,8 @@ const (
 	OpGte
 	OpAnd
 	OpOr
+	OpMinus
+	OpBang
 )
 
 type (
@@ -49,6 +51,8 @@ var definitions = map[Opcode]*Definition{
 	OpGte:      {"OpGte", []int{}},
 	OpAnd:      {"OpAnd", []int{}},
 	OpOr:       {"OpOr", []int{}},
+	OpMinus:    {"OpMinus", []int{}},
+	OpBang:     {"OpBang", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {
