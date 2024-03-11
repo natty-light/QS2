@@ -29,6 +29,7 @@ const (
 	OpBang
 	OpJumpNotTruthy
 	OpJump
+	OpNull
 )
 
 type (
@@ -57,6 +58,7 @@ var definitions = map[Opcode]*Definition{
 	OpBang:          {"OpBang", []int{}},
 	OpJumpNotTruthy: {"OpJumpNotTruthy", []int{2}},
 	OpJump:          {"OpJump", []int{2}},
+	OpNull:          {"OpNull", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {
@@ -111,6 +113,7 @@ func ReadOperands(def *Definition, ins Instructions) ([]int, int) {
 	return operands, offset
 }
 
+// ReadUint16 reads 2 bytes from ins and returns them as a uint16
 func ReadUint16(ins Instructions) uint16 {
 	return binary.BigEndian.Uint16(ins)
 }

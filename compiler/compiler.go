@@ -168,16 +168,16 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			c.removeLastPop()
 		}
 
+		//emit an OpJump with operand to be replaced later
+		jumpPos := c.emit(code.OpJump, 9999)
+
+		afterConsequencePos := len(c.instructions)
+		c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+
 		// only if there is no alternative do we jump to immediately after the consequence
 		if node.Alternative == nil {
-			afterConsequencePos := len(c.instructions)
-			c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+			c.emit(code.OpNull)
 		} else {
-			// emit with operand to be replaced later
-			jumpPos := c.emit(code.OpJump, 9999)
-
-			afterConsequencePos := len(c.instructions)
-			c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
 
 			_, err = c.Compile(node.Alternative)
 			if err != nil {
@@ -187,10 +187,10 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			if c.lastInstructionIsPop() {
 				c.removeLastPop()
 			}
-
-			afterAlternativePos := len(c.instructions)
-			c.changeOperand(jumpPos, afterAlternativePos)
 		}
+
+		afterAlternativePos := len(c.instructions)
+		c.changeOperand(jumpPos, afterAlternativePos)
 
 	case *ast.IntegerLiteral:
 		t = object.IntegerObj
