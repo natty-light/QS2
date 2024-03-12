@@ -6,9 +6,7 @@ import (
 	"io"
 	"os"
 	"quonk/compiler"
-	"quonk/evaluator"
 	"quonk/lexer"
-	"quonk/object"
 	"quonk/parser"
 	"quonk/repl"
 	"quonk/vm"
@@ -21,13 +19,9 @@ func main() {
 
 	if len(args) == 1 {
 		// If no filename was passed as a command line argument, run the repl
-		repl.Start(os.Stdin, os.Stdout)
-	} else if args[1] == "--vm" {
 		repl.StartVM(os.Stdin, os.Stdout)
 	} else {
-		if args[1] == "interpret" {
-			Interpret(args[2])
-		} else if args[1] == "run" {
+		if args[1] == "run" {
 			Run(args[2])
 		} else if args[1] == "compile" {
 			// TODO: implement writing intermediate bytecode file
@@ -37,36 +31,7 @@ func main() {
 			// TODO: implement reading intermediate bytecode file
 			fmt.Println("Honk! Exec not implemented yet")
 		} else if args[1] == "help" {
-			fmt.Println("Usage: quonk [interpret|run|compile|exec|help] [filename]")
-		}
-	}
-
-}
-
-func Interpret(filename string) {
-	file, err := os.ReadFile(filename)
-	if err != nil {
-		fmt.Printf("Honk! Cannot read file %s\n", filename)
-		return
-	}
-
-	src := string(file)
-
-	l := lexer.New(src)
-	p := parser.New(l)
-	scope := object.NewScope()
-
-	program := p.ParseProgram()
-
-	if len(p.Errors()) > 0 {
-		fmt.Println("Honk! Parser errors:")
-		for _, err := range p.Errors() {
-			fmt.Println(err)
-		}
-	} else {
-		result := evaluator.Eval(program, scope)
-		if result != nil {
-			fmt.Println(result.Inspect())
+			fmt.Println("Usage: quonk [run|compile|exec|help] [filename]")
 		}
 	}
 

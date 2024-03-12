@@ -14,7 +14,7 @@ import (
 
 const PROMPT = ">>"
 
-func Start(in io.Reader, out io.Writer) {
+func StartEval(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 	scope := object.NewScope()
 	macroScope := object.NewScope()
