@@ -358,6 +358,62 @@ func TestGlobalVarDeclarationStatements(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestVariableAssignment(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			source: `
+			mut x = 2;
+			x = 3;
+			x;
+			`,
+			expectedConstants: []interface{}{2, 3},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpSetMutableGlobal, 0),
+				// 0006
+				code.Make(code.OpConstant, 1),
+				// 0009
+				code.Make(code.OpSetMutableGlobal, 0),
+				// 0012
+				code.Make(code.OpGetGlobal, 0),
+				// 0015
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			source: `
+			mut x = 2;
+			mut y = 3;
+			x = y;
+			y;
+			`,
+			expectedConstants: []interface{}{2, 3},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpSetMutableGlobal, 0),
+				// 0006
+				code.Make(code.OpConstant, 1),
+				// 0009
+				code.Make(code.OpSetMutableGlobal, 1),
+				// 0012
+				code.Make(code.OpGetGlobal, 1),
+				// 0015
+				code.Make(code.OpSetMutableGlobal, 0),
+				// 0018
+				code.Make(code.OpGetGlobal, 1),
+				// 0021
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 

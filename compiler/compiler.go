@@ -69,6 +69,11 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			}
 		}
 	case *ast.VarDeclarationStmt:
+
+		if node.Value == nil {
+			node.Value = &ast.NullLiteral{}
+		}
+
 		_, err := c.Compile(node.Value)
 		if err != nil {
 			return object.ErrorObj, err
@@ -87,6 +92,22 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			symbol := c.symbolTable.DefineMutable(node.Name.Value)
 			c.emit(code.OpSetMutableGlobal, symbol.Index)
 		}
+	case *ast.VarAssignmentStmt:
+		_, err = c.Compile(node.Value)
+		if err != nil {
+			return object.ErrorObj, err
+		}
+
+		symbol, ok := c.symbolTable.Resolve(node.Identifier.Value)
+		if !ok {
+			return object.ErrorObj, fmt.Errorf("undefined variable %s on line %d", node.Identifier.Value, node.Token.Line)
+		}
+
+		if symbol.IsConstant {
+			return object.ErrorObj, fmt.Errorf("cannot assign to constant %s on line %d", node.Identifier.Value, node.Token.Line)
+		}
+
+		c.emit(code.OpSetMutableGlobal, symbol.Index)
 
 	case *ast.InfixExpr:
 		if node.Operator == "<" || node.Operator == "<=" {
@@ -242,6 +263,9 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 		} else {
 			c.emit(code.OpFalse)
 		}
+	case *ast.NullLiteral:
+		t = object.NullObj
+		c.emit(code.OpNull)
 	}
 	return t, nil
 }
