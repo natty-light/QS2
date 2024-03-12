@@ -295,6 +295,69 @@ func TestConditionals(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestGlobalVarDeclarationStatements(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			source: `
+			mut x = 1;
+			const y = 2;
+			`,
+			expectedConstants: []interface{}{1, 2},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpSetMutableGlobal, 0),
+				// 0006
+				code.Make(code.OpConstant, 1),
+				// 0009
+				code.Make(code.OpSetImmutableGlobal, 1),
+			},
+		},
+		{
+			source: `
+			mut x = 1;
+			x;
+			`,
+			expectedConstants: []interface{}{1},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpSetMutableGlobal, 0),
+				// 0006
+				code.Make(code.OpGetGlobal, 0),
+				// 0009
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			source: `
+			mut x = 1;
+			mut y = x;
+			y;
+			`,
+			expectedConstants: []interface{}{1},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpSetMutableGlobal, 0),
+				// 0006
+				code.Make(code.OpGetGlobal, 0),
+				// 0009
+				code.Make(code.OpSetMutableGlobal, 1),
+				// 0012
+				code.Make(code.OpGetGlobal, 1),
+				// 0015
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 

@@ -13,6 +13,8 @@ type Compiler struct {
 
 	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
+
+	symbolTable *SymbolTable
 }
 
 type Bytecode struct {
@@ -31,6 +33,7 @@ func New() *Compiler {
 		constants:           []object.Object{},
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
+		symbolTable:         NewSymbolTable(),
 	}
 }
 
@@ -58,8 +61,27 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 				return object.ErrorObj, err
 			}
 		}
-	case *ast.InfixExpr:
+	case *ast.VarDeclarationStmt:
+		_, err := c.Compile(node.Value)
+		if err != nil {
+			return object.ErrorObj, err
+		}
 
+		_, ok := c.symbolTable.Resolve(node.Name.Value)
+
+		if ok {
+			return object.ErrorObj, fmt.Errorf("variable %s already declared on line %d", node.Name.Value, node.Token.Line)
+		}
+
+		if node.Constant {
+			symbol := c.symbolTable.DefineImmutable(node.Name.Value)
+			c.emit(code.OpSetImmutableGlobal, symbol.Index)
+		} else {
+			symbol := c.symbolTable.DefineMutable(node.Name.Value)
+			c.emit(code.OpSetMutableGlobal, symbol.Index)
+		}
+
+	case *ast.InfixExpr:
 		if node.Operator == "<" || node.Operator == "<=" {
 			rightType, err := c.Compile(node.Right)
 			if err != nil {
@@ -192,6 +214,12 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 		afterAlternativePos := len(c.instructions)
 		c.changeOperand(jumpPos, afterAlternativePos)
 
+	case *ast.Identifier:
+		symbol, ok := c.symbolTable.Resolve(node.Value)
+		if !ok {
+			return object.ErrorObj, fmt.Errorf("undefined variable %s on line %d", node.Value, node.Token.Line)
+		}
+		c.emit(code.OpGetGlobal, symbol.Index)
 	case *ast.IntegerLiteral:
 		t = object.IntegerObj
 		integer := &object.Integer{Value: node.Value}
