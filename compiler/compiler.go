@@ -248,6 +248,7 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			return object.ErrorObj, fmt.Errorf("undefined variable %s on line %d", node.Value, node.Token.Line)
 		}
 		c.emit(code.OpGetGlobal, symbol.Index)
+
 	case *ast.IntegerLiteral:
 		t = object.IntegerObj
 		integer := &object.Integer{Value: node.Value}
@@ -266,6 +267,10 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 	case *ast.NullLiteral:
 		t = object.NullObj
 		c.emit(code.OpNull)
+	case *ast.StringLiteral:
+		t = object.StringObj
+		str := &object.String{Value: node.Value}
+		c.emit(code.OpConstant, c.addConstant(str))
 	}
 	return t, nil
 }

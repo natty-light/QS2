@@ -170,14 +170,14 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) error {
 	leftType := left.Type()
 	rightType := right.Type()
 
-	if leftType == object.IntegerObj && rightType == object.IntegerObj {
+	switch {
+	case leftType == object.IntegerObj && rightType == object.IntegerObj:
 		return vm.executeBinaryIntegerOperation(op, left, right)
-	}
-
-	if leftType == object.FloatObj && rightType == object.FloatObj {
+	case leftType == object.FloatObj && rightType == object.FloatObj:
 		return vm.executeBinaryFloatOperation(op, left, right)
+	case leftType == object.StringObj && rightType == object.StringObj:
+		return vm.executeBinaryStringOperation(op, left, right)
 	}
-
 	return fmt.Errorf("unsupported types for binary operation: %s %s", leftType, rightType)
 }
 
@@ -237,6 +237,15 @@ func (vm *VM) executeComparison(op code.Opcode) error {
 	if leftType == object.FloatObj && rightType == object.FloatObj {
 		return vm.executeFloatComparison(op, left, right)
 
+	}
+
+	if leftType == object.StringObj && rightType == object.StringObj {
+		return vm.executeStringComparison(op, left, right)
+	}
+	// objects should be boolean at this point
+
+	if left.Type() == right.Type() && left.Type() != object.BooleanObj {
+		return fmt.Errorf("unknown operation for type %s", left.Type())
 	}
 
 	switch op {
@@ -322,6 +331,34 @@ func (vm *VM) executeMinusOperator() error {
 	default:
 		return fmt.Errorf("unsupported type for negation: %s", operand.Type())
 	}
+}
+
+func (vm *VM) executeBinaryStringOperation(op code.Opcode, left, right object.Object) error {
+	if op != code.OpAdd {
+		return fmt.Errorf("unknown string operator: %d", op)
+	}
+
+	leftVal := left.(*object.String).Value
+	rightVal := right.(*object.String).Value
+
+	return vm.push(&object.String{Value: leftVal + rightVal})
+}
+
+func (vm *VM) executeStringComparison(op code.Opcode, left, right object.Object) error {
+	leftVal := left.(*object.String).Value
+	rightVal := right.(*object.String).Value
+
+	var result bool
+	switch op {
+	case code.OpEqual:
+		result = leftVal == rightVal
+	case code.OpNotEqual:
+		result = leftVal != rightVal
+	default:
+		return fmt.Errorf("unknown string operator: %d", op)
+	}
+
+	return vm.push(nativeBoolToBooleanObject(result))
 }
 
 // utility functions
