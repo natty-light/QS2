@@ -7,6 +7,7 @@ import (
 	"os"
 	"quonk/compiler"
 	"quonk/lexer"
+	"quonk/object"
 	"quonk/parser"
 	"quonk/repl"
 	"quonk/vm"
@@ -38,6 +39,11 @@ func main() {
 }
 
 func Run(filename string) {
+
+	constants := []object.Object{}
+	globals := make([]object.Object, vm.GlobalsSize)
+	symbolTable := compiler.NewSymbolTable()
+
 	file, err := os.ReadFile(filename)
 	if err != nil {
 		fmt.Printf("Honk! Cannot read file %s\n", filename)
@@ -54,14 +60,14 @@ func Run(filename string) {
 		return
 	}
 
-	comp := compiler.New()
+	comp := compiler.NewWithState(symbolTable, constants)
 	_, err = comp.Compile(program)
 	if err != nil {
 		fmt.Printf("Compiler error: %s\n", err)
 		return
 	}
 
-	machine := vm.New(comp.Bytecode())
+	machine := vm.NewWithGlobalStore(comp.Bytecode(), globals)
 	err = machine.Run()
 	if err != nil {
 		fmt.Printf("Runtime error: %s\n", err)

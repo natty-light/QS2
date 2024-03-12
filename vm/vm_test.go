@@ -140,6 +140,16 @@ func TestConditionals(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestGlobalVarDeclarationStatements(t *testing.T) {
+	tests := []vmTestCase{
+		{"mut one = 1; one", 1},
+		{"mut one = 1; const two = 2; one + two", 3},
+		{"mut one = 1; mut two = one + one; one + two", 3},
+	}
+
+	runVmTests(t, tests)
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 

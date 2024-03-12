@@ -37,6 +37,13 @@ func New() *Compiler {
 	}
 }
 
+func NewWithState(symbolTable *SymbolTable, constants []object.Object) *Compiler {
+	compiler := New()
+	compiler.symbolTable = symbolTable
+	compiler.constants = constants
+	return compiler
+}
+
 func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 	var err error
 	var t object.ObjectType
