@@ -353,6 +353,23 @@ func TestGlobalVarDeclarationStatements(t *testing.T) {
 				code.Make(code.OpPop),
 			},
 		},
+		{
+			source: `
+			mut x;
+			x;
+			`,
+			expectedConstants: []interface{}{},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpNull),
+				// 0003
+				code.Make(code.OpSetMutableGlobal, 0),
+				// 0006
+				code.Make(code.OpGetGlobal, 0),
+				// 0009
+				code.Make(code.OpPop),
+			},
+		},
 	}
 
 	runCompilerTests(t, tests)
