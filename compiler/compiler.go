@@ -5,6 +5,7 @@ import (
 	"quonk/ast"
 	"quonk/code"
 	"quonk/object"
+	"sort"
 )
 
 type Compiler struct {
@@ -69,7 +70,6 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			}
 		}
 	case *ast.VarDeclarationStmt:
-
 		if node.Value == nil {
 			node.Value = &ast.NullLiteral{}
 		}
@@ -280,6 +280,31 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			}
 		}
 		c.emit(code.OpArray, len(node.Elements))
+	case *ast.HashLiteral:
+		t = object.HashObj
+		keys := []ast.Expr{}
+		for k := range node.Pairs {
+			keys = append(keys, k)
+		}
+
+		// This sort is for the sake of the tests
+		sort.Slice(keys, func(i, j int) bool {
+			return keys[i].String() < keys[j].String()
+		})
+
+		for _, k := range keys {
+			_, err = c.Compile(k)
+			if err != nil {
+				return object.ErrorObj, err
+			}
+
+			_, err = c.Compile(node.Pairs[k])
+			if err != nil {
+				return object.ErrorObj, err
+			}
+		}
+
+		c.emit(code.OpHash, len(node.Pairs)*2)
 	}
 	return t, nil
 }

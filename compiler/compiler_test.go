@@ -523,6 +523,91 @@ func TestArrayLiterals(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestHashLiterals(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			source:            "{}",
+			expectedConstants: []interface{}{},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpHash, 0),
+				// 0003
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			source:            "{1: 2, 3: 4, 5: 6}",
+			expectedConstants: []interface{}{1, 2, 3, 4, 5, 6},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpConstant, 1),
+				// 0006
+				code.Make(code.OpConstant, 2),
+				// 0009
+				code.Make(code.OpConstant, 3),
+				// 0012
+				code.Make(code.OpConstant, 4),
+				// 0015
+				code.Make(code.OpConstant, 5),
+				// 0018
+				code.Make(code.OpHash, 6),
+				// 0021
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			source:            "{1 + 1: 2 * 2, 3 - 3: 4 / 4, 5 * 5: 6 + 6}",
+			expectedConstants: []interface{}{1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpConstant, 1),
+				// 0006
+				code.Make(code.OpAdd),
+				// 0007
+				code.Make(code.OpConstant, 2),
+				// 0010
+				code.Make(code.OpConstant, 3),
+				// 0013
+				code.Make(code.OpMul),
+				// 0014
+				code.Make(code.OpConstant, 4),
+				// 0017
+				code.Make(code.OpConstant, 5),
+				// 0020
+				code.Make(code.OpSub),
+				// 0021
+				code.Make(code.OpConstant, 6),
+				// 0024
+				code.Make(code.OpConstant, 7),
+				// 0027
+				code.Make(code.OpDiv),
+				// 0028
+				code.Make(code.OpConstant, 8),
+				// 0031
+				code.Make(code.OpConstant, 9),
+				// 0034
+				code.Make(code.OpMul),
+				// 0035
+				code.Make(code.OpConstant, 10),
+				// 0038
+				code.Make(code.OpConstant, 11),
+				// 0041
+				code.Make(code.OpAdd),
+				// 0042
+				code.Make(code.OpHash, 6),
+				// 0045
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 
