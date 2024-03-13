@@ -33,6 +33,7 @@ const (
 	OpSetMutableGlobal
 	OpSetImmutableGlobal
 	OpGetGlobal
+	OpArray
 )
 
 type (
@@ -65,6 +66,7 @@ var definitions = map[Opcode]*Definition{
 	OpSetMutableGlobal:   {"OpSetMutableGlobal", []int{2}},
 	OpSetImmutableGlobal: {"OpSetImmutableGlobal", []int{2}},
 	OpGetGlobal:          {"OpGetGlobal", []int{2}},
+	OpArray:              {"OpArray", []int{2}},
 }
 
 func Lookup(op byte) (*Definition, error) {

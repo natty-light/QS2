@@ -134,6 +134,19 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpArray:
+			// get number of elements from operand
+			numElements := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip += 2 // move past operand
+
+			// create array and push it onto stack
+			array := vm.buildArray(vm.sp-numElements, vm.sp)
+			vm.sp -= numElements
+			err := vm.push(array)
+			if err != nil {
+				return err
+			}
+
 		}
 	}
 	return nil
@@ -359,6 +372,14 @@ func (vm *VM) executeStringComparison(op code.Opcode, left, right object.Object)
 	}
 
 	return vm.push(nativeBoolToBooleanObject(result))
+}
+
+func (vm *VM) buildArray(startIndex, endIndex int) object.Object {
+	elements := make([]object.Object, endIndex-startIndex)
+	for i := startIndex; i < endIndex; i++ {
+		elements[i-startIndex] = vm.stack[i]
+	}
+	return &object.Array{Elements: elements}
 }
 
 // utility functions
