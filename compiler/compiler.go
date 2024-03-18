@@ -111,19 +111,19 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 
 	case *ast.InfixExpr:
 		if node.Operator == "<" || node.Operator == "<=" {
-			rightType, err := c.Compile(node.Right)
+			_, err := c.Compile(node.Right)
 			if err != nil {
 				return object.ErrorObj, err
 			}
 
-			leftType, err := c.Compile(node.Left)
+			_, err = c.Compile(node.Left)
 			if err != nil {
 				return object.ErrorObj, err
 			}
 
-			if leftType != rightType {
-				return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s on line %d", leftType, node.Operator, rightType, node.Token.Line)
-			}
+			// if leftType != rightType {
+			// 	return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s on line %d", leftType, node.Operator, rightType, node.Token.Line)
+			// }
 
 			if node.Operator == "<" {
 				c.emit(code.OpGt)
@@ -133,33 +133,33 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			return object.BooleanObj, nil
 		}
 
-		leftType, err := c.Compile(node.Left)
+		_, err := c.Compile(node.Left)
 		if err != nil {
 			return object.NullObj, err
 		}
 
-		rightType, err := c.Compile(node.Right)
+		_, err = c.Compile(node.Right)
 		if err != nil {
 			return object.ErrorObj, err
 		}
 
-		if leftType != rightType {
-			return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s on line %d", leftType, node.Operator, rightType, node.Token.Line)
-		}
+		// if leftType != rightType {
+		// 	return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s on line %d", leftType, node.Operator, rightType, node.Token.Line)
+		// }
 
 		switch node.Operator {
 
 		case "+":
-			t = leftType
+			// t = leftType
 			c.emit(code.OpAdd)
 		case "-":
-			t = leftType
+			// t = leftType
 			c.emit(code.OpSub)
 		case "*":
-			t = leftType
+			// t = leftType
 			c.emit(code.OpMul)
 		case "/":
-			t = leftType
+			// t = leftType
 			c.emit(code.OpDiv)
 		case "==":
 			t = object.BooleanObj
@@ -241,7 +241,19 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 
 		afterAlternativePos := len(c.instructions)
 		c.changeOperand(jumpPos, afterAlternativePos)
+	case *ast.IndexExpr:
+		leftType, err := c.Compile(node.Left)
+		if err != nil {
+			return object.ErrorObj, err
+		}
+		fmt.Println(leftType)
 
+		_, err = c.Compile(node.Index)
+		if err != nil {
+			return object.ErrorObj, err
+		}
+
+		c.emit(code.OpIndex)
 	case *ast.Identifier:
 		symbol, ok := c.symbolTable.Resolve(node.Value)
 		if !ok {

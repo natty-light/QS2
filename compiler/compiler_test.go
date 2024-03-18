@@ -608,6 +608,89 @@ func TestHashLiterals(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestIndexExpressions(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			source:            "[1, 2, 3][1 + 1]",
+			expectedConstants: []interface{}{1, 2, 3, 1, 1},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpConstant, 1),
+				// 0006
+				code.Make(code.OpConstant, 2),
+				// 0009
+				code.Make(code.OpArray, 3),
+				// 0012
+				code.Make(code.OpConstant, 3),
+				// 0015
+				code.Make(code.OpConstant, 4),
+				// 0018
+				code.Make(code.OpAdd),
+				// 0019
+				code.Make(code.OpIndex),
+				// 0020
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			source:            "{1: 2}[2 - 1]",
+			expectedConstants: []interface{}{1, 2, 2, 1},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpConstant, 1),
+				// 0006
+				code.Make(code.OpHash, 2),
+				// 0009
+				code.Make(code.OpConstant, 2),
+				// 0012
+				code.Make(code.OpConstant, 3),
+				// 0015
+				code.Make(code.OpSub),
+				// 0016
+				code.Make(code.OpIndex),
+				// 0017
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			source:            "[[1, 2, 3]][0][0] + 1",
+			expectedConstants: []interface{}{1, 2, 3, 0, 0, 1},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpConstant, 1),
+				// 0006
+				code.Make(code.OpConstant, 2),
+				// 0009
+				code.Make(code.OpArray, 3),
+				// 0012
+				code.Make(code.OpArray, 1),
+				// 0015
+				code.Make(code.OpConstant, 3),
+				// 0018
+				code.Make(code.OpIndex),
+				// 0019
+				code.Make(code.OpConstant, 4),
+				// 0022
+				code.Make(code.OpIndex),
+				// 0023
+				code.Make(code.OpConstant, 5),
+				// 0026
+				code.Make(code.OpAdd),
+				// 0027
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 
