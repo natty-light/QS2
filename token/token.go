@@ -59,8 +59,6 @@ const (
 	FloatType  TokenType = "FloatType"
 	BoolType   TokenType = "BoolType"
 	StringType TokenType = "StringType"
-	ArrayType  TokenType = "ArrayType"
-	HashType   TokenType = "HashType"
 
 	EOF     TokenType = "EOF" // End of File
 	Illegal TokenType = "Illegal"
