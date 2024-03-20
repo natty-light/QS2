@@ -5,6 +5,7 @@ import (
 	"quonk/ast"
 	"quonk/lexer"
 	"quonk/token"
+	"quonk/types"
 	"strconv"
 )
 
@@ -208,6 +209,15 @@ func (p *Parser) parseVarDeclarationStmt() *ast.VarDeclarationStmt {
 	isConst := p.currToken.Type == token.Const
 
 	stmt := &ast.VarDeclarationStmt{Token: p.currToken, Constant: isConst}
+
+	if p.peekTokenIs(token.Assign) {
+		p.errors = append(p.errors, fmt.Sprintf("Honk! missing type annotation on line %d", p.currToken.Line))
+		return nil
+	}
+
+	t := p.parseType()
+
+	stmt.VarType = t
 
 	// expectPeek eats?
 	if !p.expectPeek(token.Identifier) {
@@ -636,4 +646,22 @@ func (p *Parser) parseMacroLiteral() ast.Expr {
 	macro.Body = p.parseBlockStmt()
 
 	return macro
+}
+
+func (p *Parser) parseType() *ast.TypeLiteral {
+
+	switch p.currToken.Type {
+	case token.IntType:
+		return &ast.TypeLiteral{Token: p.currToken, Type: &types.Int{}}
+	case token.FloatType:
+		return &ast.TypeLiteral{Token: p.currToken, Type: &types.Float{}}
+	case token.StringType:
+		return &ast.TypeLiteral{Token: p.currToken, Type: &types.Str{}}
+	case token.BoolType:
+		return &ast.TypeLiteral{Token: p.currToken, Type: &types.Bool{}}
+	case token.ArrayType:
+		// curr token should be [ and peek token should be the type
+
+	}
+	return nil
 }

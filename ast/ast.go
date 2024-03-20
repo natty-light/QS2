@@ -3,6 +3,7 @@ package ast
 import (
 	"bytes"
 	"quonk/token"
+	"quonk/types"
 	"strings"
 )
 
@@ -39,6 +40,7 @@ type (
 		Name     *Identifier
 		Value    Expr
 		Constant bool
+		VarType  *TypeLiteral
 	}
 
 	ReturnStmt struct {
@@ -155,6 +157,11 @@ type (
 		Left  Expr
 		Index Expr
 	}
+
+	TypeLiteral struct {
+		Token token.Token
+		Type  types.Type
+	}
 )
 
 // Node interfaces
@@ -250,6 +257,10 @@ func (m *MacroLiteral) TokenLiteral() string {
 	return m.Token.Literal
 }
 
+func (t *TypeLiteral) TokenLiteral() string {
+	return t.Token.Literal
+}
+
 // Statements
 func (p *Program) String() string {
 	var out bytes.Buffer
@@ -265,7 +276,8 @@ func (v *VarDeclarationStmt) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(v.TokenLiteral() + " ")
-	out.WriteString(v.Name.String())
+	out.WriteString(v.Name.String() + " ")
+	out.WriteString(v.VarType.TokenLiteral())
 	out.WriteString(" = ")
 
 	if v.Value != nil {
@@ -487,6 +499,10 @@ func (m *MacroLiteral) String() string {
 	return out.String()
 }
 
+func (t *TypeLiteral) String() string {
+	return t.Token.Literal
+}
+
 // Statements
 func (v *VarDeclarationStmt) statementNode() {}
 func (r *ReturnStmt) statementNode()         {}
@@ -511,3 +527,4 @@ func (n *NullLiteral) expressionNode()     {}
 func (h *HashLiteral) expressionNode()     {}
 func (f *FloatLiteral) expressionNode()    {}
 func (m *MacroLiteral) expressionNode()    {}
+func (t *TypeLiteral) expressionNode()     {}

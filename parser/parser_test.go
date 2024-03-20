@@ -14,13 +14,14 @@ func TestVarDeclarationStmts(t *testing.T) {
 		source        string
 		expectedIdent string
 		expectedValue interface{}
+		expectedType  interface{}
 		isConst       bool
 	}{
-		//{"mut x = 5;", "x", 5, false},
-		//{"const y = true;", "y", true, true},
-		//{"mut foo = y;", "foo", "y", false},
-		//{"mut x = null", "x", "null", false},
-		{"mut x;", "x", "null", false},
+		{"mut x int = 5;", "x", 5, "IntType", false},
+		{"const y bool = true;", "y", true, "BoolType", true},
+		{"mut foo int = y;", "foo", "y", "IntType", false},
+		{"mut x int = null", "x", "null", "IntType", false},
+		{"mut x int;", "x", "null", "IntType", false},
 	}
 
 	for _, tt := range tests {
@@ -30,7 +31,7 @@ func TestVarDeclarationStmts(t *testing.T) {
 		checkParserErrors(t, p)
 
 		if len(program.Stmts) != 1 {
-			t.Fatalf("program.Stmts doe snot contain 1 statement. got=%d", len(program.Stmts))
+			t.Fatalf("program.Stmts does not contain 1 statement. got=%d", len(program.Stmts))
 		}
 
 		stmt := program.Stmts[0]
