@@ -1,5 +1,7 @@
 package types
 
+import "bytes"
+
 type DataType string
 
 const (
@@ -15,6 +17,7 @@ const (
 
 type Type interface {
 	Type() DataType
+	String() string
 }
 
 type (
@@ -82,4 +85,44 @@ func (f *Func) ReturnType() Type {
 
 func (f *Func) ParameterTypes() []Type {
 	return f.Parameters
+}
+
+func (i *Int) String() string {
+	return "int"
+}
+
+func (b *Bool) String() string {
+	return "bool"
+}
+
+func (f *Float) String() string {
+	return "float"
+}
+
+func (s *Str) String() string {
+	return "str"
+}
+
+func (a *Array) String() string {
+	return "[]" + a.Element.String()
+}
+
+func (h *Hash) String() string {
+	return "{" + h.Key.String() + " " + h.Value.String() + "}"
+}
+
+func (f *Func) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	for i, p := range f.Parameters {
+		out.WriteString(p.String())
+		if i != len(f.Parameters)-1 {
+			out.WriteString(", ")
+		}
+	}
+	out.WriteString(") -> ")
+	out.WriteString(f.Return.String())
+
+	return out.String()
 }

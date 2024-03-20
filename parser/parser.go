@@ -210,21 +210,22 @@ func (p *Parser) parseVarDeclarationStmt() *ast.VarDeclarationStmt {
 
 	stmt := &ast.VarDeclarationStmt{Token: p.currToken, Constant: isConst}
 
-	if p.peekTokenIs(token.Assign) {
-		p.errors = append(p.errors, fmt.Sprintf("Honk! missing type annotation on line %d", p.currToken.Line))
-		return nil
-	}
-
-	t := p.parseType()
-
-	stmt.VarType = t
-
 	// expectPeek eats?
 	if !p.expectPeek(token.Identifier) {
 		return nil
 	}
 
 	stmt.Name = &ast.Identifier{Token: p.currToken, Value: p.currToken.Literal}
+
+	if p.peekTokenIs(token.Assign) {
+		p.errors = append(p.errors, fmt.Sprintf("Honk! missing type annotation on line %d", p.currToken.Line))
+		return nil
+	}
+	p.nextToken() // advance past identifier
+
+	t := p.parseType()
+
+	stmt.VarType = t
 
 	if p.peekTokenIs(token.Semicolon) {
 		if isConst {
@@ -649,7 +650,6 @@ func (p *Parser) parseMacroLiteral() ast.Expr {
 }
 
 func (p *Parser) parseType() *ast.TypeLiteral {
-
 	switch p.currToken.Type {
 	case token.IntType:
 		return &ast.TypeLiteral{Token: p.currToken, Type: &types.Int{}}
@@ -659,9 +659,91 @@ func (p *Parser) parseType() *ast.TypeLiteral {
 		return &ast.TypeLiteral{Token: p.currToken, Type: &types.Str{}}
 	case token.BoolType:
 		return &ast.TypeLiteral{Token: p.currToken, Type: &types.Bool{}}
-	case token.ArrayType:
-		// curr token should be [ and peek token should be the type
-
+	case token.LeftSquareBracket:
+		return p.parseArrayType()
+	case token.LeftCurlyBracket:
+		return p.parseHashType()
+	case token.LeftParen:
+		return p.parseFunctionType()
+	default:
+		p.errors = append(p.errors, fmt.Sprintf("Honk! unknown type annotation %s on line %d", p.currToken.Literal, p.currToken.Line))
+		return nil
 	}
-	return nil
+}
+
+func (p *Parser) parseArrayType() *ast.TypeLiteral {
+	t := &ast.TypeLiteral{Token: p.currToken}
+
+	if !p.expectPeek(token.RightSquareBracket) {
+		p.errors = append(p.errors, fmt.Sprintf("Honk! expected ] on line %d", p.currToken.Line))
+		return nil
+	}
+	p.nextToken() // advance past [
+
+	valType := p.parseType()
+
+	t.Type = &types.Array{Element: valType.Type}
+
+	return t
+}
+
+// type for a hash defn is {key val}
+func (p *Parser) parseHashType() *ast.TypeLiteral {
+	t := &ast.TypeLiteral{Token: p.currToken}
+	p.nextToken() // advance past {
+
+	keyType := p.parseType()
+	p.nextToken() // advance past type
+
+	valType := p.parseType()
+
+	if !p.expectPeek(token.RightCurlyBracket) {
+		p.errors = append(p.errors, fmt.Sprintf("Honk! expected } on line %d", p.currToken.Line))
+		return nil
+	}
+
+	t.Type = &types.Hash{Key: keyType.Type, Value: valType.Type}
+
+	return t
+}
+
+func (p *Parser) parseFunctionType() *ast.TypeLiteral {
+	t := &ast.TypeLiteral{Token: p.currToken}
+	params := p.parseFunctionTypeArgs()
+
+	if !p.expectPeek(token.Arrow) {
+		return nil
+	}
+	p.nextToken() // advance past arrow
+
+	retType := p.parseType()
+
+	t.Type = &types.Func{Parameters: params, Return: retType.Type}
+
+	return t
+}
+
+func (p *Parser) parseFunctionTypeArgs() []types.Type {
+	args := make([]types.Type, 0)
+
+	if p.peekTokenIs(token.RightParen) {
+		p.nextToken()
+		return args
+	}
+
+	p.nextToken() // advance past openParen
+	args = append(args, p.parseType().Type)
+
+	for p.peekTokenIs(token.Comma) {
+		p.nextToken() // advance to commma
+		p.nextToken() // advance past comma
+		t := p.parseType()
+		args = append(args, t.Type)
+	}
+
+	if !p.expectPeek(token.RightParen) {
+		return nil
+	}
+
+	return args
 }

@@ -1042,6 +1042,37 @@ func TestMacroLiteralParsing(t *testing.T) {
 	testInfixExpr(t, bodyStmt.Expr, "x", "+", "y")
 }
 
+func TestTypeAnnotationParsing(t *testing.T) {
+	tests := []struct {
+		source       string
+		expectedType interface{}
+	}{
+		{"mut x int;", "int"},
+		{"const f (int) -> int = func (x) { x }", "(int) -> int"},
+		{"const x []int = [1, 2, 3]", "[]int"},
+		{"const x {int int} = {1: 2}", "{int int}"},
+		{"const x {int []int} = {1: [1, 2, 3]}", "{int []int}"},
+		{"const x {int {int int}} = {1: {2: 3}}", "{int {int int}}"},
+		{"const x [][]int = [[1, 2], [3, 4]]", "[][]int"},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.source)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		stmt, ok := program.Stmts[0].(*ast.VarDeclarationStmt)
+		if !ok {
+			t.Fatalf("program.Stmts[0] is not *ast.VarDeclarationStmt. got=%T", program.Stmts[0])
+		}
+
+		if stmt.VarType.Type.String() != tt.expectedType {
+			t.Errorf("stmt.Type.String() not %s. got=%s", tt.expectedType, stmt.VarType.Type.String())
+		}
+	}
+}
+
 // Utilities
 
 func checkParserErrors(t *testing.T, p *Parser) {
