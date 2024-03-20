@@ -16,10 +16,10 @@ func TestVarDeclarationStmts(t *testing.T) {
 		expectedValue interface{}
 		isConst       bool
 	}{
-		//{"mut x = 5;", "x", 5, false},
-		//{"const y = true;", "y", true, true},
-		//{"mut foo = y;", "foo", "y", false},
-		//{"mut x = null", "x", "null", false},
+		{"mut x = 5;", "x", 5, false},
+		{"const y = true;", "y", true, true},
+		{"mut foo = y;", "foo", "y", false},
+		{"mut x = null", "x", "null", false},
 		{"mut x;", "x", "null", false},
 	}
 
