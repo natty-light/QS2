@@ -698,7 +698,7 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 		program := parse(tt.source)
 
 		compiler := New()
-		_, err := compiler.Compile(program)
+		err := compiler.Compile(program)
 		if err != nil {
 			t.Fatalf("compiler error: %s", err)
 		}

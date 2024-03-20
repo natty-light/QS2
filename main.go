@@ -61,7 +61,7 @@ func Run(filename string) {
 	}
 
 	comp := compiler.NewWithState(symbolTable, constants)
-	_, err = comp.Compile(program)
+	err = comp.Compile(program)
 	if err != nil {
 		fmt.Printf("Compiler error: %s\n", err)
 		return
@@ -96,7 +96,7 @@ func Compile(filename string) {
 	}
 
 	comp := compiler.New()
-	_, err = comp.Compile(program)
+	err = comp.Compile(program)
 	if err != nil {
 		fmt.Printf("Honk! Compiler error: %s\n", err)
 		return

@@ -231,7 +231,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 		program := parse(tt.source)
 
 		comp := compiler.New()
-		_, err := comp.Compile(program)
+		err := comp.Compile(program)
 
 		if err != nil {
 			t.Fatalf("compiler error: %s", err)

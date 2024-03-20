@@ -45,28 +45,26 @@ func NewWithState(symbolTable *SymbolTable, constants []object.Object) *Compiler
 	return compiler
 }
 
-func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
-	var err error
-	var t object.ObjectType
+func (c *Compiler) Compile(node ast.Node) error {
 	switch node := node.(type) {
 	case *ast.Program:
 		for _, s := range node.Stmts {
-			_, err = c.Compile(s)
+			err := c.Compile(s)
 			if err != nil {
-				return object.ErrorObj, err
+				return err
 			}
 		}
 	case *ast.ExpressionStmt:
-		t, err = c.Compile(node.Expr)
+		err := c.Compile(node.Expr)
 		if err != nil {
-			return object.ErrorObj, err
+			return err
 		}
 		c.emit(code.OpPop)
 	case *ast.BlockStmt:
 		for _, s := range node.Stmts {
-			_, err = c.Compile(s)
+			err := c.Compile(s)
 			if err != nil {
-				return object.ErrorObj, err
+				return err
 			}
 		}
 	case *ast.VarDeclarationStmt:
@@ -74,15 +72,15 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			node.Value = &ast.NullLiteral{}
 		}
 
-		_, err := c.Compile(node.Value)
+		err := c.Compile(node.Value)
 		if err != nil {
-			return object.ErrorObj, err
+			return err
 		}
 
 		_, ok := c.symbolTable.Resolve(node.Name.Value)
 
 		if ok {
-			return object.ErrorObj, fmt.Errorf("variable %s already declared on line %d", node.Name.Value, node.Token.Line)
+			return fmt.Errorf("variable %s already declared on line %d", node.Name.Value, node.Token.Line)
 		}
 
 		if node.Constant {
@@ -93,124 +91,103 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			c.emit(code.OpSetMutableGlobal, symbol.Index)
 		}
 	case *ast.VarAssignmentStmt:
-		_, err = c.Compile(node.Value)
+		err := c.Compile(node.Value)
 		if err != nil {
-			return object.ErrorObj, err
+			return err
 		}
 
 		symbol, ok := c.symbolTable.Resolve(node.Identifier.Value)
 		if !ok {
-			return object.ErrorObj, fmt.Errorf("undefined variable %s on line %d", node.Identifier.Value, node.Token.Line)
+			return fmt.Errorf("undefined variable %s on line %d", node.Identifier.Value, node.Token.Line)
 		}
 
 		if symbol.IsConstant {
-			return object.ErrorObj, fmt.Errorf("cannot assign to constant %s on line %d", node.Identifier.Value, node.Token.Line)
+			return fmt.Errorf("cannot assign to constant %s on line %d", node.Identifier.Value, node.Token.Line)
 		}
 
 		c.emit(code.OpSetMutableGlobal, symbol.Index)
 
 	case *ast.InfixExpr:
 		if node.Operator == "<" || node.Operator == "<=" {
-			_, err := c.Compile(node.Right)
+			err := c.Compile(node.Right)
 			if err != nil {
-				return object.ErrorObj, err
+				return err
 			}
 
-			_, err = c.Compile(node.Left)
+			err = c.Compile(node.Left)
 			if err != nil {
-				return object.ErrorObj, err
+				return err
 			}
-
-			// if leftType != rightType {
-			// 	return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s on line %d", leftType, node.Operator, rightType, node.Token.Line)
-			// }
 
 			if node.Operator == "<" {
 				c.emit(code.OpGt)
 			} else {
 				c.emit(code.OpGte)
 			}
-			return object.BooleanObj, nil
+			return nil
 		}
 
-		_, err := c.Compile(node.Left)
+		err := c.Compile(node.Left)
 		if err != nil {
-			return object.NullObj, err
+			return err
 		}
 
-		_, err = c.Compile(node.Right)
+		err = c.Compile(node.Right)
 		if err != nil {
-			return object.ErrorObj, err
+			return err
 		}
-
-		// if leftType != rightType {
-		// 	return object.ErrorObj, fmt.Errorf("type mismatch: %s %s %s on line %d", leftType, node.Operator, rightType, node.Token.Line)
-		// }
 
 		switch node.Operator {
 
 		case "+":
-			// t = leftType
 			c.emit(code.OpAdd)
 		case "-":
-			// t = leftType
 			c.emit(code.OpSub)
 		case "*":
-			// t = leftType
 			c.emit(code.OpMul)
 		case "/":
-			// t = leftType
 			c.emit(code.OpDiv)
 		case "==":
-			t = object.BooleanObj
 			c.emit(code.OpEqual)
 		case "!=":
-			t = object.BooleanObj
 			c.emit(code.OpNotEqual)
 		case ">":
-			t = object.BooleanObj
 			c.emit(code.OpGt)
 		case ">=":
-			t = object.BooleanObj
 			c.emit(code.OpGte)
 		case "&&":
-			t = object.BooleanObj
 			c.emit(code.OpAnd)
-			t = object.BooleanObj
 		case "||":
 			c.emit(code.OpOr)
 		default:
-			return object.ErrorObj, fmt.Errorf("unknown operator %s on line %d", node.Operator, node.Token.Line)
+			return fmt.Errorf("unknown operator %s on line %d", node.Operator, node.Token.Line)
 		}
 	case *ast.PrefixExpr:
-		t, err = c.Compile(node.Right)
+		err := c.Compile(node.Right)
 		if err != nil {
-			return object.ErrorObj, err
+			return err
 		}
 
 		switch node.Operator {
 		case "!":
 			c.emit(code.OpBang)
 		case "-":
-			if t != object.IntegerObj && t != object.FloatObj {
-				return object.ErrorObj, fmt.Errorf("unknown operator %s for type %s on line %d", node.Operator, t, node.Token.Line)
-			}
 			c.emit(code.OpMinus)
 		default:
-			return object.ErrorObj, fmt.Errorf("unknown operator %s on line %d", node.Operator, node.Token.Line)
+			return fmt.Errorf("unknown operator %s on line %d", node.Operator, node.Token.Line)
 		}
 	case *ast.IfExpr:
 		// we don't need to update t here because we're not bubbling the value back up like in expressions
-		_, err = c.Compile(node.Condition)
+		err := c.Compile(node.Condition)
 		if err != nil {
-			return object.ErrorObj, err
+			return err
 		}
 		// emit with operand to be replaced later
 		jumpNotTruthyPos := c.emit(code.OpJumpNotTruthy, 9999)
 
-		_, err = c.Compile(node.Consequence)
+		err = c.Compile(node.Consequence)
 		if err != nil {
-			return object.ErrorObj, err
+			return err
 		}
 
 		// remove last pop after compiling consequence so we don't inadvertently pop too many times
@@ -229,9 +206,9 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 			c.emit(code.OpNull)
 		} else {
 
-			_, err = c.Compile(node.Alternative)
+			err = c.Compile(node.Alternative)
 			if err != nil {
-				return object.ErrorObj, err
+				return err
 			}
 
 			if c.lastInstructionIsPop() {
@@ -242,58 +219,50 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 		afterAlternativePos := len(c.instructions)
 		c.changeOperand(jumpPos, afterAlternativePos)
 	case *ast.IndexExpr:
-		leftType, err := c.Compile(node.Left)
+		err := c.Compile(node.Left)
 		if err != nil {
-			return object.ErrorObj, err
+			return err
 		}
-		fmt.Println(leftType)
 
-		_, err = c.Compile(node.Index)
+		err = c.Compile(node.Index)
 		if err != nil {
-			return object.ErrorObj, err
+			return err
 		}
 
 		c.emit(code.OpIndex)
 	case *ast.Identifier:
 		symbol, ok := c.symbolTable.Resolve(node.Value)
 		if !ok {
-			return object.ErrorObj, fmt.Errorf("undefined variable %s on line %d", node.Value, node.Token.Line)
+			return fmt.Errorf("undefined variable %s on line %d", node.Value, node.Token.Line)
 		}
 		c.emit(code.OpGetGlobal, symbol.Index)
 
 	case *ast.IntegerLiteral:
-		t = object.IntegerObj
 		integer := &object.Integer{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(integer))
 	case *ast.FloatLiteral:
-		t = object.FloatObj
 		float := &object.Float{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(float))
 	case *ast.BooleanLiteral:
-		t = object.BooleanObj
 		if node.Value {
 			c.emit(code.OpTrue)
 		} else {
 			c.emit(code.OpFalse)
 		}
 	case *ast.NullLiteral:
-		t = object.NullObj
 		c.emit(code.OpNull)
 	case *ast.StringLiteral:
-		t = object.StringObj
 		str := &object.String{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(str))
 	case *ast.ArrayLiteral:
-		t = object.ArrayObj
 		for _, el := range node.Elements {
-			_, err = c.Compile(el)
+			err := c.Compile(el)
 			if err != nil {
-				return object.ErrorObj, err
+				return err
 			}
 		}
 		c.emit(code.OpArray, len(node.Elements))
 	case *ast.HashLiteral:
-		t = object.HashObj
 		keys := []ast.Expr{}
 		for k := range node.Pairs {
 			keys = append(keys, k)
@@ -305,20 +274,20 @@ func (c *Compiler) Compile(node ast.Node) (object.ObjectType, error) {
 		})
 
 		for _, k := range keys {
-			_, err = c.Compile(k)
+			err := c.Compile(k)
 			if err != nil {
-				return object.ErrorObj, err
+				return err
 			}
 
-			_, err = c.Compile(node.Pairs[k])
+			err = c.Compile(node.Pairs[k])
 			if err != nil {
-				return object.ErrorObj, err
+				return err
 			}
 		}
 
 		c.emit(code.OpHash, len(node.Pairs)*2)
 	}
-	return t, nil
+	return nil
 }
 
 func (c *Compiler) Bytecode() *Bytecode {
