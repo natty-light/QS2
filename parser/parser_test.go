@@ -1045,7 +1045,7 @@ func TestMacroLiteralParsing(t *testing.T) {
 func TestTypeAnnotationParsing(t *testing.T) {
 	tests := []struct {
 		source       string
-		expectedType interface{}
+		expectedType string
 	}{
 		{"mut x int;", "int"},
 		{"const f (int) -> int = func (x) { x }", "(int) -> int"},
