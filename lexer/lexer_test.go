@@ -6,12 +6,12 @@ import (
 )
 
 func TestNextToken(t *testing.T) {
-	source := `mut five = 5;
-	mut ten = 10;
-	mut add = func (x, y) {
+	source := `mut five int = 5;
+	mut ten int = 10;
+	mut add (int, int) -> int = func (x, y) {
 		 x + y;
 	};
-	mut result = add(five, ten);
+	mut result int = add(five, ten);
 	!-/*5;
 	5 < 10 > 5;
 	if (5 < 10) {
@@ -41,18 +41,27 @@ func TestNextToken(t *testing.T) {
 	}{
 		{token.Mut, "mut", 1},
 		{token.Identifier, "five", 1},
+		{token.IntType, "int", 1},
 		{token.Assign, "=", 1},
 		{token.Integer, "5", 1},
 		{token.Semicolon, ";", 1},
 
 		{token.Mut, "mut", 2},
 		{token.Identifier, "ten", 2},
+		{token.IntType, "int", 2},
 		{token.Assign, "=", 2},
 		{token.Integer, "10", 2},
 		{token.Semicolon, ";", 2},
 
 		{token.Mut, "mut", 3},
 		{token.Identifier, "add", 3},
+		{token.LeftParen, "(", 3},
+		{token.IntType, "int", 3},
+		{token.Comma, ",", 3},
+		{token.IntType, "int", 3},
+		{token.RightParen, ")", 3},
+		{token.Arrow, "->", 3},
+		{token.IntType, "int", 3},
 		{token.Assign, "=", 3},
 		{token.Func, "func", 3},
 		{token.LeftParen, "(", 3},
@@ -72,6 +81,7 @@ func TestNextToken(t *testing.T) {
 
 		{token.Mut, "mut", 6},
 		{token.Identifier, "result", 6},
+		{token.IntType, "int", 6},
 		{token.Assign, "=", 6},
 		{token.Identifier, "add", 6},
 		{token.LeftParen, "(", 6},

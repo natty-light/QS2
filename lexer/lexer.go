@@ -155,7 +155,14 @@ func (l *Lexer) NextToken() token.Token {
 	case plus:
 		tok = token.MakeToken(token.Plus, l.char, l.line)
 	case minus:
-		tok = token.MakeToken(token.Minus, l.char, l.line)
+		if l.peekChar() == '>' {
+			char := l.char
+			l.readChar() // advance past minus
+			literal := string(char) + string(l.char)
+			tok = token.Token{Type: token.Arrow, Literal: literal, Line: l.line}
+		} else {
+			tok = token.MakeToken(token.Minus, l.char, l.line)
+		}
 	case star:
 		tok = token.MakeToken(token.Star, l.char, l.line)
 	case slash:
@@ -252,6 +259,10 @@ var keywords = map[string]token.TokenType{
 	"return": token.Return,
 	"for":    token.For,
 	"macro":  token.Macro,
+	"int":    token.IntType,
+	"float":  token.FloatType,
+	"bool":   token.BoolType,
+	"string": token.StringType,
 }
 
 func LookupIdent(ident string) token.TokenType {

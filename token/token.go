@@ -45,6 +45,7 @@ const (
 	GreaterThan TokenType = "GreaterThan"
 	LessThan    TokenType = "LessThan"
 	Bang        TokenType = "Bang"
+	Arrow       TokenType = "Arrow"
 
 	// Multi char symbols
 	EqualTo            TokenType = "Equality"
@@ -53,6 +54,13 @@ const (
 	NotEqualTo         TokenType = "NotEqual"
 	And                TokenType = "And"
 	Or                 TokenType = "Or"
+
+	IntType    TokenType = "IntType"
+	FloatType  TokenType = "FloatType"
+	BoolType   TokenType = "BoolType"
+	StringType TokenType = "StringType"
+	ArrayType  TokenType = "ArrayType"
+	HashType   TokenType = "HashType"
 
 	EOF     TokenType = "EOF" // End of File
 	Illegal TokenType = "Illegal"
