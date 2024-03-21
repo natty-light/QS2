@@ -714,6 +714,70 @@ func TestFunctions(t *testing.T) {
 				code.Make(code.OpPop),
 			},
 		},
+		{
+			source: "func() { 5 + 10 }",
+			expectedConstants: []interface{}{5, 10,
+				[]code.Instructions{
+					// 0000
+					code.Make(code.OpConstant, 0),
+					// 0003
+					code.Make(code.OpConstant, 1),
+					// 0006
+					code.Make(code.OpAdd),
+					// 0007
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 2),
+				// 0003
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			source: "func() { 1; 2 }",
+			expectedConstants: []interface{}{1, 2,
+				[]code.Instructions{
+					// 0000
+					code.Make(code.OpConstant, 0),
+					// 0003
+					code.Make(code.OpPop),
+					// 0004
+					code.Make(code.OpConstant, 1),
+					// 0007
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 2),
+				// 0003
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
+func TestFunctionsWithoutReturnValue(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			source: "func() { }",
+			expectedConstants: []interface{}{
+				[]code.Instructions{
+					// 0000
+					code.Make(code.OpReturn),
+				},
+			},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpPop),
+			},
+		},
 	}
 
 	runCompilerTests(t, tests)
