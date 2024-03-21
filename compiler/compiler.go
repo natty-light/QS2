@@ -251,6 +251,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return fmt.Errorf("undefined variable %s on line %d", node.Value, node.Token.Line)
 		}
 		c.emit(code.OpGetGlobal, symbol.Index)
+	case *ast.CallExpr:
+		err := c.Compile(node.Function)
+		if err != nil {
+			return err
+		}
+
+		c.emit(code.OpCall)
 
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
