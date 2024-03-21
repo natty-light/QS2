@@ -95,10 +95,18 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		if node.Constant {
 			symbol := c.symbolTable.DefineImmutable(node.Name.Value)
-			c.emit(code.OpSetImmutableGlobal, symbol.Index)
+			if symbol.Scope == GlobalScope {
+				c.emit(code.OpSetImmutableGlobal, symbol.Index)
+			} else {
+				c.emit(code.OpSetImmutableLocal, symbol.Index)
+			}
 		} else {
 			symbol := c.symbolTable.DefineMutable(node.Name.Value)
-			c.emit(code.OpSetMutableGlobal, symbol.Index)
+			if symbol.Scope == GlobalScope {
+				c.emit(code.OpSetMutableGlobal, symbol.Index)
+			} else {
+				c.emit(code.OpSetMutableLocal, symbol.Index)
+			}
 		}
 	case *ast.VarAssignmentStmt:
 		err := c.Compile(node.Value)
@@ -115,7 +123,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return fmt.Errorf("cannot assign to constant %s on line %d", node.Identifier.Value, node.Token.Line)
 		}
 
-		c.emit(code.OpSetMutableGlobal, symbol.Index)
+		if symbol.Scope == GlobalScope {
+			c.emit(code.OpSetMutableGlobal, symbol.Index)
+		} else {
+			c.emit(code.OpSetMutableLocal, symbol.Index)
+		}
 	case *ast.ReturnStmt:
 		err := c.Compile(node.ReturnValue)
 		if err != nil {
@@ -250,7 +262,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if !ok {
 			return fmt.Errorf("undefined variable %s on line %d", node.Value, node.Token.Line)
 		}
-		c.emit(code.OpGetGlobal, symbol.Index)
+
+		if symbol.Scope == GlobalScope {
+			c.emit(code.OpGetGlobal, symbol.Index)
+		} else {
+			c.emit(code.OpGetLocal, symbol.Index)
+		}
+
 	case *ast.CallExpr:
 		err := c.Compile(node.Function)
 		if err != nil {
@@ -417,6 +435,8 @@ func (c *Compiler) enterScope() {
 
 	c.scopes = append(c.scopes, scope)
 	c.scopeIndex++
+
+	c.symbolTable = NewEnclosedSymbolTable(c.symbolTable)
 }
 
 func (c *Compiler) leaveScope() code.Instructions {
@@ -424,6 +444,8 @@ func (c *Compiler) leaveScope() code.Instructions {
 
 	c.scopes = c.scopes[:len(c.scopes)-1]
 	c.scopeIndex--
+
+	c.symbolTable = c.symbolTable.Outer
 
 	return instructions
 }
