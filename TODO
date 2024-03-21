@@ -8,3 +8,5 @@ add support integer division
 propagate line numbers into macro system somehow?
 
 add type checking at compile time
+
+QS3? remove null
