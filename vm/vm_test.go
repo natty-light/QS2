@@ -293,6 +293,47 @@ func TestFirstClassFunctions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestCallingFunctionsWithBindings(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `const one = func() { const one = 1; one; }; one()`,
+			expected: 1,
+		},
+		{
+			source: `const oneAndTwo = func() { const one = 1; const two = 2; one + two; };
+			oneAndTwo();`,
+			expected: 3,
+		},
+		{
+			source: `
+			const oneAndTwo = func() {const one = 1; const two = 2; one + two; };
+			const threeAndFour = func() { const three = 3; const four = 4; three + four; };
+			oneAndTwo() + threeAndFour();
+			`,
+			expected: 10,
+		},
+		{
+			source: `
+			const first = func() { const x = 50; x };
+			const second = func() { const x = 100; x };
+			first() + second();
+			`,
+			expected: 150,
+		},
+		{
+			source: `
+			mut globalNum = 50;
+			const minusOne = func() { const num = 1; globalNum - num; };
+			const minusTwo = func() { const num = 2; globalNum - num; };
+			minusOne() + minusTwo();
+			`,
+			expected: 97,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 

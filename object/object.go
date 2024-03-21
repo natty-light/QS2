@@ -117,6 +117,7 @@ type (
 
 	CompiledFunction struct {
 		Instructions code.Instructions
+		NumLocals    int
 	}
 )
 
