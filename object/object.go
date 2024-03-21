@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"quonk/ast"
+	"quonk/code"
 	"strconv"
 
 	"strings"
@@ -14,20 +15,21 @@ type ObjectType string
 type BuiltInFunction func(line int, args ...Object) Object
 
 const (
-	IntegerObj     ObjectType = "Integer"
-	BooleanObj     ObjectType = "Boolean"
-	NullObj        ObjectType = "Null"
-	ReturnValueObj ObjectType = "ReturnValue"
-	ErrorObj       ObjectType = "Error"
-	VariableObj    ObjectType = "Variable"
-	FunctionObj    ObjectType = "Function"
-	StringObj      ObjectType = "String"
-	BuiltInObj     ObjectType = "BuiltIn"
-	ArrayObj       ObjectType = "Array"
-	HashObj        ObjectType = "Hash"
-	FloatObj       ObjectType = "Float"
-	QuoteObj       ObjectType = "Quote"
-	MacroObj       ObjectType = "Macro"
+	IntegerObj          ObjectType = "Integer"
+	BooleanObj          ObjectType = "Boolean"
+	NullObj             ObjectType = "Null"
+	ReturnValueObj      ObjectType = "ReturnValue"
+	ErrorObj            ObjectType = "Error"
+	VariableObj         ObjectType = "Variable"
+	FunctionObj         ObjectType = "Function"
+	StringObj           ObjectType = "String"
+	BuiltInObj          ObjectType = "BuiltIn"
+	ArrayObj            ObjectType = "Array"
+	HashObj             ObjectType = "Hash"
+	FloatObj            ObjectType = "Float"
+	QuoteObj            ObjectType = "Quote"
+	MacroObj            ObjectType = "Macro"
+	CompiledFunctionObj ObjectType = "CompiledFunction"
 )
 
 type (
@@ -112,6 +114,10 @@ type (
 		Body       *ast.BlockStmt
 		Scope      *Scope
 	}
+
+	CompiledFunction struct {
+		Instructions code.Instructions
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -168,6 +174,10 @@ func (q *Quote) Type() ObjectType {
 
 func (m *Macro) Type() ObjectType {
 	return MacroObj
+}
+
+func (c *CompiledFunction) Type() ObjectType {
+	return CompiledFunctionObj
 }
 
 func (i *Integer) Inspect() string {
@@ -271,6 +281,10 @@ func (m *Macro) Inspect() string {
 	out.WriteString("\n}")
 
 	return out.String()
+}
+
+func (c *CompiledFunction) Inspect() string {
+	return fmt.Sprintf("CompiledFunction[%p]", c)
 }
 
 // HashKey functions
