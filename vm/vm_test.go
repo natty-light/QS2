@@ -224,6 +224,75 @@ func TestIndexExpressions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestCallingFunctionsWithoutArguments(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `const fivePlusTen = func() { 5 + 10; }; fivePlusTen();`,
+			expected: 15,
+		},
+		{
+			source:   `const one = func() { 1; }; const two = func() { 2; }; one() + two();`,
+			expected: 3,
+		},
+		{
+			source: `
+			const a = func() { 1; };
+			const b = func() { a() + 1; };
+			const c = func() { b() + 1; };
+			c();`,
+			expected: 3,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestFunctionsWithReturnStatements(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `const earlyExit = func() { return 99; 100; }; earlyExit();`,
+			expected: 99,
+		},
+		{
+			source:   `const earlyExit = func() { return 99; return 100; }; earlyExit();`,
+			expected: 99,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestFunctionsWithoutReturnValue(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `const noReturn = func() { }; noReturn();`,
+			expected: Null,
+		},
+		{
+			source: `const noReturn = func() { };
+			const noReturnTwo = func() { noReturn(); };
+			noReturn();
+			noReturnTwo();`,
+			expected: Null,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestFirstClassFunctions(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source: `const returnsOne = func() { 1; };
+			const returnsOneReturner = func() { returnsOne; };
+			returnsOneReturner()();`,
+			expected: 1,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 
