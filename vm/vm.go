@@ -199,11 +199,10 @@ func (vm *VM) Run() error {
 			numArgs := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 
-			err := vm.callFunction(int(numArgs))
+			err := vm.executeCall(int(numArgs))
 			if err != nil {
 				return err
 			}
-
 		case code.OpReturnValue:
 			returnValue := vm.pop()
 
@@ -247,7 +246,18 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpGetBuiltIn:
+			// get built-in index from operand
+			builtinIdx := code.ReadUint8(ins[ip+1:])
+			vm.currentFrame().ip += 1 // move past operand
 
+			// get built-in function from index and push it onto the stack
+			def := object.Builtins[builtinIdx]
+
+			err := vm.push(def.BuiltIn)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -553,13 +563,21 @@ func (vm *VM) executeHashIndex(hash, index object.Object) error {
 	return vm.push(pair.Value)
 }
 
-func (vm *VM) callFunction(numArgs int) error {
+func (vm *VM) executeCall(numArgs int) error {
 	// the function is at the bottom of the stack, below the args
-	fn, ok := vm.stack[vm.sp-1-numArgs].(*object.CompiledFunction)
-	if !ok {
-		return fmt.Errorf("calling non-function")
-	}
+	fn := vm.stack[vm.sp-1-numArgs]
 
+	switch fn := fn.(type) {
+	case *object.CompiledFunction:
+		return vm.callFunction(fn, numArgs)
+	case *object.BuiltIn:
+		return vm.callBuiltIn(fn, numArgs)
+	default:
+		return fmt.Errorf("calling non-function %s", fn.Inspect())
+	}
+}
+
+func (vm *VM) callFunction(fn *object.CompiledFunction, numArgs int) error {
 	if numArgs != fn.NumParameters {
 		return fmt.Errorf("wrong number of arguments. want=%d, got=%d", fn.NumParameters, numArgs)
 	}
@@ -572,6 +590,21 @@ func (vm *VM) callFunction(numArgs int) error {
 
 	// set the stack pointer to the base pointer of the new frame
 	vm.sp = frame.basePointer + fn.NumLocals
+
+	return nil
+}
+
+func (vm *VM) callBuiltIn(builtin *object.BuiltIn, numArgs int) error {
+	args := vm.stack[vm.sp-numArgs : vm.sp] // pull slice of args off stack
+
+	result := builtin.Fn(args...)
+	vm.sp = vm.sp - numArgs - 1 // pop args and function
+
+	if result != nil {
+		vm.push(result)
+	} else {
+		vm.push(Null)
+	}
 
 	return nil
 }

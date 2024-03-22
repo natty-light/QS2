@@ -314,9 +314,9 @@ func TestCallingFunctionsWithBindings(t *testing.T) {
 		},
 		{
 			source: `
-			const first = func() { const x = 50; x };
-			const second = func() { const x = 100; x };
-			first() + second();
+			const firstFunc = func() { const x = 50; x };
+			const secondFunc = func() { const x = 100; x };
+			firstFunc() + secondFunc();
 			`,
 			expected: 150,
 		},
@@ -417,6 +417,81 @@ func TestCallingFunctionsWithWrongArguments(t *testing.T) {
 	}
 }
 
+func TestBuiltinFunctions(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `len("")`,
+			expected: 0,
+		},
+		{
+			source:   `len("four")`,
+			expected: 4,
+		},
+		{
+			source:   `len("hello world")`,
+			expected: 11,
+		},
+		{
+			source:   `len([])`,
+			expected: 0,
+		},
+		{
+			source:   `len([1, 2, 3])`,
+			expected: 3,
+		},
+		{
+			source:   `len(1)`,
+			expected: &object.Error{Message: "argument to `len` of wrong type. got=Integer"},
+		},
+		{
+			source:   `len("one", "two")`,
+			expected: &object.Error{Message: "`len` expects one argument"},
+		},
+		{
+			source:   `first([1, 2, 3])`,
+			expected: 1,
+		},
+		{
+			source:   `first([])`,
+			expected: Null,
+		},
+		{
+			source:   `first(1)`,
+			expected: &object.Error{Message: "argument to `first` must be array type"},
+		},
+		{
+			source:   `last([1, 2, 3])`,
+			expected: 3,
+		},
+		{
+			source:   `last([])`,
+			expected: Null,
+		},
+		{
+			source:   `last(1)`,
+			expected: &object.Error{Message: "argument to `last` must be array type"},
+		},
+		{
+			source:   `rest([1, 2, 3])`,
+			expected: []int{2, 3},
+		},
+		{
+			source:   `rest([])`,
+			expected: Null,
+		},
+		{
+			source:   `append([], 1)`,
+			expected: []int{1},
+		},
+		{
+			source:   `append(1, 1)`,
+			expected: &object.Error{Message: "first argument to `append` must be array type"},
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 
@@ -514,6 +589,16 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 	case *object.Null:
 		if actual != Null {
 			t.Errorf("object is not Null. got=%T (%+v)", actual, actual)
+		}
+	case *object.Error:
+		errObj, ok := actual.(*object.Error)
+		if !ok {
+			t.Errorf("object is not Error. got=%T (%+v)", actual, actual)
+			return
+		}
+
+		if errObj.Message != expected.Message {
+			t.Errorf("wrong error message. want=%q, got=%q", expected.Message, errObj.Message)
 		}
 	}
 }

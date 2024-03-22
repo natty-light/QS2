@@ -12,7 +12,7 @@ import (
 )
 
 type ObjectType string
-type BuiltInFunction func(line int, args ...Object) Object
+type BuiltInFunction func(args ...Object) Object
 
 const (
 	IntegerObj          ObjectType = "Integer"
@@ -59,8 +59,7 @@ type (
 	}
 
 	Error struct {
-		Message    string
-		OriginLine int
+		Message string
 	}
 
 	Variable struct {
@@ -199,7 +198,7 @@ func (n *Null) Inspect() string {
 }
 
 func (e *Error) Inspect() string {
-	return fmt.Sprintf("Honk! Error: %s on line %d", e.Message, e.OriginLine)
+	return fmt.Sprintf("Honk! Error: %s", e.Message)
 }
 
 func (v *Variable) Inspect() string {

@@ -40,14 +40,14 @@ func (s *Scope) Set(name string, val Object, isConstant bool) Object {
 
 func (s *Scope) DeclareVar(name string, val Object, isConst bool, line int) Object {
 	if isConst && val.Type() == NullObj {
-		return newError(line, "const variable %s must be initialized", name)
+		return newError("const variable %s must be initialize on line %d", name, line)
 	}
 
 	_, fromOuter, ok := s.Get(name)
 
 	// If the variable already exists in this scope we cannot redeclare it
 	if ok && !fromOuter {
-		return newError(line, "cannot redeclare block scoped variable %s", name)
+		return newError("cannot redeclare block scoped variable %s on line %d", name, line)
 	} else {
 		// if the variable doesn't exist or its from the parent scope
 		s.store[name] = Variable{Value: val, Constant: isConst}
@@ -59,13 +59,13 @@ func (s *Scope) AssignVar(name string, val Object, line int) Object {
 	scope, ok := s.Resolve(name)
 
 	if !ok {
-		return newError(line, "cannot resolve variable %s", name)
+		return newError("cannot resolve variable %s on line %d", name, line)
 	}
 	// if we get here, we know the variable exists so we can ignore the boolean return values
 	existing, _, _ := scope.Get(name)
 
 	if existing.Constant {
-		return newError(line, "cannot assign value to constant %s", name)
+		return newError("cannot assign value to constant %s on line %d", name, line)
 	}
 
 	return scope.Set(name, val, false)
@@ -84,6 +84,6 @@ func (s *Scope) Resolve(name string) (*Scope, bool) {
 	return s.outer.Resolve(name)
 }
 
-func newError(line int, format string, a ...interface{}) *Error {
-	return &Error{Message: fmt.Sprintf(format, a...), OriginLine: line}
+func newError(format string, a ...interface{}) *Error {
+	return &Error{Message: fmt.Sprintf(format, a...)}
 }

@@ -13,9 +13,9 @@ var Builtins = []struct {
 	{
 		"len",
 		&BuiltIn{
-			Fn: func(line int, args ...Object) Object {
+			Fn: func(args ...Object) Object {
 				if len(args) != 1 {
-					return newError(line, "`len` expects one argument")
+					return newError("`len` expects one argument")
 				}
 
 				switch arg := args[0].(type) {
@@ -24,7 +24,7 @@ var Builtins = []struct {
 				case *Array:
 					return &Integer{Value: int64(len(arg.Elements))}
 				default:
-					return newError(line, "argument to `len` of wrong type. got=%s", args[0].Type())
+					return newError("argument to `len` of wrong type. got=%s", args[0].Type())
 				}
 			},
 		},
@@ -32,7 +32,7 @@ var Builtins = []struct {
 	{
 		"print",
 		&BuiltIn{
-			Fn: func(line int, args ...Object) Object {
+			Fn: func(args ...Object) Object {
 				var out bytes.Buffer
 
 				elems := make([]string, 0)
@@ -49,12 +49,12 @@ var Builtins = []struct {
 	{
 		"first",
 		&BuiltIn{
-			Fn: func(line int, args ...Object) Object {
+			Fn: func(args ...Object) Object {
 				if len(args) != 1 {
-					return newError(line, "`first` expects a single argument. got=%d", len(args))
+					return newError("`first` expects a single argument")
 				}
 				if args[0].Type() != ArrayObj {
-					return newError(line, "argument to `first` must be an Array. got=%s", args[0].Type())
+					return newError("argument to `first` must be array type")
 				}
 
 				arr := args[0].(*Array)
@@ -68,12 +68,12 @@ var Builtins = []struct {
 	{
 		"last",
 		&BuiltIn{
-			Fn: func(line int, args ...Object) Object {
+			Fn: func(args ...Object) Object {
 				if len(args) != 1 {
-					return newError(line, "`last` expects a single argument. got=%d", len(args))
+					return newError("`last` expects a single argument.")
 				}
 				if args[0].Type() != ArrayObj {
-					return newError(line, "argument to `last` must be an Array. got=%s", args[0].Type())
+					return newError("argument to `last` must be array type")
 				}
 
 				arr := args[0].(*Array)
@@ -88,12 +88,12 @@ var Builtins = []struct {
 	{
 		"rest",
 		&BuiltIn{
-			Fn: func(line int, args ...Object) Object {
+			Fn: func(args ...Object) Object {
 				if len(args) != 1 {
-					return newError(line, "`rest` expects one argument")
+					return newError("`rest` expects one argument")
 				}
 				if args[0].Type() != ArrayObj {
-					return newError(line, "argument of `rest` must be array type")
+					return newError("argument to `rest` must be array type")
 				}
 				arr := args[0].(*Array)
 				length := len(arr.Elements)
@@ -109,13 +109,13 @@ var Builtins = []struct {
 	{
 		"append",
 		&BuiltIn{
-			Fn: func(line int, args ...Object) Object {
+			Fn: func(args ...Object) Object {
 				if len(args) != 2 {
-					return newError(line, "`append` expects two arguments")
+					return newError("`append` expects two arguments")
 				}
 
 				if args[0].Type() != ArrayObj {
-					return newError(line, "first argument to `append` must be array")
+					return newError("first argument to `append` must be array type")
 				}
 
 				arr := args[0].(*Array)
@@ -132,20 +132,20 @@ var Builtins = []struct {
 	{
 		"slice",
 		&BuiltIn{
-			Fn: func(line int, args ...Object) Object {
+			Fn: func(args ...Object) Object {
 				if len(args) != 3 {
-					return newError(line, "`slice` expects three arguments")
+					return newError("`slice` expects three arguments")
 				}
 
 				if args[0].Type() != ArrayObj {
-					return newError(line, "first argument to `slice` must be array")
+					return newError("first argument to `slice` must be array type")
 				}
 				if args[1].Type() != IntegerObj {
-					return newError(line, "`start` argument to `slice` must be int")
+					return newError("`start` argument to `slice` must be int")
 				}
 
 				if args[2].Type() != IntegerObj {
-					return newError(line, "`end` argument to `slice` must be int")
+					return newError("`end` argument to `slice` must be int")
 				}
 
 				arr := args[0].(*Array)
@@ -171,14 +171,14 @@ var Builtins = []struct {
 	{
 		"keys",
 		&BuiltIn{
-			Fn: func(line int, args ...Object) Object {
+			Fn: func(args ...Object) Object {
 				if len(args) != 1 {
-					return newError(line, "`keys` expects one argument")
+					return newError("`keys` expects one argument")
 				}
 
 				hash, ok := args[0].(*Hash)
 				if !ok {
-					return newError(line, "unknown argument type for `keys`: %T", args[0])
+					return newError("unknown argument type for `keys`: %T", args[0])
 				}
 
 				keys := make([]Object, 0)
@@ -200,14 +200,14 @@ var Builtins = []struct {
 	{
 		"values",
 		&BuiltIn{
-			Fn: func(line int, args ...Object) Object {
+			Fn: func(args ...Object) Object {
 				if len(args) != 1 {
-					return newError(line, "`values` expects one argument")
+					return newError("`values` expects one argument")
 				}
 
 				hash, ok := args[0].(*Hash)
 				if !ok {
-					return newError(line, "unknown argument type for `values`: %T", args[0])
+					return newError("unknown argument type for `values`: %T", args[0])
 				}
 
 				values := make([]Object, 0)
