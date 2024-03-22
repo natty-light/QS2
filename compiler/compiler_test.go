@@ -1070,6 +1070,44 @@ func TestBuiltins(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestForLoops(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			source: `
+			mut i = 0;
+			for (i < 5) { i }
+			`,
+			expectedConstants: []interface{}{0, 5},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpConstant, 0),
+				// 0003
+				code.Make(code.OpSetMutableGlobal, 0),
+				// 0006
+				code.Make(code.OpConstant, 1),
+				// 0009
+				code.Make(code.OpGetGlobal, 0),
+				// 0012
+				code.Make(code.OpGt),
+				// 0013
+				code.Make(code.OpJumpNotTruthy, 23),
+				// 0016
+				code.Make(code.OpGetGlobal, 0),
+				// 0019
+				code.Make(code.OpPop),
+				// 0020
+				code.Make(code.OpJump, 6),
+				// 0023
+				code.Make(code.OpNull),
+				// 0024
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 
