@@ -275,7 +275,15 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
-		c.emit(code.OpCall)
+		// push arguments on to stack
+		for _, arg := range node.Arguments {
+			err := c.Compile(arg)
+			if err != nil {
+				return err
+			}
+		}
+
+		c.emit(code.OpCall, len(node.Arguments))
 
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
@@ -328,6 +336,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.emit(code.OpHash, len(node.Pairs)*2)
 	case *ast.FunctionLiteral:
 		c.enterScope()
+
+		for _, p := range node.Parameters {
+			c.symbolTable.DefineImmutable(p.Value)
+		}
+
 		err := c.Compile(node.Body)
 		if err != nil {
 			return err
