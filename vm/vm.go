@@ -195,17 +195,14 @@ func (vm *VM) Run() error {
 				return err
 			}
 		case code.OpCall:
+			// get number of arguments from operand
+			numArgs := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
-			fn, ok := vm.stack[vm.sp-1].(*object.CompiledFunction)
-			if !ok {
-				return fmt.Errorf("calling non-function")
+
+			err := vm.callFunction(int(numArgs))
+			if err != nil {
+				return err
 			}
-
-			// create new frame for function call with the base pointer being the value of the current vm stack pointer
-			frame := NewFrame(fn, vm.sp)
-			vm.pushFrame(frame)
-
-			vm.sp = frame.basePointer + fn.NumLocals
 
 		case code.OpReturnValue:
 			returnValue := vm.pop()
@@ -554,6 +551,29 @@ func (vm *VM) executeHashIndex(hash, index object.Object) error {
 	}
 
 	return vm.push(pair.Value)
+}
+
+func (vm *VM) callFunction(numArgs int) error {
+	// the function is at the bottom of the stack, below the args
+	fn, ok := vm.stack[vm.sp-1-numArgs].(*object.CompiledFunction)
+	if !ok {
+		return fmt.Errorf("calling non-function")
+	}
+
+	if numArgs != fn.NumParameters {
+		return fmt.Errorf("wrong number of arguments. want=%d, got=%d", fn.NumParameters, numArgs)
+	}
+
+	// frame's base pointer is the first argument,
+	// since stack pointer is always pointing to the next value
+	// we need to subtract the number of arguments to get the base pointer
+	frame := NewFrame(fn, vm.sp-numArgs)
+	vm.pushFrame(frame)
+
+	// set the stack pointer to the base pointer of the new frame
+	vm.sp = frame.basePointer + fn.NumLocals
+
+	return nil
 }
 
 // utility functions
