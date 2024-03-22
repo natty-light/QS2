@@ -42,6 +42,7 @@ const (
 	OpSetImmutableLocal
 	OpSetMutableLocal
 	OpGetLocal
+	OpGetBuiltIn
 )
 
 type (
@@ -83,6 +84,7 @@ var definitions = map[Opcode]*Definition{
 	OpSetImmutableLocal:  {"OpSetImmutableLocal", []int{1}},
 	OpSetMutableLocal:    {"OpSetMutableLocal", []int{1}},
 	OpGetLocal:           {"OpGetLocal", []int{1}},
+	OpGetBuiltIn:         {"OpGetBuiltIn", []int{1}},
 }
 
 func Lookup(op byte) (*Definition, error) {
