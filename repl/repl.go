@@ -58,7 +58,7 @@ func StartVM(in io.Reader, out io.Writer) {
 	}
 
 	for {
-		fmt.Print(out, PROMPT)
+		fmt.Fprint(out, PROMPT)
 		scanned := scanner.Scan()
 		if !scanned {
 			return
