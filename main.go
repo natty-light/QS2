@@ -43,6 +43,9 @@ func Run(filename string) {
 	constants := []object.Object{}
 	globals := make([]object.Object, vm.GlobalsSize)
 	symbolTable := compiler.NewSymbolTable()
+	for i, v := range object.Builtins {
+		symbolTable.DefineBuiltin(i, v.Name)
+	}
 
 	file, err := os.ReadFile(filename)
 	if err != nil {
