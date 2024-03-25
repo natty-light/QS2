@@ -30,6 +30,7 @@ const (
 	QuoteObj            ObjectType = "Quote"
 	MacroObj            ObjectType = "Macro"
 	CompiledFunctionObj ObjectType = "CompiledFunction"
+	ClosureObj          ObjectType = "Closure"
 )
 
 type (
@@ -119,6 +120,11 @@ type (
 		NumLocals     int
 		NumParameters int
 	}
+
+	Closure struct {
+		Fn   *CompiledFunction
+		Free []Object
+	}
 )
 
 func (i *Integer) Type() ObjectType {
@@ -179,6 +185,10 @@ func (m *Macro) Type() ObjectType {
 
 func (c *CompiledFunction) Type() ObjectType {
 	return CompiledFunctionObj
+}
+
+func (c *Closure) Type() ObjectType {
+	return ClosureObj
 }
 
 func (i *Integer) Inspect() string {
@@ -286,6 +296,10 @@ func (m *Macro) Inspect() string {
 
 func (c *CompiledFunction) Inspect() string {
 	return fmt.Sprintf("CompiledFunction[%p]", c)
+}
+
+func (c *Closure) Inspect() string {
+	return fmt.Sprintf("Closure[%p]", c)
 }
 
 // HashKey functions
