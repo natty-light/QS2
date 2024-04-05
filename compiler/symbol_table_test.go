@@ -1,6 +1,8 @@
 package compiler
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestDefine(t *testing.T) {
 	expected := map[string]Symbol{
@@ -175,6 +177,123 @@ func TestDefineResolveBuiltins(t *testing.T) {
 			if result != sym {
 				t.Errorf("expected %s to resolve to %+v, got=%+v", sym.Name, sym, result)
 			}
+		}
+	}
+}
+
+func TestResolveFree(t *testing.T) {
+	global := NewSymbolTable()
+	global.DefineImmutable("a")
+	global.DefineImmutable("b")
+
+	firstLocal := NewEnclosedSymbolTable(global)
+	firstLocal.DefineImmutable("c")
+	firstLocal.DefineImmutable("d")
+
+	secondLocal := NewEnclosedSymbolTable(firstLocal)
+	secondLocal.DefineImmutable("e")
+	secondLocal.DefineImmutable("f")
+
+	tests := []struct {
+		table               *SymbolTable
+		expectedSymbols     []Symbol
+		expectedFreeSymbols []Symbol
+	}{
+		{
+			firstLocal,
+			[]Symbol{
+				Symbol{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
+				Symbol{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: true},
+				Symbol{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true},
+				Symbol{Name: "d", Scope: LocalScope, Index: 1, IsConstant: true},
+			},
+			[]Symbol{},
+		},
+		{
+			secondLocal,
+			[]Symbol{
+				Symbol{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
+				Symbol{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: true},
+				Symbol{Name: "c", Scope: FreeScope, Index: 0, IsConstant: true},
+				Symbol{Name: "d", Scope: FreeScope, Index: 1, IsConstant: true},
+				Symbol{Name: "e", Scope: LocalScope, Index: 0, IsConstant: true},
+				Symbol{Name: "f", Scope: LocalScope, Index: 1, IsConstant: true},
+			},
+			[]Symbol{
+				Symbol{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true},
+				Symbol{Name: "d", Scope: LocalScope, Index: 1, IsConstant: true},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		for _, sym := range tt.expectedSymbols {
+			result, ok := tt.table.Resolve(sym.Name)
+
+			if !ok {
+				t.Errorf("name %s not resolvable", sym.Name)
+				continue
+			}
+
+			if result != sym {
+				t.Errorf("expected %s to resolve to %+v, got=%+v", sym.Name, sym, result)
+			}
+		}
+
+		if len(tt.table.FreeSymbols) != len(tt.expectedFreeSymbols) {
+			t.Errorf("wrong number of free symbols. got=%d, want=%d", len(tt.table.FreeSymbols), len(tt.expectedFreeSymbols))
+			continue
+		}
+
+		for i, sym := range tt.expectedFreeSymbols {
+			result := tt.table.FreeSymbols[i]
+			if result != sym {
+				t.Errorf("wrong free symbol. got=%+v, want=%+v", result, sym)
+			}
+		}
+	}
+}
+
+func TestResolveUnresolvableFree(t *testing.T) {
+	global := NewSymbolTable()
+	global.DefineImmutable("a")
+
+	firstLocal := NewEnclosedSymbolTable(global)
+	firstLocal.DefineImmutable("c")
+
+	secondLocal := NewEnclosedSymbolTable(firstLocal)
+	secondLocal.DefineImmutable("e")
+	secondLocal.DefineImmutable("f")
+
+	expected := []Symbol{
+		Symbol{"a", GlobalScope, 0, true},
+		Symbol{"c", FreeScope, 0, true},
+		Symbol{"e", LocalScope, 0, true},
+		Symbol{"f", LocalScope, 1, true},
+	}
+
+	for _, sym := range expected {
+		result, ok := secondLocal.Resolve(sym.Name)
+
+		if !ok {
+			t.Errorf("name %s not resolvable", sym.Name)
+			continue
+		}
+
+		if result != sym {
+			t.Errorf("expected %s to resolve to %+v, got=%+v", sym.Name, sym, result)
+		}
+	}
+
+	expectedUnresolvable := []string{
+		"b",
+		"d",
+	}
+
+	for _, name := range expectedUnresolvable {
+		_, ok := secondLocal.Resolve(name)
+		if ok {
+			t.Errorf("name %s resolved, but was expected not to", name)
 		}
 	}
 }
