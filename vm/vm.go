@@ -263,11 +263,21 @@ func (vm *VM) Run() error {
 			// get index of compiled fn
 			constIdx := code.ReadUint16(ins[ip+1:])
 			// get number of free variables
-			_ = code.ReadUint8(ins[ip+3:])
+			numFree := code.ReadUint8(ins[ip+3:])
 			// advance past operands
 			vm.currentFrame().ip += 3
 
-			err := vm.pushClosure(int(constIdx))
+			err := vm.pushClosure(int(constIdx), int(numFree))
+			if err != nil {
+				return err
+			}
+		case code.OpGetFree:
+			freeIdx := code.ReadUint8(ins[ip+1:])
+			vm.currentFrame().ip += 1 // move past operand
+
+			currentClosure := vm.currentFrame().cl
+
+			err := vm.push(currentClosure.Free[freeIdx]) // push free var onto stack
 			if err != nil {
 				return err
 			}
@@ -622,14 +632,19 @@ func (vm *VM) callBuiltIn(builtin *object.BuiltIn, numArgs int) error {
 	return nil
 }
 
-func (vm *VM) pushClosure(constIdx int) error {
+func (vm *VM) pushClosure(constIdx, numFree int) error {
 	constant := vm.constants[constIdx]
 	fn, ok := constant.(*object.CompiledFunction)
 	if !ok {
 		return fmt.Errorf("not a function: %+v", constant)
 	}
 
-	closure := &object.Closure{Fn: fn}
+	free := make([]object.Object, numFree)
+	for i := 0; i < numFree; i++ {
+		free[i] = vm.stack[vm.sp-numFree+i]
+	}
+	vm.sp = vm.sp - numFree // clean up stack
+	closure := &object.Closure{Fn: fn, Free: free}
 
 	return vm.push(closure)
 }
