@@ -202,26 +202,26 @@ func TestResolveFree(t *testing.T) {
 		{
 			firstLocal,
 			[]Symbol{
-				Symbol{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
-				Symbol{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: true},
-				Symbol{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true},
-				Symbol{Name: "d", Scope: LocalScope, Index: 1, IsConstant: true},
+				{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
+				{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: true},
+				{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true},
+				{Name: "d", Scope: LocalScope, Index: 1, IsConstant: true},
 			},
 			[]Symbol{},
 		},
 		{
 			secondLocal,
 			[]Symbol{
-				Symbol{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
-				Symbol{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: true},
-				Symbol{Name: "c", Scope: FreeScope, Index: 0, IsConstant: true},
-				Symbol{Name: "d", Scope: FreeScope, Index: 1, IsConstant: true},
-				Symbol{Name: "e", Scope: LocalScope, Index: 0, IsConstant: true},
-				Symbol{Name: "f", Scope: LocalScope, Index: 1, IsConstant: true},
+				{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
+				{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: true},
+				{Name: "c", Scope: FreeScope, Index: 0, IsConstant: true},
+				{Name: "d", Scope: FreeScope, Index: 1, IsConstant: true},
+				{Name: "e", Scope: LocalScope, Index: 0, IsConstant: true},
+				{Name: "f", Scope: LocalScope, Index: 1, IsConstant: true},
 			},
 			[]Symbol{
-				Symbol{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true},
-				Symbol{Name: "d", Scope: LocalScope, Index: 1, IsConstant: true},
+				{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true},
+				{Name: "d", Scope: LocalScope, Index: 1, IsConstant: true},
 			},
 		},
 	}
@@ -266,10 +266,10 @@ func TestResolveUnresolvableFree(t *testing.T) {
 	secondLocal.DefineImmutable("f")
 
 	expected := []Symbol{
-		Symbol{"a", GlobalScope, 0, true},
-		Symbol{"c", FreeScope, 0, true},
-		Symbol{"e", LocalScope, 0, true},
-		Symbol{"f", LocalScope, 1, true},
+		{"a", GlobalScope, 0, true},
+		{"c", FreeScope, 0, true},
+		{"e", LocalScope, 0, true},
+		{"f", LocalScope, 1, true},
 	}
 
 	for _, sym := range expected {
