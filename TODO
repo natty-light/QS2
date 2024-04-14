@@ -9,4 +9,6 @@ propagate line numbers into macro system somehow?
 
 add type checking at compile time
 
-QS3? remove null
+
+add builtins for casting 
+QS3? remove null, follow Go's approach for zero value for uninit vars
