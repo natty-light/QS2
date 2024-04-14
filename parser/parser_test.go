@@ -1041,6 +1041,33 @@ func TestMacroLiteralParsing(t *testing.T) {
 	testInfixExpr(t, bodyStmt.Expr, "x", "+", "y")
 }
 
+func TestFunctionLiteralWithName(t *testing.T) {
+	source := `const myFunc = func() { }`
+
+	l := lexer.New(source)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Stmts) != 1 {
+		t.Fatalf("progream.Body does not contain %d stmts. got=%d\n", 1, len(program.Stmts))
+	}
+
+	stmt, ok := program.Stmts[0].(*ast.VarDeclarationStmt)
+	if !ok {
+		t.Fatalf("program.Stmts[0] is not *ast.VarDeclarationStmt. got=%T", program.Stmts[0])
+	}
+
+	fn, ok := stmt.Value.(*ast.FunctionLiteral)
+	if !ok {
+		t.Fatalf("stmt.Value is not *ast.FunctionLiteral. got=%T", stmt.Value)
+	}
+
+	if fn.Name != "myFunc" {
+		t.Fatalf("function literal name wrong. want `myFunc`, got=%q\n", fn.Name)
+	}
+}
+
 // Utilities
 
 func checkParserErrors(t *testing.T, p *Parser) {

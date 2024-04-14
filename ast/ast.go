@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"fmt"
 	"quonk/token"
 	"strings"
 )
@@ -86,6 +87,7 @@ type (
 		Token      token.Token
 		Parameters []*Identifier
 		Body       *BlockStmt
+		Name       string
 	}
 
 	StringLiteral struct {
@@ -443,6 +445,9 @@ func (f *FunctionLiteral) String() string {
 	}
 
 	out.WriteString(f.TokenLiteral())
+	if f.Name != "" {
+		out.WriteString(fmt.Sprintf("<%s>", f.Name))
+	}
 	out.WriteString("(")
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") ")

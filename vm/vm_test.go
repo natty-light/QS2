@@ -2,7 +2,6 @@ package vm
 
 import (
 	"fmt"
-	"os"
 	"quonk/ast"
 	"quonk/compiler"
 	"quonk/lexer"
@@ -512,34 +511,34 @@ func TestClosures(t *testing.T) {
 
 func TestRecursiveFunctions(t *testing.T) {
 	tests := []vmTestCase{
-		// {
-		// 	source: `
-		// 	const countDown = func(x) {
-		// 		if (x == 0) {
-		// 			return 0;
-		// 		} else {
-		// 			countDown(x - 1);
-		// 		}
-		// 	}
-		// 	countDown(1);
-		// 	`,
-		// 	expected: 0,
-		// },
-		// {
-		// 	source: `const countDown = func(x) {
-		// 		if (x == 0) {
-		// 			return 0;
-		// 		}
+		{
+			source: `
+			const countDown = func(x) {
+				if (x == 0) {
+					return 0;
+				} else {
+					countDown(x - 1);
+				}
+			}
+			countDown(1);
+			`,
+			expected: 0,
+		},
+		{
+			source: `const countDown = func(x) {
+				if (x == 0) {
+					return 0;
+				}
 
-		// 		return countDown(x - 1);
-		// 	};
-		// 	const wrapper = func() {
-		// 		countDown(1);
-		// 	};
-		// 	wrapper();
-		// 	`,
-		// 	expected: 0,
-		// },
+				return countDown(x - 1);
+			};
+			const wrapper = func() {
+				countDown(1);
+			};
+			wrapper();
+			`,
+			expected: 0,
+		},
 		{
 			`
 			const wrapper = func() {
@@ -576,7 +575,6 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 		}
 
 		vm := New(comp.Bytecode())
-		os.WriteFile("prog.txt", comp.Bytecode().Instructions, os.ModeAppend)
 		err = vm.Run()
 		if err != nil {
 			t.Fatalf("vm error: %s", err)
