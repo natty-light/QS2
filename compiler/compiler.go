@@ -86,20 +86,21 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if node.Value == nil {
 			node.Value = &ast.NullLiteral{}
 		}
+		_, fromOuter, ok := c.symbolTable.Resolve(node.Name.Value)
 
-		err := c.Compile(node.Value)
-		if err != nil {
-			return err
-		}
-
-		_, ok := c.symbolTable.Resolve(node.Name.Value)
-
-		if ok {
+		// if the variable exists in this scope, cannot redeclare
+		if ok && !fromOuter {
 			return fmt.Errorf("variable %s already declared on line %d", node.Name.Value, node.Token.Line)
 		}
 
 		if node.Constant {
 			symbol := c.symbolTable.DefineImmutable(node.Name.Value)
+
+			err := c.Compile(node.Value)
+			if err != nil {
+				return err
+			}
+
 			if symbol.Scope == GlobalScope {
 				c.emit(code.OpSetImmutableGlobal, symbol.Index)
 			} else {
@@ -107,6 +108,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		} else {
 			symbol := c.symbolTable.DefineMutable(node.Name.Value)
+
+			err := c.Compile(node.Value)
+			if err != nil {
+				return err
+			}
+
 			if symbol.Scope == GlobalScope {
 				c.emit(code.OpSetMutableGlobal, symbol.Index)
 			} else {
@@ -119,7 +126,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
-		symbol, ok := c.symbolTable.Resolve(node.Identifier.Value)
+		symbol, _, ok := c.symbolTable.Resolve(node.Identifier.Value)
 		if !ok {
 			return fmt.Errorf("undefined variable %s on line %d", node.Identifier.Value, node.Token.Line)
 		}
@@ -282,7 +289,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		c.emit(code.OpIndex)
 	case *ast.Identifier:
-		symbol, ok := c.symbolTable.Resolve(node.Value)
+		symbol, _, ok := c.symbolTable.Resolve(node.Value)
 		if !ok {
 			return fmt.Errorf("undefined variable %s on line %d", node.Value, node.Token.Line)
 		}

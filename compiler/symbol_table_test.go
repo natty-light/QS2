@@ -61,7 +61,7 @@ func TestResolveGlobal(t *testing.T) {
 	}
 
 	for _, sym := range expected {
-		result, ok := globalScope.Resolve(sym.Name)
+		result, _, ok := globalScope.Resolve(sym.Name)
 		if !ok {
 			t.Errorf("name %s not resolvable", sym.Name)
 		}
@@ -111,7 +111,7 @@ func TestResolveNestedLocal(t *testing.T) {
 
 	for _, tt := range tests {
 		for _, sym := range tt.expectedSymbols {
-			result, ok := tt.table.Resolve(sym.Name)
+			result, _, ok := tt.table.Resolve(sym.Name)
 			if !ok {
 				t.Errorf("name %s not resolvable", sym.Name)
 			}
@@ -140,7 +140,7 @@ func TestResolveLocal(t *testing.T) {
 	}
 
 	for _, sym := range expected {
-		result, ok := local.Resolve(sym.Name)
+		result, _, ok := local.Resolve(sym.Name)
 		if !ok {
 			t.Errorf("name %s not resolvable", sym.Name)
 		}
@@ -169,7 +169,7 @@ func TestDefineResolveBuiltins(t *testing.T) {
 
 	for _, table := range []*SymbolTable{global, firstLocal, secondLocal} {
 		for _, sym := range expected {
-			result, ok := table.Resolve(sym.Name)
+			result, _, ok := table.Resolve(sym.Name)
 			if !ok {
 				t.Errorf("name %s not resolvable", sym.Name)
 			}
@@ -228,7 +228,7 @@ func TestResolveFree(t *testing.T) {
 
 	for _, tt := range tests {
 		for _, sym := range tt.expectedSymbols {
-			result, ok := tt.table.Resolve(sym.Name)
+			result, _, ok := tt.table.Resolve(sym.Name)
 
 			if !ok {
 				t.Errorf("name %s not resolvable", sym.Name)
@@ -273,7 +273,7 @@ func TestResolveUnresolvableFree(t *testing.T) {
 	}
 
 	for _, sym := range expected {
-		result, ok := secondLocal.Resolve(sym.Name)
+		result, _, ok := secondLocal.Resolve(sym.Name)
 
 		if !ok {
 			t.Errorf("name %s not resolvable", sym.Name)
@@ -291,7 +291,7 @@ func TestResolveUnresolvableFree(t *testing.T) {
 	}
 
 	for _, name := range expectedUnresolvable {
-		_, ok := secondLocal.Resolve(name)
+		_, _, ok := secondLocal.Resolve(name)
 		if ok {
 			t.Errorf("name %s resolved, but was expected not to", name)
 		}

@@ -72,23 +72,25 @@ func (s *SymbolTable) defineFree(original Symbol) Symbol {
 	return symbol
 }
 
-func (s *SymbolTable) Resolve(name string) (Symbol, bool) {
+// symbol, fromOuter, ok
+func (s *SymbolTable) Resolve(name string) (Symbol, bool, bool) {
 	symbol, ok := s.store[name]
 	if !ok && s.Outer != nil {
-		symbol, ok = s.Outer.Resolve(name)
+		symbol, _, ok = s.Outer.Resolve(name)
 		if !ok {
-			return symbol, ok
+			return symbol, true, ok
 		}
 
+		// if we are here, we resolved variable from outer scope
 		if symbol.Scope == GlobalScope || symbol.Scope == BuiltinScope {
-			return symbol, ok
+			return symbol, true, ok
 		}
 
 		free := s.defineFree(symbol)
-		return free, true
+		return free, true, true
 	}
 
-	return symbol, ok
+	return symbol, false, ok
 }
 
 func NewEnclosedSymbolTable(outer *SymbolTable) *SymbolTable {
