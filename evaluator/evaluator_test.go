@@ -140,32 +140,32 @@ func TestErrorHandling(t *testing.T) {
 	}{
 		{
 			"5 + true;",
-			"type mismatch: Integer + Boolean",
+			"type mismatch: Integer + Boolean on line 1",
 			1,
 		},
 		{
 			"5 + true; 5;",
-			"type mismatch: Integer + Boolean",
+			"type mismatch: Integer + Boolean on line 1",
 			1,
 		},
 		{
 			"-true",
-			"unknown operation - for type Boolean",
+			"unknown operation - for type Boolean on line 1",
 			1,
 		},
 		{
 			"true + false;",
-			"unknown operator: Boolean + Boolean",
+			"unknown operator: Boolean + Boolean on line 1",
 			1,
 		},
 		{
 			"5; true + false; 5",
-			"unknown operator: Boolean + Boolean",
+			"unknown operator: Boolean + Boolean on line 1",
 			1,
 		},
 		{
 			"if (10 > 1) { true + false; }",
-			"unknown operator: Boolean + Boolean",
+			"unknown operator: Boolean + Boolean on line 1",
 			1,
 		},
 		{
@@ -175,14 +175,14 @@ func TestErrorHandling(t *testing.T) {
 				}
 				return 1;
 			}`,
-			"unknown operator: Boolean + Boolean",
+			"unknown operator: Boolean + Boolean on line 3",
 			3,
 		},
-		{"foobar", "identifier not found: foobar", 1},
-		{`"Hello" - "World"`, "unknown operator: String - String", 1},
+		{"foobar", "identifier not found: foobar on line 1", 1},
+		{`"Hello" - "World"`, "unknown operator: String - String on line 1", 1},
 		{
 			`{"name": "QuonkScript"}[func(x) { x }];`,
-			"unusable as hash key: Function",
+			"unusable as hash key: Function on line 1",
 			1,
 		},
 	}
@@ -199,10 +199,6 @@ func TestErrorHandling(t *testing.T) {
 
 		if errObj.Message != tt.expectedMessage {
 			t.Errorf("wrong error message. expected=%q, got=%q", tt.expectedMessage, errObj.Message)
-		}
-
-		if errObj.OriginLine != tt.expectedLine {
-			t.Errorf("wrong line. expected=%d, got=%d", tt.expectedLine, errObj.OriginLine)
 		}
 	}
 }
@@ -425,7 +421,7 @@ func TestArrayIndexExpressions(t *testing.T) {
 		{
 			"[1, 2, 3][3]",
 			nil,
-			"array index out of bounds",
+			"array index out of bounds on line 1",
 		},
 		{
 			"[1, 2, 3][-1]",
@@ -445,7 +441,7 @@ func TestArrayIndexExpressions(t *testing.T) {
 		{
 			"[1, 2, 3][-4]",
 			nil,
-			"array index out of bounds",
+			"array index out of bounds on line 1",
 		},
 	}
 

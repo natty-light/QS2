@@ -247,6 +247,10 @@ func (p *Parser) parseVarDeclarationStmt() *ast.VarDeclarationStmt {
 	p.nextToken() // advance past =
 	stmt.Value = p.parseExpression(LOWEST)
 
+	if fl, ok := stmt.Value.(*ast.FunctionLiteral); ok {
+		fl.Name = stmt.Name.Value
+	}
+
 	if p.peekTokenIs(token.Semicolon) {
 		p.nextToken()
 	}

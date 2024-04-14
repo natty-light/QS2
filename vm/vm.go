@@ -9,30 +9,43 @@ import (
 
 const StackSize = 2048
 const GlobalsSize = 65536
+const MaxFrames = 1024
 
 var True = &object.Boolean{Value: true}
 var False = &object.Boolean{Value: false}
 var Null = &object.Null{}
 
 type VM struct {
-	constants    []object.Object
-	instructions code.Instructions
+	constants []object.Object
 
 	stack []object.Object
 	sp    int // always points to next value. top of stack is stack[sp - 1]
 
 	globals []object.Object
+
+	frames      []*Frame
+	framesIndex int
 }
 
 func New(bytecode *compiler.Bytecode) *VM {
+
+	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
+	mainClosure := &object.Closure{Fn: mainFn}
+	mainFrame := NewFrame(mainClosure, 0)
+
+	frames := make([]*Frame, MaxFrames)
+	frames[0] = mainFrame
+
 	return &VM{
-		instructions: bytecode.Instructions,
-		constants:    bytecode.Constants,
+		constants: bytecode.Constants,
 
 		stack: make([]object.Object, StackSize),
 		sp:    0,
 
 		globals: make([]object.Object, GlobalsSize),
+
+		frames:      frames,
+		framesIndex: 1,
 	}
 }
 
@@ -50,14 +63,24 @@ func (vm *VM) StackTop() object.Object {
 }
 
 func (vm *VM) Run() error {
-	for ip := 0; ip < len(vm.instructions); ip++ {
-		op := code.Opcode(vm.instructions[ip])
+
+	var ip int
+	var ins code.Instructions
+	var op code.Opcode
+
+	for vm.currentFrame().ip < len(vm.currentFrame().Instructions())-1 {
+		vm.currentFrame().ip++
+
+		ip = vm.currentFrame().ip
+		ins = vm.currentFrame().Instructions()
+
+		op = code.Opcode(ins[ip])
 
 		switch op {
 		case code.OpConstant:
 			// get constant index from instruction
-			constIdx := code.ReadUint16(vm.instructions[ip+1:])
-			ip += 2 // update instruction pointer
+			constIdx := code.ReadUint16(ins[ip+1:])
+			vm.currentFrame().ip += 2 // update instruction pointer
 
 			// push constant onto stack
 			err := vm.push(vm.constants[constIdx])
@@ -98,20 +121,20 @@ func (vm *VM) Run() error {
 			}
 		case code.OpJump:
 			// read jump position from operand of instruction at ip+1
-			pos := int(code.ReadUint16(vm.instructions[ip+1:]))
+			pos := int(code.ReadUint16(ins[ip+1:]))
 			// ip will be incremented as part of loop, so we set it to right before the jump position
-			ip = pos - 1
+			vm.currentFrame().ip = pos - 1
 		case code.OpJumpNotTruthy:
 			// read jump position from operand of instruction at ip+1
-			pos := int(code.ReadUint16(vm.instructions[ip+1:]))
-			ip += 2 // move past operand
+			pos := int(code.ReadUint16(ins[ip+1:]))
+			vm.currentFrame().ip += 2 // move past operand
 
 			condition := vm.pop()
 			// if the condition is not truthy, we jump back to the position right before the target
 			if !isTruthy(condition) {
 				// ip will be incremented as part of loop, so we set it to right before the jump position
 
-				ip = pos - 1
+				vm.currentFrame().ip = pos - 1
 			}
 		case code.OpNull:
 			err := vm.push(Null)
@@ -120,14 +143,14 @@ func (vm *VM) Run() error {
 			}
 		case code.OpSetImmutableGlobal, code.OpSetMutableGlobal:
 			// get index of variable from operand
-			globalIdx := code.ReadUint16(vm.instructions[ip+1:])
-			ip += 2 // move past operand
+			globalIdx := code.ReadUint16(ins[ip+1:])
+			vm.currentFrame().ip += 2 // move past operand
 			// pull value off stack and put it into the globals
 			vm.globals[globalIdx] = vm.pop()
 		case code.OpGetGlobal:
 			// get index from operand
-			globalIdx := code.ReadUint16(vm.instructions[ip+1:])
-			ip += 2 // move past operand
+			globalIdx := code.ReadUint16(ins[ip+1:])
+			vm.currentFrame().ip += 2 // move past operand
 
 			// put value of variable on to stack
 			err := vm.push(vm.globals[globalIdx])
@@ -136,8 +159,8 @@ func (vm *VM) Run() error {
 			}
 		case code.OpArray:
 			// get number of elements from operand
-			numElements := int(code.ReadUint16(vm.instructions[ip+1:]))
-			ip += 2 // move past operand
+			numElements := int(code.ReadUint16(ins[ip+1:]))
+			vm.currentFrame().ip += 2 // move past operand
 
 			// create array and push it onto stack
 			array := vm.buildArray(vm.sp-numElements, vm.sp)
@@ -148,8 +171,8 @@ func (vm *VM) Run() error {
 			}
 		case code.OpHash:
 			// get number of elements from operand
-			numElements := int(code.ReadUint16(vm.instructions[ip+1:]))
-			ip += 2 // move past operand
+			numElements := int(code.ReadUint16(ins[ip+1:]))
+			vm.currentFrame().ip += 2 // move past operand
 
 			// create hash and push it onto stack
 			hash, err := vm.buildHash(vm.sp-numElements, vm.sp)
@@ -169,6 +192,98 @@ func (vm *VM) Run() error {
 			left := vm.pop()
 
 			err := vm.executeIndexExpression(left, index)
+			if err != nil {
+				return err
+			}
+		case code.OpCall:
+			// get number of arguments from operand
+			numArgs := code.ReadUint8(ins[ip+1:])
+			vm.currentFrame().ip += 1
+
+			err := vm.executeCall(int(numArgs))
+			if err != nil {
+				return err
+			}
+		case code.OpReturnValue:
+			returnValue := vm.pop()
+
+			// pop frame
+			frame := vm.popFrame()
+			// restore stack pointer
+			vm.sp = frame.basePointer - 1
+
+			// push return value onto stack
+			err := vm.push(returnValue)
+			if err != nil {
+				return err
+			}
+		case code.OpReturn:
+			// pop frame
+			frame := vm.popFrame()
+			// restore stack pointer, also has effect of popping last value off stack
+			vm.sp = frame.basePointer - 1
+
+			err := vm.push(Null)
+			if err != nil {
+				return err
+			}
+		case code.OpSetImmutableLocal, code.OpSetMutableLocal:
+			// get local index from operand
+			localIdx := code.ReadUint8(ins[ip+1:])
+			vm.currentFrame().ip += 1 // move past operand
+
+			frame := vm.currentFrame()
+
+			vm.stack[frame.basePointer+int(localIdx)] = vm.pop()
+		case code.OpGetLocal:
+			// get local index from operand
+			localIdx := code.ReadUint8(ins[ip+1:])
+			vm.currentFrame().ip += 1 // move past operand
+
+			frame := vm.currentFrame()
+
+			// index into the reserved space for local variables in the stack and push the value onto the stack
+			err := vm.push(vm.stack[frame.basePointer+int(localIdx)])
+			if err != nil {
+				return err
+			}
+		case code.OpGetBuiltIn:
+			// get built-in index from operand
+			builtinIdx := code.ReadUint8(ins[ip+1:])
+			vm.currentFrame().ip += 1 // move past operand
+
+			// get built-in function from index and push it onto the stack
+			def := object.Builtins[builtinIdx]
+
+			err := vm.push(def.BuiltIn)
+			if err != nil {
+				return err
+			}
+		case code.OpClosure:
+			// get index of compiled fn
+			constIdx := code.ReadUint16(ins[ip+1:])
+			// get number of free variables
+			numFree := code.ReadUint8(ins[ip+3:])
+			// advance past operands
+			vm.currentFrame().ip += 3
+
+			err := vm.pushClosure(int(constIdx), int(numFree))
+			if err != nil {
+				return err
+			}
+		case code.OpGetFree:
+			freeIdx := code.ReadUint8(ins[ip+1:])
+			vm.currentFrame().ip += 1 // move past operand
+
+			currentClosure := vm.currentFrame().cl
+
+			err := vm.push(currentClosure.Free[freeIdx]) // push free var onto stack
+			if err != nil {
+				return err
+			}
+		case code.OpCurrentClosure:
+			currentClosure := vm.currentFrame().cl
+			err := vm.push(currentClosure)
 			if err != nil {
 				return err
 			}
@@ -199,6 +314,20 @@ func (vm *VM) pop() object.Object {
 
 func (vm *VM) head() object.Object {
 	return vm.stack[vm.sp-1]
+}
+
+func (vm *VM) currentFrame() *Frame {
+	return vm.frames[vm.framesIndex-1]
+}
+
+func (vm *VM) pushFrame(f *Frame) {
+	vm.frames[vm.framesIndex] = f
+	vm.framesIndex++
+}
+
+func (vm *VM) popFrame() *Frame {
+	vm.framesIndex--
+	return vm.frames[vm.framesIndex]
 }
 
 func (vm *VM) executeBinaryOperation(op code.Opcode) error {
@@ -461,6 +590,69 @@ func (vm *VM) executeHashIndex(hash, index object.Object) error {
 	}
 
 	return vm.push(pair.Value)
+}
+
+func (vm *VM) executeCall(numArgs int) error {
+	// the function is at the bottom of the stack, below the args
+	callee := vm.stack[vm.sp-1-numArgs]
+
+	switch callee := callee.(type) {
+	case *object.Closure:
+		return vm.callClosure(callee, numArgs)
+	case *object.BuiltIn:
+		return vm.callBuiltIn(callee, numArgs)
+	default:
+		return fmt.Errorf("calling non-function %s", callee.Inspect())
+	}
+}
+
+func (vm *VM) callClosure(cl *object.Closure, numArgs int) error {
+	if numArgs != cl.Fn.NumParameters {
+		return fmt.Errorf("wrong number of arguments. want=%d, got=%d", cl.Fn.NumParameters, numArgs)
+	}
+
+	// frame's base pointer is the first argument,
+	// since stack pointer is always pointing to the next value
+	// we need to subtract the number of arguments to get the base pointer
+	frame := NewFrame(cl, vm.sp-numArgs)
+	vm.pushFrame(frame)
+
+	// set the stack pointer to the base pointer of the new frame
+	vm.sp = frame.basePointer + cl.Fn.NumLocals
+
+	return nil
+}
+
+func (vm *VM) callBuiltIn(builtin *object.BuiltIn, numArgs int) error {
+	args := vm.stack[vm.sp-numArgs : vm.sp] // pull slice of args off stack
+
+	result := builtin.Fn(args...)
+	vm.sp = vm.sp - numArgs - 1 // pop args and function
+
+	if result != nil {
+		vm.push(result)
+	} else {
+		vm.push(Null)
+	}
+
+	return nil
+}
+
+func (vm *VM) pushClosure(constIdx, numFree int) error {
+	constant := vm.constants[constIdx]
+	fn, ok := constant.(*object.CompiledFunction)
+	if !ok {
+		return fmt.Errorf("not a function: %+v", constant)
+	}
+
+	free := make([]object.Object, numFree)
+	for i := 0; i < numFree; i++ {
+		free[i] = vm.stack[vm.sp-numFree+i]
+	}
+	vm.sp = vm.sp - numFree // clean up stack
+	closure := &object.Closure{Fn: fn, Free: free}
+
+	return vm.push(closure)
 }
 
 // utility functions

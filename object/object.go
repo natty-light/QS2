@@ -5,29 +5,32 @@ import (
 	"fmt"
 	"hash/fnv"
 	"quonk/ast"
+	"quonk/code"
 	"strconv"
 
 	"strings"
 )
 
 type ObjectType string
-type BuiltInFunction func(line int, args ...Object) Object
+type BuiltInFunction func(args ...Object) Object
 
 const (
-	IntegerObj     ObjectType = "Integer"
-	BooleanObj     ObjectType = "Boolean"
-	NullObj        ObjectType = "Null"
-	ReturnValueObj ObjectType = "ReturnValue"
-	ErrorObj       ObjectType = "Error"
-	VariableObj    ObjectType = "Variable"
-	FunctionObj    ObjectType = "Function"
-	StringObj      ObjectType = "String"
-	BuiltInObj     ObjectType = "BuiltIn"
-	ArrayObj       ObjectType = "Array"
-	HashObj        ObjectType = "Hash"
-	FloatObj       ObjectType = "Float"
-	QuoteObj       ObjectType = "Quote"
-	MacroObj       ObjectType = "Macro"
+	IntegerObj          ObjectType = "Integer"
+	BooleanObj          ObjectType = "Boolean"
+	NullObj             ObjectType = "Null"
+	ReturnValueObj      ObjectType = "ReturnValue"
+	ErrorObj            ObjectType = "Error"
+	VariableObj         ObjectType = "Variable"
+	FunctionObj         ObjectType = "Function"
+	StringObj           ObjectType = "String"
+	BuiltInObj          ObjectType = "BuiltIn"
+	ArrayObj            ObjectType = "Array"
+	HashObj             ObjectType = "Hash"
+	FloatObj            ObjectType = "Float"
+	QuoteObj            ObjectType = "Quote"
+	MacroObj            ObjectType = "Macro"
+	CompiledFunctionObj ObjectType = "CompiledFunction"
+	ClosureObj          ObjectType = "Closure"
 )
 
 type (
@@ -57,8 +60,7 @@ type (
 	}
 
 	Error struct {
-		Message    string
-		OriginLine int
+		Message string
 	}
 
 	Variable struct {
@@ -111,6 +113,17 @@ type (
 		Parameters []*ast.Identifier
 		Body       *ast.BlockStmt
 		Scope      *Scope
+	}
+
+	CompiledFunction struct {
+		Instructions  code.Instructions
+		NumLocals     int
+		NumParameters int
+	}
+
+	Closure struct {
+		Fn   *CompiledFunction
+		Free []Object
 	}
 )
 
@@ -170,6 +183,14 @@ func (m *Macro) Type() ObjectType {
 	return MacroObj
 }
 
+func (c *CompiledFunction) Type() ObjectType {
+	return CompiledFunctionObj
+}
+
+func (c *Closure) Type() ObjectType {
+	return ClosureObj
+}
+
 func (i *Integer) Inspect() string {
 	return fmt.Sprintf("%d", i.Value)
 }
@@ -187,7 +208,7 @@ func (n *Null) Inspect() string {
 }
 
 func (e *Error) Inspect() string {
-	return fmt.Sprintf("Honk! Error: %s on line %d", e.Message, e.OriginLine)
+	return fmt.Sprintf("Honk! Error: %s", e.Message)
 }
 
 func (v *Variable) Inspect() string {
@@ -271,6 +292,14 @@ func (m *Macro) Inspect() string {
 	out.WriteString("\n}")
 
 	return out.String()
+}
+
+func (c *CompiledFunction) Inspect() string {
+	return fmt.Sprintf("CompiledFunction[%p]", c)
+}
+
+func (c *Closure) Inspect() string {
+	return fmt.Sprintf("Closure[%p]", c)
 }
 
 // HashKey functions

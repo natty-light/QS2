@@ -206,19 +206,380 @@ func TestHashLiterals(t *testing.T) {
 
 func TestIndexExpressions(t *testing.T) {
 	tests := []vmTestCase{
-		// {"[1, 2, 3][1]", 2},
-		// {"[1, 2, 3][0 + 2]", 3},
-		// {"[[1, 1, 1]][0][0]", 1},
+		{"[1, 2, 3][1]", 2},
+		{"[1, 2, 3][0 + 2]", 3},
+		{"[[1, 1, 1]][0][0]", 1},
 		{"[[1, 1, 1]][0][0] + 1", 2},
-		// {"[1, 2, 3][1 + 1]", 3},
-		// {"const i = 0; [1][i]", 1},
-		// {"[][0]", Null},
-		// {"[1, 2, 3][99]", Null},
-		// {"[1][-1]", Null},
-		// {"{1: 1, 2: 2}[1]", 1},
-		// {"{1: 1, 2: 2}[2]", 2},
-		// {"{1: 1}[0]", Null},
-		// {"{}[0]", Null},
+		{"[1, 2, 3][1 + 1]", 3},
+		{"const i = 0; [1][i]", 1},
+		{"[][0]", Null},
+		{"[1, 2, 3][99]", Null},
+		{"[1][-1]", Null},
+		{"{1: 1, 2: 2}[1]", 1},
+		{"{1: 1, 2: 2}[2]", 2},
+		{"{1: 1}[0]", Null},
+		{"{}[0]", Null},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestCallingFunctionsWithoutArguments(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `const fivePlusTen = func() { 5 + 10; }; fivePlusTen();`,
+			expected: 15,
+		},
+		{
+			source:   `const one = func() { 1; }; const two = func() { 2; }; one() + two();`,
+			expected: 3,
+		},
+		{
+			source: `
+			const a = func() { 1; };
+			const b = func() { a() + 1; };
+			const c = func() { b() + 1; };
+			c();`,
+			expected: 3,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestFunctionsWithReturnStatements(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `const earlyExit = func() { return 99; 100; }; earlyExit();`,
+			expected: 99,
+		},
+		{
+			source:   `const earlyExit = func() { return 99; return 100; }; earlyExit();`,
+			expected: 99,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestFunctionsWithoutReturnValue(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `const noReturn = func() { }; noReturn();`,
+			expected: Null,
+		},
+		{
+			source: `const noReturn = func() { };
+			const noReturnTwo = func() { noReturn(); };
+			noReturn();
+			noReturnTwo();`,
+			expected: Null,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestFirstClassFunctions(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source: `const returnsOne = func() { 1; };
+			const returnsOneReturner = func() { returnsOne; };
+			returnsOneReturner()();`,
+			expected: 1,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestCallingFunctionsWithBindings(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `const one = func() { const one = 1; one; }; one()`,
+			expected: 1,
+		},
+		{
+			source: `const oneAndTwo = func() { const one = 1; const two = 2; one + two; };
+			oneAndTwo();`,
+			expected: 3,
+		},
+		{
+			source: `
+			const oneAndTwo = func() {const one = 1; const two = 2; one + two; };
+			const threeAndFour = func() { const three = 3; const four = 4; three + four; };
+			oneAndTwo() + threeAndFour();
+			`,
+			expected: 10,
+		},
+		{
+			source: `
+			const firstFunc = func() { const x = 50; x };
+			const secondFunc = func() { const x = 100; x };
+			firstFunc() + secondFunc();
+			`,
+			expected: 150,
+		},
+		{
+			source: `
+			mut globalNum = 50;
+			const minusOne = func() { const num = 1; globalNum - num; };
+			const minusTwo = func() { const num = 2; globalNum - num; };
+			minusOne() + minusTwo();
+			`,
+			expected: 97,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestCallingFunctionsWithArgumentsAndBindings(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `const identity = func(a) { a; }; identity(4);`,
+			expected: 4,
+		},
+		{
+			source:   `const sum = func(a, b) { a + b; }; sum(1, 2);`,
+			expected: 3,
+		},
+		{
+			source:   `const sum = func(a, b) { const c = a + b; c; }; sum(1, 2);`,
+			expected: 3,
+		},
+		{
+			source: `
+			const sum = func(a, b) {
+				const c = a + b;
+				c;
+			};
+			const outer = func() {
+				sum(1, 2) + sum(3, 4);
+			}
+			outer();
+			`,
+			expected: 10,
+		},
+		{
+			source: `
+			const globalNum = 10;
+			const sum = func(a, b) {
+				const c = a + b;
+				c + globalNum;	
+			}
+			const outer = func() {
+				sum(1, 2) + sum(3, 4) + globalNum;
+			};
+			outer() + globalNum;
+			`,
+			expected: 50,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestCallingFunctionsWithWrongArguments(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `func() { 1; }(1);`,
+			expected: "wrong number of arguments. want=0, got=1",
+		},
+		{
+			source:   `func(a) { a; }();`,
+			expected: "wrong number of arguments. want=1, got=0",
+		},
+		{
+			source:   `func(a, b) { a + b; }(1);`,
+			expected: "wrong number of arguments. want=2, got=1",
+		},
+	}
+
+	for _, tt := range tests {
+		program := parse(tt.source)
+
+		comp := compiler.New()
+		err := comp.Compile(program)
+		if err != nil {
+			t.Fatalf("compiler error: %s", err)
+		}
+
+		vm := New(comp.Bytecode())
+		err = vm.Run()
+		if err == nil {
+			t.Fatalf("expected vm error, but got nil")
+		}
+
+		if err.Error() != tt.expected {
+			t.Fatalf("wrong error message. want=%q, got=%q", tt.expected, err.Error())
+		}
+	}
+}
+
+func TestBuiltinFunctions(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source:   `len("")`,
+			expected: 0,
+		},
+		{
+			source:   `len("four")`,
+			expected: 4,
+		},
+		{
+			source:   `len("hello world")`,
+			expected: 11,
+		},
+		{
+			source:   `len([])`,
+			expected: 0,
+		},
+		{
+			source:   `len([1, 2, 3])`,
+			expected: 3,
+		},
+		{
+			source:   `len(1)`,
+			expected: &object.Error{Message: "argument to `len` of wrong type. got=Integer"},
+		},
+		{
+			source:   `len("one", "two")`,
+			expected: &object.Error{Message: "`len` expects one argument"},
+		},
+		{
+			source:   `first([1, 2, 3])`,
+			expected: 1,
+		},
+		{
+			source:   `first([])`,
+			expected: Null,
+		},
+		{
+			source:   `first(1)`,
+			expected: &object.Error{Message: "argument to `first` must be array type"},
+		},
+		{
+			source:   `last([1, 2, 3])`,
+			expected: 3,
+		},
+		{
+			source:   `last([])`,
+			expected: Null,
+		},
+		{
+			source:   `last(1)`,
+			expected: &object.Error{Message: "argument to `last` must be array type"},
+		},
+		{
+			source:   `rest([1, 2, 3])`,
+			expected: []int{2, 3},
+		},
+		{
+			source:   `rest([])`,
+			expected: Null,
+		},
+		{
+			source:   `append([], 1)`,
+			expected: []int{1},
+		},
+		{
+			source:   `append(1, 1)`,
+			expected: &object.Error{Message: "first argument to `append` must be array type"},
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestClosures(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source: `
+			const newClosure = func(a) {
+				func() { a; };
+			}
+			const closure = newClosure(99);
+			closure();
+			`,
+			expected: 99,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestRecursiveFunctions(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source: `
+			const countDown = func(x) {
+				if (x == 0) {
+					return 0;
+				} else {
+					countDown(x - 1);
+				}
+			}
+			countDown(1);
+			`,
+			expected: 0,
+		},
+		{
+			source: `const countDown = func(x) {
+				if (x == 0) {
+					return 0;
+				}
+
+				return countDown(x - 1);
+			};
+			const wrapper = func() {
+				countDown(1);
+			};
+			wrapper();
+			`,
+			expected: 0,
+		},
+		{
+			`
+			const wrapper = func() {
+				const countDown = func(x) {
+					if (x == 0) {
+						return 0;
+					} else {
+						countDown(x - 1);
+					}
+
+				};
+				countDown(1);
+			};
+			wrapper();
+			`,
+			0,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestRecursiveFibonacci(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			source: `
+			const fib = func(x) {
+				if (x == 0) {
+					return 0;
+				} else {
+					if (x == 1) {
+						return 1;
+					} else {
+						fib(x - 1) + fib(x - 2);
+					}
+				}
+			}
+			fib(15);
+			`,
+			expected: 610,
+		},
 	}
 
 	runVmTests(t, tests)
@@ -231,7 +592,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 		program := parse(tt.source)
 
 		comp := compiler.New()
-		_, err := comp.Compile(program)
+		err := comp.Compile(program)
 
 		if err != nil {
 			t.Fatalf("compiler error: %s", err)
@@ -321,6 +682,16 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 	case *object.Null:
 		if actual != Null {
 			t.Errorf("object is not Null. got=%T (%+v)", actual, actual)
+		}
+	case *object.Error:
+		errObj, ok := actual.(*object.Error)
+		if !ok {
+			t.Errorf("object is not Error. got=%T (%+v)", actual, actual)
+			return
+		}
+
+		if errObj.Message != expected.Message {
+			t.Errorf("wrong error message. want=%q, got=%q", expected.Message, errObj.Message)
 		}
 	}
 }

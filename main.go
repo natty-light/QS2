@@ -26,7 +26,7 @@ func main() {
 			Run(args[2])
 		} else if args[1] == "compile" {
 			// TODO: implement writing intermediate bytecode file
-			//Compile(args[2])
+			Compile(args[2])
 			fmt.Println("Honk! Compile not implemented yet")
 		} else if args[1] == "exec" {
 			// TODO: implement reading intermediate bytecode file
@@ -43,6 +43,9 @@ func Run(filename string) {
 	constants := []object.Object{}
 	globals := make([]object.Object, vm.GlobalsSize)
 	symbolTable := compiler.NewSymbolTable()
+	for i, v := range object.Builtins {
+		symbolTable.DefineBuiltin(i, v.Name)
+	}
 
 	file, err := os.ReadFile(filename)
 	if err != nil {
@@ -61,7 +64,7 @@ func Run(filename string) {
 	}
 
 	comp := compiler.NewWithState(symbolTable, constants)
-	_, err = comp.Compile(program)
+	err = comp.Compile(program)
 	if err != nil {
 		fmt.Printf("Compiler error: %s\n", err)
 		return
@@ -96,7 +99,7 @@ func Compile(filename string) {
 	}
 
 	comp := compiler.New()
-	_, err = comp.Compile(program)
+	err = comp.Compile(program)
 	if err != nil {
 		fmt.Printf("Honk! Compiler error: %s\n", err)
 		return
@@ -107,6 +110,33 @@ func Compile(filename string) {
 	out.Write(bytecode.Instructions)
 	out.Write([]byte("\n"))
 	// TODO: come up with way of encoding constants as bytes
+
+	fi, err := os.Create("instructions.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err := fi.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	if _, err = fi.WriteString(bytecode.Instructions.String()); err != nil {
+		panic(err)
+	}
+
+	fi.WriteString("\n")
+
+	for _, c := range bytecode.Constants {
+		switch c := c.(type) {
+		case *object.CompiledFunction:
+			fi.WriteString(c.Instructions.String())
+		default:
+			fi.WriteString(c.Inspect())
+		}
+		fi.WriteString("\n")
+	}
 }
 
 func Exec(filename string) {

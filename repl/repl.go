@@ -53,9 +53,12 @@ func StartVM(in io.Reader, out io.Writer) {
 	constants := []object.Object{}
 	globals := make([]object.Object, vm.GlobalsSize)
 	symbolTable := compiler.NewSymbolTable()
+	for i, v := range object.Builtins {
+		symbolTable.DefineBuiltin(i, v.Name)
+	}
 
 	for {
-		fmt.Fprintf(out, PROMPT)
+		fmt.Fprint(out, PROMPT)
 		scanned := scanner.Scan()
 		if !scanned {
 			return
@@ -71,7 +74,7 @@ func StartVM(in io.Reader, out io.Writer) {
 		}
 
 		comp := compiler.NewWithState(symbolTable, constants)
-		_, err := comp.Compile(program)
+		err := comp.Compile(program)
 		if err != nil {
 			fmt.Fprintf(out, "Honk! compiler error:\n %s\n", err)
 			continue

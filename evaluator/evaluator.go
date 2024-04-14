@@ -414,7 +414,10 @@ func applyFunction(fn object.Object, args []object.Object, line int) object.Obje
 		evaluated := Eval(fn.Body, extendedScope)
 		return unwrapReturnValue(evaluated)
 	case *object.BuiltIn:
-		return fn.Fn(line, args...)
+		if result := fn.Fn(args...); result != nil {
+			return result
+		}
+		return NULL
 	default:
 		return newError(line, "not a function: %s", fn.Type())
 	}
@@ -458,7 +461,7 @@ func isTruthy(obj object.Object) bool {
 }
 
 func newError(line int, format string, a ...interface{}) *object.Error {
-	return &object.Error{Message: fmt.Sprintf(format, a...), OriginLine: line}
+	return &object.Error{Message: fmt.Sprintf("%s on line %d", fmt.Sprintf(format, a...), line)}
 }
 
 func isError(obj object.Object) bool {
