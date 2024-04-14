@@ -86,10 +86,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if node.Value == nil {
 			node.Value = &ast.NullLiteral{}
 		}
-		_, fromOuter, ok := c.symbolTable.Resolve(node.Name.Value)
+		sym, fromOuter, ok := c.symbolTable.Resolve(node.Name.Value)
 
 		// if the variable exists in this scope, cannot redeclare
-		if ok && !fromOuter {
+		if ok && !fromOuter && sym.Scope != FunctionScope {
 			return fmt.Errorf("variable %s already declared on line %d", node.Name.Value, node.Token.Line)
 		}
 
