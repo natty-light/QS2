@@ -59,11 +59,12 @@ const (
 )
 
 type Token struct {
-	Literal string
-	Type    TokenType
-	Line    int
+	Literal  string
+	Type     TokenType
+	StartPos int
+	EndPos   int
 }
 
-func MakeToken(Type TokenType, char byte, Line int) Token {
-	return Token{Type: Type, Literal: string(char), Line: Line}
+func MakeToken(Type TokenType, char byte, start int, end int) Token {
+	return Token{Type: Type, Literal: string(char), StartPos: start, EndPos: end}
 }

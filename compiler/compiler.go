@@ -15,6 +15,8 @@ type Compiler struct {
 
 	scopes     []CompilationScope
 	scopeIndex int
+
+	source string
 }
 
 type Bytecode struct {
@@ -90,7 +92,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		// if the variable exists in this scope, cannot redeclare
 		if ok && !fromOuter && sym.Scope != FunctionScope {
-			return fmt.Errorf("variable %s already declared on line %d", node.Name.Value, node.Token.Line)
+			return fmt.Errorf("variable %s already declared:", node.Name.Value, node.Token.Line)
 		}
 
 		if node.Constant {
@@ -528,4 +530,8 @@ func (c *Compiler) loadSymbol(s Symbol) {
 	case FunctionScope:
 		c.emit(code.OpCurrentClosure)
 	}
+}
+
+func (c *Compiler) getSnippet(start int, end int) string {
+	return c.source[start:end]
 }
