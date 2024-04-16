@@ -190,6 +190,7 @@ func TestNextToken(t *testing.T) {
 		{token.Identifier, "y"},
 		{token.Semicolon, ";"},
 		{token.RightCurlyBracket, "}"},
+		{token.Semicolon, ";"},
 
 		{token.EOF, ""},
 	}
