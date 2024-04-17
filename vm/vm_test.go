@@ -142,9 +142,9 @@ func TestConditionals(t *testing.T) {
 
 func TestGlobalVarDeclarationStatements(t *testing.T) {
 	tests := []vmTestCase{
-		{"mut one = 1; one", 1},
-		{"mut one = 1; const two = 2; one + two", 3},
-		{"mut one = 1; mut two = one + one; one + two", 3},
+		{"mut one int = 1; one", 1},
+		{"mut one int = 1; const two int = 2; one + two", 3},
+		{"mut one int = 1; mut two int = one + one; one + two", 3},
 	}
 
 	runVmTests(t, tests)
@@ -211,7 +211,7 @@ func TestIndexExpressions(t *testing.T) {
 		{"[[1, 1, 1]][0][0]", 1},
 		{"[[1, 1, 1]][0][0] + 1", 2},
 		{"[1, 2, 3][1 + 1]", 3},
-		{"const i = 0; [1][i]", 1},
+		{"const i int= 0; [1][i]", 1},
 		{"[][0]", Null},
 		{"[1, 2, 3][99]", Null},
 		{"[1][-1]", Null},
@@ -227,18 +227,18 @@ func TestIndexExpressions(t *testing.T) {
 func TestCallingFunctionsWithoutArguments(t *testing.T) {
 	tests := []vmTestCase{
 		{
-			source:   `const fivePlusTen = func() { 5 + 10; }; fivePlusTen();`,
+			source:   `const fivePlusTen () -> int = func() { 5 + 10; }; fivePlusTen();`,
 			expected: 15,
 		},
 		{
-			source:   `const one = func() { 1; }; const two = func() { 2; }; one() + two();`,
+			source:   `const one () -> int = func() { 1; }; const two () -> int = func() { 2; }; one() + two();`,
 			expected: 3,
 		},
 		{
 			source: `
-			const a = func() { 1; };
-			const b = func() { a() + 1; };
-			const c = func() { b() + 1; };
+			const a () -> int = func() { 1; };
+			const b () -> int = func() { a() + 1; };
+			const c () -> int = func() { b() + 1; };
 			c();`,
 			expected: 3,
 		},
@@ -250,11 +250,11 @@ func TestCallingFunctionsWithoutArguments(t *testing.T) {
 func TestFunctionsWithReturnStatements(t *testing.T) {
 	tests := []vmTestCase{
 		{
-			source:   `const earlyExit = func() { return 99; 100; }; earlyExit();`,
+			source:   `const earlyExit () -> int = func() { return 99; 100; }; earlyExit();`,
 			expected: 99,
 		},
 		{
-			source:   `const earlyExit = func() { return 99; return 100; }; earlyExit();`,
+			source:   `const earlyExit () -> int = func() { return 99; return 100; }; earlyExit();`,
 			expected: 99,
 		},
 	}
@@ -265,12 +265,12 @@ func TestFunctionsWithReturnStatements(t *testing.T) {
 func TestFunctionsWithoutReturnValue(t *testing.T) {
 	tests := []vmTestCase{
 		{
-			source:   `const noReturn = func() { }; noReturn();`,
+			source:   `const noReturn () -> null = func() { }; noReturn();`,
 			expected: Null,
 		},
 		{
-			source: `const noReturn = func() { };
-			const noReturnTwo = func() { noReturn(); };
+			source: `const noReturn () -> null = func() { };
+			const noReturnTwo () -> null = func() { noReturn(); };
 			noReturn();
 			noReturnTwo();`,
 			expected: Null,
@@ -283,8 +283,8 @@ func TestFunctionsWithoutReturnValue(t *testing.T) {
 func TestFirstClassFunctions(t *testing.T) {
 	tests := []vmTestCase{
 		{
-			source: `const returnsOne = func() { 1; };
-			const returnsOneReturner = func() { returnsOne; };
+			source: `const returnsOne () -> int = func() { 1; };
+			const returnsOneReturner () -> () -> int = func() { returnsOne; };
 			returnsOneReturner()();`,
 			expected: 1,
 		},
@@ -296,35 +296,35 @@ func TestFirstClassFunctions(t *testing.T) {
 func TestCallingFunctionsWithBindings(t *testing.T) {
 	tests := []vmTestCase{
 		{
-			source:   `const one = func() { const one = 1; one; }; one()`,
+			source:   `const one () -> int = func() { const one int = 1; one; }; one()`,
 			expected: 1,
 		},
 		{
-			source: `const oneAndTwo = func() { const one = 1; const two = 2; one + two; };
+			source: `const oneAndTwo () -> int = func() { const one int = 1; const two int = 2; one + two; };
 			oneAndTwo();`,
 			expected: 3,
 		},
 		{
 			source: `
-			const oneAndTwo = func() {const one = 1; const two = 2; one + two; };
-			const threeAndFour = func() { const three = 3; const four = 4; three + four; };
+			const oneAndTwo () -> int = func() {const one int = 1; const two int = 2; one + two; };
+			const threeAndFour () -> int = func() { const three int = 3; const four int = 4; three + four; };
 			oneAndTwo() + threeAndFour();
 			`,
 			expected: 10,
 		},
 		{
 			source: `
-			const firstFunc = func() { const x = 50; x };
-			const secondFunc = func() { const x = 100; x };
+			const firstFunc () -> int = func() { const x int = 50; x };
+			const secondFunc () -> int = func() { const x int = 100; x };
 			firstFunc() + secondFunc();
 			`,
 			expected: 150,
 		},
 		{
 			source: `
-			mut globalNum = 50;
-			const minusOne = func() { const num = 1; globalNum - num; };
-			const minusTwo = func() { const num = 2; globalNum - num; };
+			mut globalNum int = 50;
+			const minusOne () -> int = func() { const num int = 1; globalNum - num; };
+			const minusTwo () -> int = func() { const num int = 2; globalNum - num; };
 			minusOne() + minusTwo();
 			`,
 			expected: 97,
@@ -337,24 +337,24 @@ func TestCallingFunctionsWithBindings(t *testing.T) {
 func TestCallingFunctionsWithArgumentsAndBindings(t *testing.T) {
 	tests := []vmTestCase{
 		{
-			source:   `const identity = func(a) { a; }; identity(4);`,
+			source:   `const identity (int) -> int = func(a) { a; }; identity(4);`,
 			expected: 4,
 		},
 		{
-			source:   `const sum = func(a, b) { a + b; }; sum(1, 2);`,
+			source:   `const sum (int, int) -> int = func(a, b) { a + b; }; sum(1, 2);`,
 			expected: 3,
 		},
 		{
-			source:   `const sum = func(a, b) { const c = a + b; c; }; sum(1, 2);`,
+			source:   `const sum (int, int) -> int = func(a, b) { const c int = a + b; c; }; sum(1, 2);`,
 			expected: 3,
 		},
 		{
 			source: `
-			const sum = func(a, b) {
-				const c = a + b;
+			const sum (int, int) -> int = func(a, b) {
+				const c int = a + b;
 				c;
 			};
-			const outer = func() {
+			const outer () -> (int, int) -> int = func() {
 				sum(1, 2) + sum(3, 4);
 			}
 			outer();
@@ -363,12 +363,12 @@ func TestCallingFunctionsWithArgumentsAndBindings(t *testing.T) {
 		},
 		{
 			source: `
-			const globalNum = 10;
-			const sum = func(a, b) {
-				const c = a + b;
+			const globalNum int = 10;
+			const sum () -> int = func(a, b) {
+				const c int = a + b;
 				c + globalNum;	
 			}
-			const outer = func() {
+			const outer () -> () -> int = func() {
 				sum(1, 2) + sum(3, 4) + globalNum;
 			};
 			outer() + globalNum;
@@ -496,10 +496,10 @@ func TestClosures(t *testing.T) {
 	tests := []vmTestCase{
 		{
 			source: `
-			const newClosure = func(a) {
+			const newClosure (int) -> () -> int = func(a) {
 				func() { a; };
 			}
-			const closure = newClosure(99);
+			const closure () -> int = newClosure(99);
 			closure();
 			`,
 			expected: 99,
@@ -513,7 +513,7 @@ func TestRecursiveFunctions(t *testing.T) {
 	tests := []vmTestCase{
 		{
 			source: `
-			const countDown = func(x) {
+			const countDown (int) -> int = func(x) {
 				if (x == 0) {
 					return 0;
 				} else {
@@ -525,14 +525,14 @@ func TestRecursiveFunctions(t *testing.T) {
 			expected: 0,
 		},
 		{
-			source: `const countDown = func(x) {
+			source: `const countDown (int ) -> int = func(x) {
 				if (x == 0) {
 					return 0;
 				}
 
 				return countDown(x - 1);
 			};
-			const wrapper = func() {
+			const wrapper () -> int = func() {
 				countDown(1);
 			};
 			wrapper();
@@ -541,8 +541,8 @@ func TestRecursiveFunctions(t *testing.T) {
 		},
 		{
 			`
-			const wrapper = func() {
-				const countDown = func(x) {
+			const wrapper () -> int = func() {
+				const countDown (int) -> int = func(x) {
 					if (x == 0) {
 						return 0;
 					} else {
@@ -565,7 +565,7 @@ func TestRecursiveFibonacci(t *testing.T) {
 	tests := []vmTestCase{
 		{
 			source: `
-			const fib = func(x) {
+			const fib () -> int =  func(x) {
 				if (x == 0) {
 					return 0;
 				} else {
