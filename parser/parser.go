@@ -669,6 +669,8 @@ func (p *Parser) parseType() *ast.TypeLiteral {
 		return p.parseHashType()
 	case token.LeftParen:
 		return p.parseFunctionType()
+	case token.Null:
+		return &ast.TypeLiteral{Token: p.currToken, Type: &types.Null{}}
 	default:
 		p.errors = append(p.errors, fmt.Sprintf("Honk! unknown type annotation %s on line %d", p.currToken.Literal, p.currToken.Line))
 		return nil

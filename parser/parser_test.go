@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"quonk/ast"
 	"quonk/lexer"
+	"quonk/types"
 	"strconv"
 	"testing"
 )
@@ -1043,7 +1044,7 @@ func TestMacroLiteralParsing(t *testing.T) {
 }
 
 func TestFunctionLiteralWithName(t *testing.T) {
-	source := `const myFunc = func() { }`
+	source := `const myFunc () -> null = func() { }`
 
 	l := lexer.New(source)
 	p := New(l)
@@ -1057,6 +1058,17 @@ func TestFunctionLiteralWithName(t *testing.T) {
 	stmt, ok := program.Stmts[0].(*ast.VarDeclarationStmt)
 	if !ok {
 		t.Fatalf("program.Stmts[0] is not *ast.VarDeclarationStmt. got=%T", program.Stmts[0])
+	}
+
+	fnType, ok := stmt.VarType.Type.(*types.Func)
+	if !ok {
+		t.Fatalf("stmt.VarType.Type is not *types.Func. got=%T", stmt.VarType.Type)
+	}
+	if fnType.Return.String() != "null" {
+		t.Fatalf("return type is not null. got=%s", fnType.Return.String())
+	}
+	if len(fnType.Parameters) != 0 {
+		t.Fatalf("fnType.Parameters has wrong length. got=%d", len(fnType.Parameters))
 	}
 
 	fn, ok := stmt.Value.(*ast.FunctionLiteral)
@@ -1081,6 +1093,7 @@ func TestTypeAnnotationParsing(t *testing.T) {
 		{"const x {int []int} = {1: [1, 2, 3]}", "{int []int}"},
 		{"const x {int {int int}} = {1: {2: 3}}", "{int {int int}}"},
 		{"const x [][]int = [[1, 2], [3, 4]]", "[][]int"},
+		{"const x () -> null = func () {} ", "() -> null"},
 	}
 
 	for _, tt := range tests {

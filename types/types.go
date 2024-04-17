@@ -25,6 +25,7 @@ type (
 	Bool  struct{}
 	Float struct{}
 	Str   struct{}
+	Null  struct{}
 	Array struct {
 		Element Type
 	}
@@ -65,6 +66,10 @@ func (h *Hash) Type() DataType {
 
 func (f *Func) Type() DataType {
 	return FuncType
+}
+
+func (n *Null) Type() DataType {
+	return NullType
 }
 
 func (a *Array) ElementType() Type {
@@ -109,6 +114,10 @@ func (a *Array) String() string {
 
 func (h *Hash) String() string {
 	return "{" + h.Key.String() + " " + h.Value.String() + "}"
+}
+
+func (n *Null) String() string {
+	return "null"
 }
 
 func (f *Func) String() string {
