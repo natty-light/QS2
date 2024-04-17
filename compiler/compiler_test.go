@@ -299,8 +299,8 @@ func TestGlobalVarDeclarationStatements(t *testing.T) {
 	tests := []compilerTestCase{
 		{
 			source: `
-			mut x = 1;
-			const y = 2;
+			mut x int = 1;
+			const y int = 2;
 			`,
 			expectedConstants: []interface{}{1, 2},
 			expectedInstructions: []code.Instructions{
@@ -316,7 +316,7 @@ func TestGlobalVarDeclarationStatements(t *testing.T) {
 		},
 		{
 			source: `
-			mut x = 1;
+			mut x int = 1;
 			x;
 			`,
 			expectedConstants: []interface{}{1},
@@ -333,8 +333,8 @@ func TestGlobalVarDeclarationStatements(t *testing.T) {
 		},
 		{
 			source: `
-			mut x = 1;
-			mut y = x;
+			mut x int = 1;
+			mut y int = x;
 			y;
 			`,
 			expectedConstants: []interface{}{1},
@@ -355,7 +355,7 @@ func TestGlobalVarDeclarationStatements(t *testing.T) {
 		},
 		{
 			source: `
-			mut x;
+			mut x int;
 			x;
 			`,
 			expectedConstants: []interface{}{},
@@ -379,7 +379,7 @@ func TestVariableAssignment(t *testing.T) {
 	tests := []compilerTestCase{
 		{
 			source: `
-			mut x = 2;
+			mut x int = 2;
 			x = 3;
 			x;
 			`,
@@ -401,8 +401,8 @@ func TestVariableAssignment(t *testing.T) {
 		},
 		{
 			source: `
-			mut x = 2;
-			mut y = 3;
+			mut x int = 2;
+			mut y int = 3;
 			x = y;
 			y;
 			`,
@@ -802,7 +802,7 @@ func TestFunctionCalls(t *testing.T) {
 			},
 		},
 		{
-			source: `const noArg = func() { 24 }; noArg();`,
+			source: `const noArg () -> int = func() { 24 }; noArg();`,
 			expectedConstants: []interface{}{24,
 				[]code.Instructions{
 					// 0000
@@ -820,7 +820,7 @@ func TestFunctionCalls(t *testing.T) {
 			},
 		},
 		{
-			source: `const oneArg = func(a) { a }; oneArg(24);`,
+			source: `const oneArg (int) -> int = func(a) { a }; oneArg(24);`,
 			expectedConstants: []interface{}{
 				[]code.Instructions{
 					code.Make(code.OpGetLocal, 0),
@@ -838,7 +838,7 @@ func TestFunctionCalls(t *testing.T) {
 			},
 		},
 		{
-			source: `const manyArg = func(a, b, c) { a; b; c; };
+			source: `const manyArg (int, int, int) -> int = func(a, b, c) { a; b; c; };
 			manyArg(1, 2, 3);`,
 			expectedConstants: []interface{}{
 				[]code.Instructions{
@@ -934,7 +934,7 @@ func TestCompilerScopes(t *testing.T) {
 func TestVarDeclarationStatementScopes(t *testing.T) {
 	tests := []compilerTestCase{
 		{
-			source: `const num = 55;
+			source: `const num int = 55;
 			func() { num }`,
 			expectedConstants: []interface{}{55,
 				[]code.Instructions{
@@ -952,7 +952,7 @@ func TestVarDeclarationStatementScopes(t *testing.T) {
 			},
 		},
 		{
-			source: `mut num = 55;
+			source: `mut num int = 55;
 			func() { num }`,
 			expectedConstants: []interface{}{55,
 				[]code.Instructions{
@@ -969,7 +969,7 @@ func TestVarDeclarationStatementScopes(t *testing.T) {
 		},
 		{
 			source: `func() {
-				const a = 55;
+				const a int = 55;
 				a;
 			}`,
 			expectedConstants: []interface{}{55,
@@ -987,7 +987,7 @@ func TestVarDeclarationStatementScopes(t *testing.T) {
 		},
 		{
 			source: `func() {
-				mut a = 55;
+				mut a int = 55;
 				a;
 			}`,
 			expectedConstants: []interface{}{55,
@@ -1005,8 +1005,8 @@ func TestVarDeclarationStatementScopes(t *testing.T) {
 		},
 		{
 			source: `func() {
-				const a = 55;
-				mut b = 77;
+				const a int = 55;
+				mut b int = 77;
 				a + b;
 			}`,
 			expectedConstants: []interface{}{
@@ -1074,7 +1074,7 @@ func TestForLoops(t *testing.T) {
 	tests := []compilerTestCase{
 		{
 			source: `
-			mut i = 0;
+			mut i int = 0;
 			for (i < 5) { i }
 			`,
 			expectedConstants: []interface{}{0, 5},
@@ -1174,16 +1174,16 @@ func TestClosures(t *testing.T) {
 		},
 		{
 			source: `
-			const global = 55;
+			const global int = 55;
 
 			func() {
-				const a = 66;
+				const a int = 66;
 
 				func() {
-					const b = 77;
+					const b int = 77;
 
 					func() {
-						const c = 88;
+						const c int = 88;
 
 						global + a + b + c;
 					}
@@ -1239,7 +1239,7 @@ func TestRecursiveFunctions(t *testing.T) {
 	tests := []compilerTestCase{
 		{
 			source: `
-			const countDown = func(x) { countDown(x - 1); };
+			const countDown (int) -> int = func(x) { countDown(x - 1); };
 			countDown(1);
 			`,
 			expectedConstants: []interface{}{
@@ -1265,8 +1265,8 @@ func TestRecursiveFunctions(t *testing.T) {
 		},
 		{
 			source: `
-			const wrapper = func() {
-				const countDown = func(x) { countDown(x - 1); };
+			const wrapper () -> (int) -> int = func() {
+				const countDown (int) -> int = func(x) { countDown(x - 1); };
 				countDown(1);
 			};
 			wrapper();`,

@@ -1,5 +1,7 @@
 package compiler
 
+import "quonk/types"
+
 type SymbolScopes string
 
 const (
@@ -15,6 +17,7 @@ type Symbol struct {
 	Scope      SymbolScopes
 	Index      int
 	IsConstant bool
+	Type       types.Type
 }
 
 type SymbolTable struct {
@@ -31,8 +34,8 @@ func NewSymbolTable() *SymbolTable {
 	return &SymbolTable{store: s, FreeSymbols: free}
 }
 
-func (s *SymbolTable) DefineMutable(name string) Symbol {
-	symbol := Symbol{Name: name, Index: s.numDefinitions, IsConstant: false}
+func (s *SymbolTable) DefineMutable(name string, t types.Type) Symbol {
+	symbol := Symbol{Name: name, Index: s.numDefinitions, IsConstant: false, Type: t}
 	if s.Outer == nil {
 		symbol.Scope = GlobalScope
 	} else {
@@ -44,8 +47,8 @@ func (s *SymbolTable) DefineMutable(name string) Symbol {
 	return symbol
 }
 
-func (s *SymbolTable) DefineImmutable(name string) Symbol {
-	symbol := Symbol{Name: name, Index: s.numDefinitions, IsConstant: true}
+func (s *SymbolTable) DefineImmutable(name string, t types.Type) Symbol {
+	symbol := Symbol{Name: name, Index: s.numDefinitions, IsConstant: true, Type: t}
 	if s.Outer == nil {
 		symbol.Scope = GlobalScope
 	} else {

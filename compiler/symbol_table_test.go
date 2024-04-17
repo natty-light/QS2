@@ -1,49 +1,50 @@
 package compiler
 
 import (
+	"quonk/types"
 	"testing"
 )
 
 func TestDefine(t *testing.T) {
 	expected := map[string]Symbol{
-		"a": {Name: "a", Scope: "GLOBAL", Index: 0, IsConstant: true},
-		"b": {Name: "b", Scope: "GLOBAL", Index: 1, IsConstant: false},
-		"c": {Name: "c", Scope: "LOCAL", Index: 0, IsConstant: true},
-		"d": {Name: "d", Scope: "LOCAL", Index: 1, IsConstant: false},
-		"e": {Name: "e", Scope: "LOCAL", Index: 0, IsConstant: true},
-		"f": {Name: "f", Scope: "LOCAL", Index: 1, IsConstant: false},
+		"a": {Name: "a", Scope: "GLOBAL", Index: 0, IsConstant: true, Type: &types.Int{}},
+		"b": {Name: "b", Scope: "GLOBAL", Index: 1, IsConstant: false, Type: &types.Int{}},
+		"c": {Name: "c", Scope: "LOCAL", Index: 0, IsConstant: true, Type: &types.Int{}},
+		"d": {Name: "d", Scope: "LOCAL", Index: 1, IsConstant: false, Type: &types.Int{}},
+		"e": {Name: "e", Scope: "LOCAL", Index: 0, IsConstant: true, Type: &types.Int{}},
+		"f": {Name: "f", Scope: "LOCAL", Index: 1, IsConstant: false, Type: &types.Int{}},
 	}
 
 	globalScope := NewSymbolTable()
 
-	a := globalScope.DefineImmutable("a")
+	a := globalScope.DefineImmutable("a", &types.Int{})
 	if a != expected["a"] {
 		t.Errorf("a = %v, expected %v", a, expected["a"])
 	}
 
-	b := globalScope.DefineMutable("b")
+	b := globalScope.DefineMutable("b", &types.Int{})
 	if b != expected["b"] {
 		t.Errorf("b = %v, expected %v", b, expected["b"])
 	}
 
 	firstLocal := NewEnclosedSymbolTable(globalScope)
-	c := firstLocal.DefineImmutable("c")
+	c := firstLocal.DefineImmutable("c", &types.Int{})
 	if c != expected["c"] {
 		t.Errorf("c = %v, expected %v", c, expected["c"])
 	}
 
-	d := firstLocal.DefineMutable("d")
+	d := firstLocal.DefineMutable("d", &types.Int{})
 	if d != expected["d"] {
 		t.Errorf("d = %v, expected %v", d, expected["d"])
 	}
 
 	secondLocal := NewEnclosedSymbolTable(firstLocal)
-	e := secondLocal.DefineImmutable("e")
+	e := secondLocal.DefineImmutable("e", &types.Int{})
 	if e != expected["e"] {
 		t.Errorf("e = %v, expected %v", e, expected["e"])
 	}
 
-	f := secondLocal.DefineMutable("f")
+	f := secondLocal.DefineMutable("f", &types.Int{})
 	if f != expected["f"] {
 		t.Errorf("f = %v, expected %v", f, expected["f"])
 	}
@@ -52,12 +53,12 @@ func TestDefine(t *testing.T) {
 
 func TestResolveGlobal(t *testing.T) {
 	globalScope := NewSymbolTable()
-	globalScope.DefineImmutable("a")
-	globalScope.DefineMutable("b")
+	globalScope.DefineImmutable("a", &types.Int{})
+	globalScope.DefineMutable("b", &types.Int{})
 
 	expected := []Symbol{
-		{Name: "a", Scope: "GLOBAL", Index: 0, IsConstant: true},
-		{Name: "b", Scope: "GLOBAL", Index: 1, IsConstant: false},
+		{Name: "a", Scope: "GLOBAL", Index: 0, IsConstant: true, Type: &types.Int{}},
+		{Name: "b", Scope: "GLOBAL", Index: 1, IsConstant: false, Type: &types.Int{}},
 	}
 
 	for _, sym := range expected {
@@ -74,16 +75,16 @@ func TestResolveGlobal(t *testing.T) {
 
 func TestResolveNestedLocal(t *testing.T) {
 	globalScope := NewSymbolTable()
-	globalScope.DefineImmutable("a")
-	globalScope.DefineMutable("b")
+	globalScope.DefineImmutable("a", &types.Int{})
+	globalScope.DefineMutable("b", &types.Int{})
 
 	firstLocal := NewEnclosedSymbolTable(globalScope)
-	firstLocal.DefineImmutable("c")
-	firstLocal.DefineMutable("d")
+	firstLocal.DefineImmutable("c", &types.Int{})
+	firstLocal.DefineMutable("d", &types.Int{})
 
 	secondLocal := NewEnclosedSymbolTable(firstLocal)
-	secondLocal.DefineImmutable("e")
-	secondLocal.DefineMutable("f")
+	secondLocal.DefineImmutable("e", &types.Int{})
+	secondLocal.DefineMutable("f", &types.Int{})
 
 	tests := []struct {
 		table           *SymbolTable
@@ -92,19 +93,19 @@ func TestResolveNestedLocal(t *testing.T) {
 		{
 			firstLocal,
 			[]Symbol{
-				{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
-				{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: false},
-				{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true},
-				{Name: "d", Scope: LocalScope, Index: 1, IsConstant: false},
+				{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+				{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: false, Type: &types.Int{}},
+				{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+				{Name: "d", Scope: LocalScope, Index: 1, IsConstant: false, Type: &types.Int{}},
 			},
 		},
 		{
 			secondLocal,
 			[]Symbol{
-				{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
-				{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: false},
-				{Name: "e", Scope: LocalScope, Index: 0, IsConstant: true},
-				{Name: "f", Scope: LocalScope, Index: 1, IsConstant: false},
+				{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+				{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: false, Type: &types.Int{}},
+				{Name: "e", Scope: LocalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+				{Name: "f", Scope: LocalScope, Index: 1, IsConstant: false, Type: &types.Int{}},
 			},
 		},
 	}
@@ -125,12 +126,12 @@ func TestResolveNestedLocal(t *testing.T) {
 
 func TestResolveLocal(t *testing.T) {
 	globalScope := NewSymbolTable()
-	globalScope.DefineImmutable("a")
-	globalScope.DefineMutable("b")
+	globalScope.DefineImmutable("a", &types.Int{})
+	globalScope.DefineMutable("b", &types.Int{})
 
 	local := NewEnclosedSymbolTable(globalScope)
-	local.DefineImmutable("c")
-	local.DefineMutable("d")
+	local.DefineImmutable("c", &types.Int{})
+	local.DefineMutable("d", &types.Int{})
 
 	expected := []Symbol{
 		{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
@@ -183,16 +184,16 @@ func TestDefineResolveBuiltins(t *testing.T) {
 
 func TestResolveFree(t *testing.T) {
 	global := NewSymbolTable()
-	global.DefineImmutable("a")
-	global.DefineImmutable("b")
+	global.DefineImmutable("a", &types.Int{})
+	global.DefineImmutable("b", &types.Int{})
 
 	firstLocal := NewEnclosedSymbolTable(global)
-	firstLocal.DefineImmutable("c")
-	firstLocal.DefineImmutable("d")
+	firstLocal.DefineImmutable("c", &types.Int{})
+	firstLocal.DefineImmutable("d", &types.Int{})
 
 	secondLocal := NewEnclosedSymbolTable(firstLocal)
-	secondLocal.DefineImmutable("e")
-	secondLocal.DefineImmutable("f")
+	secondLocal.DefineImmutable("e", &types.Int{})
+	secondLocal.DefineImmutable("f", &types.Int{})
 
 	tests := []struct {
 		table               *SymbolTable
@@ -256,20 +257,20 @@ func TestResolveFree(t *testing.T) {
 
 func TestResolveUnresolvableFree(t *testing.T) {
 	global := NewSymbolTable()
-	global.DefineImmutable("a")
+	global.DefineImmutable("a", &types.Int{})
 
 	firstLocal := NewEnclosedSymbolTable(global)
-	firstLocal.DefineImmutable("c")
+	firstLocal.DefineImmutable("c", &types.Int{})
 
 	secondLocal := NewEnclosedSymbolTable(firstLocal)
-	secondLocal.DefineImmutable("e")
-	secondLocal.DefineImmutable("f")
+	secondLocal.DefineImmutable("e", &types.Int{})
+	secondLocal.DefineImmutable("f", &types.Int{})
 
 	expected := []Symbol{
-		{"a", GlobalScope, 0, true},
-		{"c", FreeScope, 0, true},
-		{"e", LocalScope, 0, true},
-		{"f", LocalScope, 1, true},
+		{"a", GlobalScope, 0, true, &types.Int{}},
+		{"c", FreeScope, 0, true, &types.Int{}},
+		{"e", LocalScope, 0, true, &types.Int{}},
+		{"f", LocalScope, 1, true, &types.Int{}},
 	}
 
 	for _, sym := range expected {
@@ -317,7 +318,7 @@ func TestDefineAndResolveFunctionName(t *testing.T) {
 func TestShadowingFunctionName(t *testing.T) {
 	g := NewSymbolTable()
 	g.DefineFunctionName("a")
-	g.DefineImmutable("a")
+	g.DefineImmutable("a", &types.Int{})
 
 	expected := Symbol{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true}
 
