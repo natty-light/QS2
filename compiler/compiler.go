@@ -94,7 +94,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		if node.Constant {
-			symbol := c.symbolTable.DefineImmutable(node.Name.Value)
+			symbol := c.symbolTable.DefineImmutable(node.Name.Value, node.VarType.Type)
 
 			err := c.Compile(node.Value)
 			if err != nil {
@@ -107,7 +107,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 				c.emit(code.OpSetImmutableLocal, symbol.Index)
 			}
 		} else {
-			symbol := c.symbolTable.DefineMutable(node.Name.Value)
+			symbol := c.symbolTable.DefineMutable(node.Name.Value, node.VarType.Type)
 
 			err := c.Compile(node.Value)
 			if err != nil {
@@ -368,7 +368,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		for _, p := range node.Parameters {
-			c.symbolTable.DefineImmutable(p.Value)
+			c.symbolTable.DefineImmutable(p.Value, p.Type)
 		}
 
 		err := c.Compile(node.Body)

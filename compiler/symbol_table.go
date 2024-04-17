@@ -60,8 +60,8 @@ func (s *SymbolTable) DefineImmutable(name string, t types.Type) Symbol {
 	return symbol
 }
 
-func (s *SymbolTable) DefineBuiltin(index int, name string) Symbol {
-	symbol := Symbol{Name: name, Index: index, Scope: BuiltinScope, IsConstant: true}
+func (s *SymbolTable) DefineBuiltin(index int, name string, t types.Type) Symbol {
+	symbol := Symbol{Name: name, Index: index, Scope: BuiltinScope, IsConstant: true, Type: t}
 	s.store[name] = symbol
 	return symbol
 }

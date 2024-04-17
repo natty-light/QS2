@@ -3,12 +3,14 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"quonk/types"
 	"strings"
 )
 
 var Builtins = []struct {
 	Name    string
 	BuiltIn *BuiltIn
+	Type    types.Type
 }{
 	{
 		"len",
@@ -28,6 +30,7 @@ var Builtins = []struct {
 				}
 			},
 		},
+		&types.Func{Return: &types.Int{}},
 	},
 	{
 		"print",
@@ -45,6 +48,7 @@ var Builtins = []struct {
 				return nil
 			},
 		},
+		&types.Func{Return: &types.Null{}},
 	},
 	{
 		"first",

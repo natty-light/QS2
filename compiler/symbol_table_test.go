@@ -134,10 +134,10 @@ func TestResolveLocal(t *testing.T) {
 	local.DefineMutable("d", &types.Int{})
 
 	expected := []Symbol{
-		{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
-		{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: false},
-		{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true},
-		{Name: "d", Scope: LocalScope, Index: 1, IsConstant: false},
+		{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+		{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: false, Type: &types.Int{}},
+		{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+		{Name: "d", Scope: LocalScope, Index: 1, IsConstant: false, Type: &types.Int{}},
 	}
 
 	for _, sym := range expected {
@@ -158,10 +158,10 @@ func TestDefineResolveBuiltins(t *testing.T) {
 	secondLocal := NewEnclosedSymbolTable(firstLocal)
 
 	expected := []Symbol{
-		{Name: "a", Scope: BuiltinScope, Index: 0, IsConstant: true},
-		{Name: "b", Scope: BuiltinScope, Index: 1, IsConstant: true},
-		{Name: "c", Scope: BuiltinScope, Index: 2, IsConstant: true},
-		{Name: "d", Scope: BuiltinScope, Index: 3, IsConstant: true},
+		{Name: "a", Scope: BuiltinScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+		{Name: "b", Scope: BuiltinScope, Index: 1, IsConstant: true, Type: &types.Int{}},
+		{Name: "c", Scope: BuiltinScope, Index: 2, IsConstant: true, Type: &types.Int{}},
+		{Name: "d", Scope: BuiltinScope, Index: 3, IsConstant: true, Type: &types.Int{}},
 	}
 
 	for i, sym := range expected {
@@ -203,26 +203,26 @@ func TestResolveFree(t *testing.T) {
 		{
 			firstLocal,
 			[]Symbol{
-				{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
-				{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: true},
-				{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true},
-				{Name: "d", Scope: LocalScope, Index: 1, IsConstant: true},
+				{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+				{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: true, Type: &types.Int{}},
+				{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+				{Name: "d", Scope: LocalScope, Index: 1, IsConstant: true, Type: &types.Int{}},
 			},
 			[]Symbol{},
 		},
 		{
 			secondLocal,
 			[]Symbol{
-				{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true},
-				{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: true},
-				{Name: "c", Scope: FreeScope, Index: 0, IsConstant: true},
-				{Name: "d", Scope: FreeScope, Index: 1, IsConstant: true},
-				{Name: "e", Scope: LocalScope, Index: 0, IsConstant: true},
-				{Name: "f", Scope: LocalScope, Index: 1, IsConstant: true},
+				{Name: "a", Scope: GlobalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+				{Name: "b", Scope: GlobalScope, Index: 1, IsConstant: true, Type: &types.Int{}},
+				{Name: "c", Scope: FreeScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+				{Name: "d", Scope: FreeScope, Index: 1, IsConstant: true, Type: &types.Int{}},
+				{Name: "e", Scope: LocalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+				{Name: "f", Scope: LocalScope, Index: 1, IsConstant: true, Type: &types.Int{}},
 			},
 			[]Symbol{
-				{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true},
-				{Name: "d", Scope: LocalScope, Index: 1, IsConstant: true},
+				{Name: "c", Scope: LocalScope, Index: 0, IsConstant: true, Type: &types.Int{}},
+				{Name: "d", Scope: LocalScope, Index: 1, IsConstant: true, Type: &types.Int{}},
 			},
 		},
 	}

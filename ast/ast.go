@@ -126,6 +126,7 @@ type (
 	Identifier struct {
 		Token token.Token // token.Ident
 		Value string
+		Type  types.Type
 	}
 
 	PrefixExpr struct {
